@@ -1,0 +1,72 @@
+{
+  "project": "Bull Weightlifting MVP",
+  "updated": "2026-04-06",
+  "sprints": [
+    {
+      "week": 1,
+      "name": "Base + UX/UI + Admin",
+      "status": "completed",
+      "tasks": [
+        { "id": "W1-01", "title": "Estructura App Router + route groups", "status": "done" },
+        { "id": "W1-02", "title": "Design system: colores, tipografía, tokens CSS", "status": "done" },
+        { "id": "W1-03", "title": "Navbar: glassmorphism, carrito badge, mobile menu", "status": "done" },
+        { "id": "W1-04", "title": "Footer: links, redes, tagline", "status": "done" },
+        { "id": "W1-05", "title": "Home: HeroSection + BrandStatement + CategoriesSection + FeaturedCTA", "status": "done" },
+        { "id": "W1-06", "title": "Catálogo: grid + sidebar filtros género/categoría + búsqueda", "status": "done" },
+        { "id": "W1-07", "title": "Producto: galería imágenes + VariantSelector + AddToCartButton", "status": "done" },
+        { "id": "W1-08", "title": "CartDrawer: slide-right GSAP + items editables + subtotal", "status": "done" },
+        { "id": "W1-09", "title": "Auth: login + registro con validación Zod", "status": "done" },
+        { "id": "W1-10", "title": "Perfil: datos personales + direcciones", "status": "done" },
+        { "id": "W1-11", "title": "Middleware: protección rutas /profile + /checkout + /admin", "status": "done" },
+        { "id": "W1-12", "title": "Supabase: schema + RLS policies + seed data", "status": "done" },
+        { "id": "W1-13", "title": "Admin: layout sidebar + dashboard métricas", "status": "done" },
+        { "id": "W1-14", "title": "Admin: CRUD productos + variantes + imágenes", "status": "done" },
+        { "id": "W1-15", "title": "Docs: MVP.md + roles.md + setup-guide.md + week2-plan.md", "status": "done" }
+      ]
+    },
+    {
+      "week": 2,
+      "name": "Checkout + Mercado Pago",
+      "status": "pending",
+      "tasks": [
+        { "id": "W2-01", "title": "lib/mercadopago.ts: instanciar cliente + createPreference", "status": "todo" },
+        { "id": "W2-02", "title": "Checkout page: step 1 dirección", "status": "todo" },
+        { "id": "W2-03", "title": "Checkout page: step 2 resumen + totales", "status": "todo" },
+        { "id": "W2-04", "title": "app/actions/checkout.ts: crear preferencia MP", "status": "todo" },
+        { "id": "W2-05", "title": "app/api/webhooks/mercadopago/route.ts: recibir notificaciones", "status": "todo" },
+        { "id": "W2-06", "title": "Páginas post-pago: success / failure / pending", "status": "todo" },
+        { "id": "W2-07", "title": "Historial órdenes usuario: /profile/orders", "status": "todo" },
+        { "id": "W2-08", "title": "Admin: tabla órdenes + cambio de estado", "status": "todo" },
+        { "id": "W2-09", "title": "lib/queries/orders.ts: queries para órdenes", "status": "todo" },
+        { "id": "W2-10", "title": "Email confirmación con Resend (opcional)", "status": "todo" }
+      ]
+    },
+    {
+      "week": 3,
+      "name": "Polish + Admin Completo",
+      "status": "pending",
+      "tasks": [
+        { "id": "W3-01", "title": "Subida imágenes a Supabase Storage", "status": "todo" },
+        { "id": "W3-02", "title": "Admin: CRUD categorías", "status": "todo" },
+        { "id": "W3-03", "title": "Admin: reportes básicos (ventas por período)", "status": "todo" },
+        { "id": "W3-04", "title": "SEO: metadatos dinámicos por producto/categoría", "status": "todo" },
+        { "id": "W3-05", "title": "SEO: sitemap.xml + robots.txt", "status": "todo" },
+        { "id": "W3-06", "title": "Performance: optimizar imágenes + lazy loading", "status": "todo" },
+        { "id": "W3-07", "title": "Animations: scroll reveals con GSAP ScrollTrigger", "status": "todo" }
+      ]
+    },
+    {
+      "week": 4,
+      "name": "QA + Deploy",
+      "status": "pending",
+      "tasks": [
+        { "id": "W4-01", "title": "Testing E2E: flujo compra completo", "status": "todo" },
+        { "id": "W4-02", "title": "Core Web Vitals: LCP < 2.5s, CLS < 0.1", "status": "todo" },
+        { "id": "W4-03", "title": "Configuración dominio en Vercel", "status": "todo" },
+        { "id": "W4-04", "title": "Variables de entorno producción", "status": "todo" },
+        { "id": "W4-05", "title": "Deploy producción + smoke test", "status": "todo" },
+        { "id": "W4-06", "title": "Monitoreo básico (errores + uptime)", "status": "todo" }
+      ]
+    }
+  ]
+}

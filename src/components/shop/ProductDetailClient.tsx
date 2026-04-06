@@ -1,0 +1,123 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import type { Product, ProductVariant } from "@/types";
+import { VariantSelector } from "./VariantSelector";
+import { AddToCartButton } from "./AddToCartButton";
+
+interface ProductDetailClientProps {
+  product: Product;
+}
+
+export function ProductDetailClient({ product }: ProductDetailClientProps) {
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [activeImage, setActiveImage] = useState(0);
+  const images = product.images ?? [];
+  const variants = product.variants ?? [];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+      {/* Galería */}
+      <div className="space-y-3">
+        {/* Imagen principal */}
+        <div className="relative aspect-[4/5] bg-[#111] overflow-hidden border border-white/5">
+          {images[activeImage]?.url ? (
+            <Image
+              src={images[activeImage].url}
+              alt={images[activeImage].alt ?? product.name}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="font-heading text-crimson/15 text-8xl tracking-widest select-none" aria-hidden>
+                BULL
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        {images.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto">
+            {images.map((img, i) => (
+              <button
+                key={img.id}
+                onClick={() => setActiveImage(i)}
+                className={`relative shrink-0 w-16 h-20 bg-[#111] border transition-colors overflow-hidden ${
+                  activeImage === i ? "border-crimson" : "border-white/5 hover:border-white/20"
+                }`}
+              >
+                <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info + acciones */}
+      <div className="space-y-6">
+        {/* Categoría */}
+        {product.category && (
+          <p className="font-impact text-[10px] tracking-[0.5em] text-crimson uppercase">
+            {product.category.name}
+          </p>
+        )}
+
+        {/* Nombre */}
+        <h1 className="text-3xl md:text-4xl text-white leading-tight">
+          {product.name.toUpperCase()}
+        </h1>
+
+        {/* Precio */}
+        <p className="font-bebas text-3xl tracking-wider text-white">
+          ${product.price.toLocaleString("es-CO")}
+          <span className="font-body text-sm text-white/30 ml-2 tracking-normal normal-case">COP</span>
+        </p>
+
+        {/* Separador */}
+        <div className="h-px bg-white/5" />
+
+        {/* Selector de variantes */}
+        {variants.length > 0 ? (
+          <VariantSelector variants={variants} onSelect={setSelectedVariant} />
+        ) : (
+          <p className="font-body text-sm text-white/30">Sin variantes disponibles.</p>
+        )}
+
+        {/* Botón agregar */}
+        <AddToCartButton product={product} selectedVariant={selectedVariant} />
+
+        {/* Descripción */}
+        {product.description && (
+          <div className="border-t border-white/5 pt-6 space-y-2">
+            <h3 className="text-sm text-white/70">DESCRIPCIÓN</h3>
+            <p className="font-body text-sm text-white/40 leading-relaxed">
+              {product.description}
+            </p>
+          </div>
+        )}
+
+        {/* Info adicional */}
+        <div className="border-t border-white/5 pt-4 space-y-2">
+          <div className="flex justify-between">
+            <span className="font-body text-xs text-white/30 tracking-wide uppercase">SKU</span>
+            <span className="font-body text-xs text-white/40">
+              {selectedVariant?.sku ?? "—"}
+            </span>
+          </div>
+          {selectedVariant && (
+            <div className="flex justify-between">
+              <span className="font-body text-xs text-white/30 tracking-wide uppercase">Stock</span>
+              <span className={`font-body text-xs ${selectedVariant.stock > 0 ? "text-white/40" : "text-red-400/70"}`}>
+                {selectedVariant.stock > 0 ? `${selectedVariant.stock} disponibles` : "Agotado"}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

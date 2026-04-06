@@ -141,9 +141,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   const onSubmit = async (data: FormValues) => {
     setServerError(null);
     const formData = new FormData();
-    Object.entries(data).forEach(([k, v]) =>
-      formData.append(k, String(v))
-    );
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== null && v !== undefined) {
+        formData.append(k, String(v));
+      }
+    });
 
     formData.append("variant_count", String(variants.length));
     variants.forEach((v, i) => {

@@ -75,7 +75,7 @@ export function AdminProductRow({ product }: AdminProductRowProps) {
             <span className="text-base text-crimson">
               ${product.sale_price?.toLocaleString("es-CO")}
               {product.discount_percent && (
-                <span className="ml-2 text-[9px] bg-crimson/10 px-1 py-0.5 rounded-sm">
+                <span className="ml-2 text-[9px] bg-crimson/10 px-1 py-0.5 rounded-sm font-body">
                   -{product.discount_percent}%
                 </span>
               )}

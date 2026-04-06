@@ -66,8 +66,6 @@ export async function getAdminOffers() {
   if (error) throw error;
   return data ?? [];
 }
-
-
 export async function getProductByIdAdmin(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase

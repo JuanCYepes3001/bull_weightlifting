@@ -112,8 +112,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       sale_end_at: product?.sale_end_at ? new Date(product.sale_end_at).toISOString().slice(0, 16) : "",
     },
   });
-
-  const nameValue = watch("name");
+  
   const isOnSale = watch("is_on_sale");
   const price = watch("price");
   const discountPercent = watch("discount_percent");
@@ -130,6 +129,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       setValue("sale_price", roundToNicePrice(calculated));
     }
   }, [isOnSale, discountPercent, price, setValue, salePrice]);
+
+  const nameValue = watch("name");
 
   useEffect(() => {
     if (!isEdit && nameValue) {
@@ -335,7 +336,6 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           )}
         </div>
       </section>
-
       {/* Variantes */}
       <section className="space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-white/5">

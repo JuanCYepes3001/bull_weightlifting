@@ -96,22 +96,23 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
 
   // Ajuste dinámico: hacer que BULL tenga el mismo ancho que WEIGHTLIFTING
   useEffect(() => {
-    if (!bullRef.current || !weightRef.current) return;
-
     function fitBullToWeight() {
-      const targetW = weightRef.current!.offsetWidth;
+      const weightEl = weightRef.current;
+      const bullEl = bullRef.current;
+      if (!weightEl || !bullEl) return;
+
+      const targetW = weightEl.offsetWidth;
       if (!targetW) return;
 
       // Binary search para fontSize en px que haga que el ancho del título BULL sea ~ targetW
-      const el = bullRef.current!;
-      const style = window.getComputedStyle(el);
+      const el = bullEl;
       const min = 24; // px
       const max = 800; // px
       let low = min;
       let high = max;
       let best = low;
 
-      // hacemos 8 iteraciones de búsqueda para ajustar rápidamente
+      // hacemos 10 iteraciones de búsqueda para ajustar rápidamente
       for (let i = 0; i < 10; i++) {
         const mid = Math.floor((low + high) / 2);
         el.style.fontSize = mid + "px";
@@ -125,7 +126,6 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
         }
       }
 
-      // Queremos que BULL sea más alto que WEIGHTLIFTING: multiplicador en altura visual
       // Guardamos computedBullSize para uso si es necesario
       setComputedBullSize(best);
 
@@ -134,12 +134,15 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       setComputedMarkSize(mark);
     }
 
-    fitBullToWeight();
+    // Ejecutar en el siguiente frame para asegurarnos de que el DOM esté listo
+    const raf = requestAnimationFrame(fitBullToWeight);
+
     const ro = new ResizeObserver(() => fitBullToWeight());
-    ro.observe(weightRef.current);
-    ro.observe(bullRef.current);
+    if (weightRef.current) ro.observe(weightRef.current);
+    if (bullRef.current) ro.observe(bullRef.current);
     window.addEventListener("resize", fitBullToWeight);
     return () => {
+      cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", fitBullToWeight);
     };

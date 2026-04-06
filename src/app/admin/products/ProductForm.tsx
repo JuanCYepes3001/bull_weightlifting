@@ -24,6 +24,8 @@ const schema = z.object({
   is_on_sale: z.boolean().default(false),
   sale_price: z.coerce.number().nullable().optional(),
   discount_percent: z.coerce.number().min(0).max(100).nullable().optional(),
+  sale_start_at: z.string().nullable().optional(),
+  sale_end_at: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -50,6 +52,8 @@ interface ProductFormProps {
     is_on_sale?: boolean;
     sale_price?: number | null;
     discount_percent?: number | null;
+    sale_start_at?: string | null;
+    sale_end_at?: string | null;
     variants?: { size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
     images?: { url: string; alt: string | null }[];
   };
@@ -104,6 +108,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       is_on_sale: product?.is_on_sale ?? false,
       sale_price: product?.sale_price ?? null,
       discount_percent: product?.discount_percent ?? null,
+      sale_start_at: product?.sale_start_at ? new Date(product.sale_start_at).toISOString().slice(0, 16) : "",
+      sale_end_at: product?.sale_end_at ? new Date(product.sale_end_at).toISOString().slice(0, 16) : "",
     },
   });
 
@@ -308,6 +314,22 @@ export function ProductForm({ categories, product }: ProductFormProps) {
                 <p className="mt-1 font-body text-[9px] text-white/20 uppercase tracking-wider">
                   Precio que verá el cliente
                 </p>
+              </div>
+              <div>
+                <Input
+                  label="Fecha de Inicio"
+                  type="datetime-local"
+                  error={errors.sale_start_at?.message}
+                  {...register("sale_start_at")}
+                />
+              </div>
+              <div>
+                <Input
+                  label="Fecha de Fin"
+                  type="datetime-local"
+                  error={errors.sale_end_at?.message}
+                  {...register("sale_end_at")}
+                />
               </div>
             </div>
           )}

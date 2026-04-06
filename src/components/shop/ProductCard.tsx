@@ -10,6 +10,11 @@ export function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images?.[0]?.url ?? null;
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
   const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
+  
+  const now = new Date();
+  const isSaleActive = product.is_on_sale && 
+    (!product.sale_start_at || new Date(product.sale_start_at) <= now) &&
+    (!product.sale_end_at || new Date(product.sale_end_at) >= now);
 
   return (
     <Link
@@ -46,7 +51,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </span>
             </div>
           )}
-          {product.is_on_sale && (
+          {isSaleActive && (
             <div className="bg-crimson px-2 py-0.5 flex items-center gap-1.5 shadow-lg shadow-crimson/20">
               <span className="font-bebas text-[11px] tracking-[0.15em] uppercase text-white">
                 OFERTA
@@ -93,7 +98,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {product.is_on_sale ? (
+        {isSaleActive ? (
           <div className="flex items-baseline gap-2 mt-1">
             <p className="font-bebas text-lg tracking-wider text-crimson">
               ${product.sale_price?.toLocaleString("es-CO")}

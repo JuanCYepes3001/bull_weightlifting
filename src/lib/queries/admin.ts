@@ -51,6 +51,10 @@ export async function getAdminProducts() {
 
 export async function getAdminOffers() {
   const supabase = await createClient();
+  
+  // Ejecutar limpieza antes de consultar
+  await supabase.rpc("expire_products_offers" as any);
+
   const { data, error } = await supabase
     .from("products")
     .select(
@@ -62,6 +66,7 @@ export async function getAdminOffers() {
   if (error) throw error;
   return data ?? [];
 }
+
 
 export async function getProductByIdAdmin(id: string) {
   const supabase = await createClient();

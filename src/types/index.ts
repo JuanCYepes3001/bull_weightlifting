@@ -48,6 +48,8 @@ export interface Product {
   is_on_sale: boolean;
   sale_price: number | null;
   discount_percent: number | null;
+  sale_start_at: string | null;
+  sale_end_at: string | null;
   category?: Category;
   variants?: ProductVariant[];
   images?: ProductImage[];

@@ -1,13 +1,19 @@
 import Link from "next/link";
-import { getAdminOffers } from "@/lib/queries/admin";
+import { getAdminOffers, getAdminProducts } from "@/lib/queries/admin";
+import { getCategories } from "@/lib/queries/categories";
 import { AdminProductRow } from "../products/AdminProductRow";
+import { BulkOfferManager } from "./BulkOfferManager";
 import { Tag } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Ofertas | Admin" };
 
 export default async function AdminOffersPage() {
-  const offers = await getAdminOffers().catch(() => []);
+  const [offers, allProducts, categories] = await Promise.all([
+    getAdminOffers().catch(() => []),
+    getAdminProducts().catch(() => []),
+    getCategories().catch(() => []),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -19,11 +25,14 @@ export default async function AdminOffersPage() {
           </p>
           <h1 className="text-2xl text-white">OFERTAS ACTIVAS</h1>
         </div>
-        <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-sm">
-          <Tag size={14} className="text-crimson" />
-          <span className="font-body text-xs text-white/60 uppercase tracking-widest">
-            {offers.length} Productos en oferta
-          </span>
+        <div className="flex items-center gap-4">
+          <BulkOfferManager products={allProducts as any} categories={categories} />
+          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-sm">
+            <Tag size={14} className="text-crimson" />
+            <span className="font-body text-xs text-white/60 uppercase tracking-widest">
+              {offers.length} Productos en oferta
+            </span>
+          </div>
         </div>
       </div>
 

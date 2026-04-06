@@ -21,6 +21,8 @@ const productSchema = z.object({
   is_on_sale: z.coerce.boolean().default(false),
   sale_price: z.coerce.number().nullable().optional(),
   discount_percent: z.coerce.number().min(0).max(100).nullable().optional(),
+  sale_start_at: z.string().nullable().optional(),
+  sale_end_at: z.string().nullable().optional(),
 });
 
 export async function createProductAction(
@@ -38,6 +40,8 @@ export async function createProductAction(
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
     discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
+    sale_start_at: (formData.get("sale_start_at") as string) || null,
+    sale_end_at: (formData.get("sale_end_at") as string) || null,
   };
 
   const parsed = productSchema.safeParse(raw);
@@ -109,6 +113,8 @@ export async function updateProductAction(
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
     discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
+    sale_start_at: (formData.get("sale_start_at") as string) || null,
+    sale_end_at: (formData.get("sale_end_at") as string) || null,
   };
 
   const parsed = productSchema.safeParse(raw);
@@ -156,3 +162,69 @@ export async function toggleProductActiveAction(
   revalidatePath("/admin/products");
   return { success: true };
 }
+
+export async function bulkUpdateOffersAction(
+  productIds: string[],
+  discountPercent: number,
+  startDate: string,
+  endDate: string
+): Promise<ActionResult> {
+  await requireAdmin();
+  if (!productIds.length) return { error: "No hay productos seleccionados" };
+  
+  const supabase = await createClient();
+
+  // 1. Obtener precios actuales
+  const { data: products, error: fetchError } = await supabase
+    .from("products")
+    .select("id, price")
+    .in("id", productIds);
+
+  if (fetchError || !products) return { error: "Error al obtener productos" };
+
+  // 2. Preparar actualizaciones
+  const updates = products.map((p) => {
+    const rawSalePrice = p.price * (1 - discountPercent / 100);
+    const niceSalePrice = Math.round(rawSalePrice / 100) * 100;
+    
+    return {
+      id: p.id,
+      is_on_sale: true,
+      discount_percent: discountPercent,
+      sale_price: niceSalePrice,
+      sale_start_at: startDate || null,
+      sale_end_at: endDate || null,
+      updated_at: new Date().toISOString(),
+    };
+  });
+
+  // 3. Ejecutar actualizaciones uno a uno para evitar errores de campos obligatorios en UPSERT
+  const updatePromises = updates.map(update => 
+    supabase
+      .from("products")
+      .update({
+        is_on_sale: update.is_on_sale,
+        discount_percent: update.discount_percent,
+        sale_price: update.sale_price,
+        sale_start_at: update.sale_start_at,
+        sale_end_at: update.sale_end_at,
+        updated_at: update.updated_at
+      })
+      .eq("id", update.id)
+  );
+
+  const results = await Promise.all(updatePromises);
+  const findError = results.find(r => r.error);
+
+  if (findError) {
+    console.error("Error en actualización masiva:", findError.error);
+    return { error: "Error al aplicar ofertas en uno o más productos" };
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/offers");
+  revalidatePath("/products");
+  
+  return { success: true };
+}
+

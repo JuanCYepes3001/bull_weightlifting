@@ -49,20 +49,6 @@ export async function getAdminProducts() {
   return data ?? [];
 }
 
-export async function getAdminOffers() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      `*, category:categories(name, slug), variants:product_variants(*), images:product_images(*)`
-    )
-    .eq("is_on_sale", true)
-    .order("updated_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-
 export async function getProductByIdAdmin(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase

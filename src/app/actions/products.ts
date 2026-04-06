@@ -18,9 +18,6 @@ const productSchema = z.object({
   price: z.coerce.number().positive("Precio debe ser mayor a 0"),
   category_id: z.string().uuid("Categoría requerida"),
   is_active: z.coerce.boolean().default(true),
-  is_on_sale: z.coerce.boolean().default(false),
-  sale_price: z.coerce.number().nullable().optional(),
-  discount_percent: z.coerce.number().min(0).max(100).nullable().optional(),
 });
 
 export async function createProductAction(
@@ -35,9 +32,6 @@ export async function createProductAction(
     price: formData.get("price"),
     category_id: formData.get("category_id"),
     is_active: formData.get("is_active") === "true",
-    is_on_sale: formData.get("is_on_sale") === "true",
-    sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
-    discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
   };
 
   const parsed = productSchema.safeParse(raw);
@@ -106,9 +100,6 @@ export async function updateProductAction(
     price: formData.get("price"),
     category_id: formData.get("category_id"),
     is_active: formData.get("is_active") === "true",
-    is_on_sale: formData.get("is_on_sale") === "true",
-    sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
-    discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
   };
 
   const parsed = productSchema.safeParse(raw);

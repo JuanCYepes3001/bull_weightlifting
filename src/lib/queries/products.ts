@@ -27,6 +27,13 @@ export async function getProducts(
   if (filters.category_id) query = query.eq("category_id", filters.category_id);
   if (filters.min_price !== undefined) query = query.gte("price", filters.min_price);
   if (filters.max_price !== undefined) query = query.lte("price", filters.max_price);
+  if (filters.on_sale !== undefined) {
+    const now = new Date().toISOString();
+    query = query
+      .eq("is_on_sale", filters.on_sale)
+      .or(`sale_start_at.is.null,sale_start_at.lte.${now}`)
+      .or(`sale_end_at.is.null,sale_end_at.gte.${now}`);
+  }
   if (filters.search) {
     query = query.textSearch("name", filters.search, {
       type: "websearch",

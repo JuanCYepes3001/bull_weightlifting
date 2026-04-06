@@ -7,11 +7,14 @@ import {
   ShoppingCart,
   Users,
   ChevronRight,
+  Home,
+  Tag,
 } from "lucide-react";
 
 const adminNav = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Productos", href: "/admin/products", icon: Package },
+  { label: "Ofertas", href: "/admin/offers", icon: Tag },
   { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Usuarios", href: "/admin/users", icon: Users },
 ];
@@ -28,16 +31,16 @@ export default async function AdminLayout({
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 border-r border-white/5 flex flex-col">
         {/* Brand */}
-        <div className="h-16 flex items-center px-5 border-b border-white/5">
-          <div>
+        <Link href="/" className="h-16 flex items-center px-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+          <div className="group">
             <p className="font-horizon text-[11px] tracking-widest text-crimson uppercase">
               Bull
             </p>
-            <p className="font-body text-[9px] tracking-[0.3em] text-white/20 uppercase">
+            <p className="font-body text-[9px] tracking-[0.3em] text-white/20 uppercase group-hover:text-white/40 transition-colors">
               Admin Panel
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -58,16 +61,24 @@ export default async function AdminLayout({
         </nav>
 
         {/* User */}
-        <div className="px-5 py-4 border-t border-white/5">
-          <p className="font-body text-[10px] text-white/20 truncate">
-            {profile.name ?? "Admin"}
-          </p>
+        <div className="px-5 py-6 border-t border-white/5 space-y-4">
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-white/5 hover:bg-white/10 text-white font-body text-[10px] tracking-[0.2em] uppercase transition-all rounded-sm"
+          >
+            <Home size={12} />
+            Salir a la Tienda
+          </Link>
+
           <form action={logoutAction}>
             <button
               type="submit"
-              className="mt-1 font-body text-[10px] tracking-widest text-white/20 hover:text-white/50 transition-colors uppercase"
+              className="w-full text-left font-body text-[9px] tracking-widest text-white/20 hover:text-crimson/60 transition-colors uppercase"
             >
-              Salir
+              Cerrar Sesión
+              <span className="block opacity-50 lowercase tracking-normal bg-transparent mt-1">
+                ({profile.name ?? "Admin"})
+              </span>
             </button>
           </form>
         </div>

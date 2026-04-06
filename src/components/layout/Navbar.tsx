@@ -60,8 +60,9 @@ export function Navbar() {
   }, [menuOpen]);
 
   const navLinks = [
-    { label: "Colección", href: "/products" },
     { label: "Categorías", href: "/products#categories" },
+    { label: "Colección", href: "/products" },
+    { label: "Ofertas", href: "/products?on_sale=true", isSpecial: true },
   ];
 
   return (
@@ -88,7 +89,11 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors"
+              className={`font-body text-[10px] tracking-widest uppercase transition-colors ${
+                link.isSpecial
+                  ? "text-crimson hover:text-crimson-light font-bold"
+                  : "text-white/50 hover:text-white"
+              }`}
             >
               {link.label}
             </Link>
@@ -155,7 +160,14 @@ export function Navbar() {
       {menuOpen && (
         <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="font-body text-sm tracking-widest uppercase text-white/60 hover:text-white transition-colors">
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className={`font-body text-sm tracking-widest uppercase transition-colors ${
+                link.isSpecial ? "text-crimson" : "text-white/60 hover:text-white"
+              }`}
+            >
               {link.label}
             </Link>
           ))}

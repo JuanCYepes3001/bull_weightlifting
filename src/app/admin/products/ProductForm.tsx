@@ -21,6 +21,11 @@ const schema = z.object({
   price: z.coerce.number().positive("Precio debe ser mayor a 0"),
   category_id: z.string().uuid("Selecciona una categoría"),
   is_active: z.boolean().default(true),
+  is_on_sale: z.boolean().default(false),
+  sale_price: z.coerce.number().nullable().optional(),
+  discount_percent: z.coerce.number().min(0).max(100).nullable().optional(),
+  sale_start_at: z.string().nullable().optional(),
+  sale_end_at: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -44,6 +49,11 @@ interface ProductFormProps {
     price: number;
     category_id: string;
     is_active: boolean;
+    is_on_sale?: boolean;
+    sale_price?: number | null;
+    discount_percent?: number | null;
+    sale_start_at?: string | null;
+    sale_end_at?: string | null;
     variants?: { size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
     images?: { url: string; alt: string | null }[];
   };
@@ -95,8 +105,30 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       price: product?.price ?? 0,
       category_id: product?.category_id ?? "",
       is_active: product?.is_active ?? true,
+      is_on_sale: product?.is_on_sale ?? false,
+      sale_price: product?.sale_price ?? null,
+      discount_percent: product?.discount_percent ?? null,
+      sale_start_at: product?.sale_start_at ? new Date(product.sale_start_at).toISOString().slice(0, 16) : "",
+      sale_end_at: product?.sale_end_at ? new Date(product.sale_end_at).toISOString().slice(0, 16) : "",
     },
   });
+  
+  const isOnSale = watch("is_on_sale");
+  const price = watch("price");
+  const discountPercent = watch("discount_percent");
+  const salePrice = watch("sale_price");
+
+  // Función para redondear a precio "bonito" (terminado en 00 o 900)
+  const roundToNicePrice = (val: number) => {
+    return Math.round(val / 100) * 100;
+  };
+
+  useEffect(() => {
+    if (isOnSale && discountPercent && price && !salePrice) {
+      const calculated = price * (1 - discountPercent / 100);
+      setValue("sale_price", roundToNicePrice(calculated));
+    }
+  }, [isOnSale, discountPercent, price, setValue, salePrice]);
 
   const nameValue = watch("name");
 
@@ -240,6 +272,70 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         </label>
       </section>
 
+      {/* Oferta */}
+      <section className="space-y-4">
+        <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-white/40 pb-2 border-b border-white/5">
+          Configuración de Oferta
+        </h2>
+
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="w-4 h-4 accent-crimson"
+              {...register("is_on_sale")}
+            />
+            <span className="font-body text-sm text-white/60">
+              Activar Oferta para este producto
+            </span>
+          </label>
+
+          {isOnSale && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 animate-in fade-in slide-in-from-top-2">
+              <div>
+                <Input
+                  label="Descuento (%)"
+                  type="number"
+                  placeholder="20"
+                  error={errors.discount_percent?.message}
+                  {...register("discount_percent")}
+                />
+                <p className="mt-1 font-body text-[9px] text-white/20 uppercase tracking-wider">
+                  Opcional: Calcula el precio automáticamente
+                </p>
+              </div>
+              <div>
+                <Input
+                  label="Precio de Oferta (Final)"
+                  type="number"
+                  placeholder="71900"
+                  error={errors.sale_price?.message}
+                  {...register("sale_price")}
+                />
+                <p className="mt-1 font-body text-[9px] text-white/20 uppercase tracking-wider">
+                  Precio que verá el cliente
+                </p>
+              </div>
+              <div>
+                <Input
+                  label="Fecha de Inicio"
+                  type="datetime-local"
+                  error={errors.sale_start_at?.message}
+                  {...register("sale_start_at")}
+                />
+              </div>
+              <div>
+                <Input
+                  label="Fecha de Fin"
+                  type="datetime-local"
+                  error={errors.sale_end_at?.message}
+                  {...register("sale_end_at")}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
       {/* Variantes */}
       <section className="space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-white/5">

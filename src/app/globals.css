@@ -30,12 +30,12 @@
   --color-crimson:       #8C1A0A;
   --color-crimson-dark:  #6B1208;
   --color-crimson-light: #B02213;
-  --color-carbon:        #1A1A1A;
+  --color-carbon:        #1C1C1C;
   --color-carbon-light:  #2A2A2A;
   --color-carbon-muted:  #3A3A3A;
 
   /* Base */
-  --color-background: #0D0D0D;
+  --color-background: #000000;
   --color-foreground: #F5F5F5;
   --color-muted:      #888888;
   --color-border:     #2A2A2A;

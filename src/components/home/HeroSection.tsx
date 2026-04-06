@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDown } from "lucide-react";
 import gsap from "gsap";
@@ -14,6 +14,10 @@ interface HeroSectionProps {
 
 export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
   const heroRef = useRef<HTMLElement>(null);
+  const bullRef = useRef<HTMLHeadingElement>(null);
+  const weightRef = useRef<HTMLParagraphElement>(null);
+  const [computedBullSize, setComputedBullSize] = useState<number | undefined>(undefined);
+  const [computedMarkSize, setComputedMarkSize] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (!heroRef.current) return;
@@ -90,6 +94,60 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
     return () => ctx.revert();
   }, []);
 
+  // Ajuste dinámico: hacer que BULL tenga el mismo ancho que WEIGHTLIFTING
+  useEffect(() => {
+    function fitBullToWeight() {
+      const weightEl = weightRef.current;
+      const bullEl = bullRef.current;
+      if (!weightEl || !bullEl) return;
+
+      const targetW = weightEl.offsetWidth;
+      if (!targetW) return;
+
+      // Binary search para fontSize en px que haga que el ancho del título BULL sea ~ targetW
+      const el = bullEl;
+      const min = 24; // px
+      const max = 800; // px
+      let low = min;
+      let high = max;
+      let best = low;
+
+      // hacemos 10 iteraciones de búsqueda para ajustar rápidamente
+      for (let i = 0; i < 10; i++) {
+        const mid = Math.floor((low + high) / 2);
+        el.style.fontSize = mid + "px";
+        // fuerza reflow
+        const w = el.offsetWidth;
+        if (w <= targetW) {
+          best = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+
+      // Guardamos computedBullSize para uso si es necesario
+      setComputedBullSize(best);
+
+      // Ajustar tamaño del mark: que sea grande y llamativo, proporción respecto al ancho objetivo
+      const mark = Math.min(520, Math.max(64, Math.floor(targetW * 0.45)));
+      setComputedMarkSize(mark);
+    }
+
+    // Ejecutar en el siguiente frame para asegurarnos de que el DOM esté listo
+    const raf = requestAnimationFrame(fitBullToWeight);
+
+    const ro = new ResizeObserver(() => fitBullToWeight());
+    if (weightRef.current) ro.observe(weightRef.current);
+    if (bullRef.current) ro.observe(bullRef.current);
+    window.addEventListener("resize", fitBullToWeight);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", fitBullToWeight);
+    };
+  }, []);
+
   return (
     <section
       ref={heroRef}
@@ -97,7 +155,7 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
     >
       {/* ── Fondo fantasma BULL (watermark) — Horizon Bull ── */}
       <span
-        className="absolute select-none pointer-events-none font-heading text-[40vw] leading-none text-white/[0.015] tracking-widest top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        className="absolute select-none pointer-events-none font-heading text-[28vw] leading-none text-white/[0.015] tracking-widest top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         aria-hidden="true"
       >
         BULL
@@ -119,21 +177,23 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
 
         {/* Ícono de marca — reemplazar con SVG oficial */}
         <div className="hero-mark mb-4 md:mb-6">
-          <BullMark size={72} />
+          <BullMark size={computedMarkSize ?? 140} />
         </div>
 
         {/* BULL — Horizon Bull, crimson, dominante */}
         <h1
+          ref={bullRef}
           className="hero-bull font-heading text-crimson uppercase leading-none tracking-[0.08em]"
-          style={{ fontSize: "clamp(5rem, 22vw, 18rem)" }}
+          style={computedBullSize ? { fontSize: computedBullSize + "px" } : { fontSize: "clamp(4rem, 18vw, 12rem)" }}
         >
           BULL
         </h1>
 
         {/* WEIGHTLIFTING — Impact, blanco, grande y visible */}
         <p
+          ref={weightRef}
           className="hero-weightlifting font-impact text-white uppercase tracking-[0.1em] -mt-2 md:-mt-4"
-          style={{ fontSize: "clamp(1.4rem, 7.5vw, 7rem)" }}
+          style={{ fontSize: "clamp(1.1rem, 6vw, 4.5rem)" }}
         >
           WEIGHTLIFTING
         </p>

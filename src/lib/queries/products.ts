@@ -27,6 +27,7 @@ export async function getProducts(
   if (filters.category_id) query = query.eq("category_id", filters.category_id);
   if (filters.min_price !== undefined) query = query.gte("price", filters.min_price);
   if (filters.max_price !== undefined) query = query.lte("price", filters.max_price);
+  if (filters.on_sale !== undefined) query = query.eq("is_on_sale", filters.on_sale);
   if (filters.search) {
     query = query.textSearch("name", filters.search, {
       type: "websearch",

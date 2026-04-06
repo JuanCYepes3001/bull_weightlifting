@@ -11,20 +11,17 @@ interface ProductsPageProps {
     category?: string;
     q?: string;
     page?: string;
-    on_sale?: string;
   }>;
 }
 
 export const metadata = { title: "Colección" };
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const { gender, category, q, page, on_sale } = await searchParams;
-  const isSalePage = on_sale === "true";
+  const { gender, category, q, page } = await searchParams;
 
   const filters: ProductFilters = {
     ...(category && { category_id: category }),
     ...(q && { search: q }),
-    ...(isSalePage && { on_sale: true }),
   };
 
   // Filtro por género: buscar categorías de ese género primero
@@ -70,9 +67,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <p className="font-impact text-[10px] tracking-[0.5em] text-crimson uppercase mb-1">
           BULL WEIGHTLIFTING
         </p>
-        <h1 className="text-4xl md:text-6xl text-white">
-          {isSalePage ? "OFERTAS" : "COLECCIÓN"}
-        </h1>
+        <h1 className="text-4xl md:text-6xl text-white">COLECCIÓN</h1>
         {total > 0 && (
           <p className="font-body text-xs text-white/30 mt-2">
             {total} producto{total !== 1 ? "s" : ""}

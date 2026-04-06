@@ -45,9 +45,6 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  is_on_sale: boolean;
-  sale_price: number | null;
-  discount_percent: number | null;
   category?: Category;
   variants?: ProductVariant[];
   images?: ProductImage[];
@@ -128,7 +125,6 @@ export interface ProductFilters {
   max_price?: number;
   search?: string;
   in_stock?: boolean;
-  on_sale?: boolean;
 }
 
 export interface PaginationParams {

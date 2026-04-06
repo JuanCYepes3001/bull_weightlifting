@@ -12,9 +12,6 @@ interface AdminProductRowProps {
     slug: string;
     price: number;
     is_active: boolean;
-    is_on_sale?: boolean;
-    sale_price?: number | null;
-    discount_percent?: number | null;
     category?: { name: string } | null;
     variants?: { id: string }[];
     images?: { url: string }[];
@@ -66,26 +63,8 @@ export function AdminProductRow({ product }: AdminProductRowProps) {
       </td>
 
       {/* Precio */}
-      <td className="px-4 py-3 font-bebas tracking-wider">
-        {product.is_on_sale ? (
-          <div className="flex flex-col">
-            <span className="text-[10px] text-white/20 line-through">
-              ${product.price.toLocaleString("es-CO")}
-            </span>
-            <span className="text-base text-crimson">
-              ${product.sale_price?.toLocaleString("es-CO")}
-              {product.discount_percent && (
-                <span className="ml-2 text-[9px] bg-crimson/10 px-1 py-0.5 rounded-sm">
-                  -{product.discount_percent}%
-                </span>
-              )}
-            </span>
-          </div>
-        ) : (
-          <span className="text-base text-white/80">
-            ${product.price.toLocaleString("es-CO")}
-          </span>
-        )}
+      <td className="px-4 py-3 font-bebas text-base tracking-wider text-white/80">
+        ${product.price.toLocaleString("es-CO")}
       </td>
 
       {/* Variantes */}

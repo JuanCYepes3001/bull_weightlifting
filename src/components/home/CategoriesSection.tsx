@@ -78,7 +78,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
         ];
 
   return (
-    <section id="categories" ref={sectionRef} className="py-24 px-4 md:px-8">
+    <section ref={sectionRef} className="py-24 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
 
         {/* Heading */}

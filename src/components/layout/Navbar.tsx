@@ -60,9 +60,8 @@ export function Navbar() {
   }, [menuOpen]);
 
   const navLinks = [
-    { label: "Categorías", href: "/#categories" },
     { label: "Colección", href: "/products" },
-    { label: "Ofertas", href: "/products?on_sale=true", isSpecial: true },
+    { label: "Categorías", href: "/products#categories" },
   ];
 
   return (
@@ -74,111 +73,80 @@ export function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 grid grid-cols-[1fr_auto_1fr] md:grid-cols-3 items-center">
-        {/* Left: Logo */}
-        <div className="flex justify-start">
-          <BullLogo size="md" withSubtitle={scrolled} withMark={false} />
-        </div>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+        <BullLogo
+          size="md"
+          layout="horizontal"
+          withMark
+          withSubtitle
+          animateMark
+          markSize={navMarkSize}
+        />
 
-        {/* Center: Nav Links */}
-        <div className="hidden md:flex items-center justify-center gap-8">
+        <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`font-body text-[10px] tracking-widest uppercase transition-colors ${
-                link.isSpecial
-                  ? "text-crimson hover:text-crimson-light font-bold"
-                  : "text-white/50 hover:text-white"
-              }`}
+              className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-4">
-          <div className="hidden md:flex items-center gap-4">
-            {/* Cart icon con badge */}
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative text-white/50 hover:text-white transition-colors"
-              aria-label="Carrito"
-            >
-              <ShoppingBag size={18} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-crimson text-white font-body text-[9px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
-            </button>
-
-            {user ? (
-              <div className="flex items-center gap-4">
-                {isAdmin && (
-                  <Link
-                    href="/admin/dashboard"
-                    className="font-impact text-xs tracking-widest uppercase text-crimson hover:text-crimson-light transition-colors"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link
-                  href="/profile/account"
-                  className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors"
-                >
-                  {profile?.name?.split(" ")[0] ?? "Mi cuenta"}
-                </Link>
-                <form action={logoutAction}>
-                  <button
-                    type="submit"
-                    className="font-body text-xs tracking-widest uppercase text-white/30 hover:text-white/70 transition-colors"
-                  >
-                    Salir
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/login"
-                  className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors"
-                >
-                  Ingresar
-                </Link>
-                <Link
-                  href="/register"
-                  className="font-body text-xs tracking-widest uppercase bg-crimson hover:bg-crimson-light text-white px-4 py-2 transition-colors"
-                >
-                  Crear cuenta
-                </Link>
-              </div>
+        <div className="hidden md:flex items-center gap-4">
+          {/* Cart icon con badge */}
+          <button onClick={() => setCartOpen(true)} className="relative text-white/50 hover:text-white transition-colors" aria-label="Carrito">
+            <ShoppingBag size={18} />
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-crimson text-white font-body text-[9px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {itemCount > 9 ? "9+" : itemCount}
+              </span>
             )}
-          </div>
+          </button>
 
-          {/* Mobile Actions */}
-          <div className="flex md:hidden items-center gap-4">
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative text-white/50 hover:text-white transition-colors"
-              aria-label="Carrito"
-            >
-              <ShoppingBag size={18} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-crimson text-white font-body text-[9px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
+          {user ? (
+            <div className="flex items-center gap-4">
+              {isAdmin && (
+                <Link href="/admin/dashboard" className="font-impact text-xs tracking-widest uppercase text-crimson hover:text-crimson-light transition-colors">
+                  Admin
+                </Link>
               )}
-            </button>
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="text-white/50 hover:text-white transition-colors"
-              aria-label="Menú"
-            >
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+              <Link href="/profile/account" className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors">
+                {profile?.name?.split(" ")[0] ?? "Mi cuenta"}
+              </Link>
+              <form action={logoutAction}>
+                <button type="submit" className="font-body text-xs tracking-widest uppercase text-white/30 hover:text-white/70 transition-colors">
+                  Salir
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors">
+                Ingresar
+              </Link>
+              <Link href="/register" className="font-body text-xs tracking-widest uppercase bg-crimson hover:bg-crimson-light text-white px-4 py-2 transition-colors">
+                Crear cuenta
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile */}
+        <div className="flex md:hidden items-center gap-4">
+          <button onClick={() => setCartOpen(true)} className="relative text-white/50 hover:text-white transition-colors" aria-label="Carrito">
+            <ShoppingBag size={18} />
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-crimson text-white font-body text-[9px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {itemCount > 9 ? "9+" : itemCount}
+              </span>
+            )}
+          </button>
+          <button onClick={() => setMenuOpen((v) => !v)} className="text-white/50 hover:text-white transition-colors" aria-label="Menú">
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
 
@@ -187,14 +155,7 @@ export function Navbar() {
       {menuOpen && (
         <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className={`font-body text-sm tracking-widest uppercase transition-colors ${
-                link.isSpecial ? "text-crimson" : "text-white/60 hover:text-white"
-              }`}
-            >
+            <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="font-body text-sm tracking-widest uppercase text-white/60 hover:text-white transition-colors">
               {link.label}
             </Link>
           ))}

@@ -37,28 +37,14 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {!hasStock && (
-            <div className="bg-background/80 px-2 py-0.5">
-              <span className="font-body text-[10px] tracking-widest uppercase text-white/40">
-                Agotado
-              </span>
-            </div>
-          )}
-          {product.is_on_sale && (
-            <div className="bg-crimson px-2 py-0.5 flex items-center gap-1.5 shadow-lg shadow-crimson/20">
-              <span className="font-bebas text-[11px] tracking-[0.15em] uppercase text-white">
-                OFERTA
-              </span>
-              {product.discount_percent && (
-                <span className="font-bebas text-[11px] text-white/70">
-                  -{product.discount_percent}%
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Badge sin stock */}
+        {!hasStock && (
+          <div className="absolute top-3 left-3 bg-background/80 px-2 py-0.5">
+            <span className="font-body text-[10px] tracking-widest uppercase text-white/40">
+              Agotado
+            </span>
+          </div>
+        )}
 
         {/* Red hover line */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-crimson scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
@@ -93,20 +79,9 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {product.is_on_sale ? (
-          <div className="flex items-baseline gap-2 mt-1">
-            <p className="font-bebas text-lg tracking-wider text-crimson">
-              ${product.sale_price?.toLocaleString("es-CO")}
-            </p>
-            <p className="font-bebas text-xs tracking-wider text-white/30 line-through">
-              ${product.price.toLocaleString("es-CO")}
-            </p>
-          </div>
-        ) : (
-          <p className="font-bebas text-lg tracking-wider text-white mt-1">
-            ${product.price.toLocaleString("es-CO")}
-          </p>
-        )}
+        <p className="font-bebas text-lg tracking-wider text-white mt-1">
+          ${product.price.toLocaleString("es-CO")}
+        </p>
       </div>
     </Link>
   );

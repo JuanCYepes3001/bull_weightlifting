@@ -14,6 +14,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const [navMarkSize, setNavMarkSize] = useState<number | undefined>(undefined);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { user, profile, isAdmin } = useUser();
   const itemCount = useCartStore((s) => s.itemCount);
@@ -32,6 +33,21 @@ export function Navbar() {
       { y: -60, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.7, ease: "power3.out", delay: 1.2 }
     );
+  }, []);
+
+  // Ajusta automáticamente el tamaño del mark para que ocupe el alto de la navbar
+  useEffect(() => {
+    function updateMarkSize() {
+      if (!navRef.current) return setNavMarkSize(undefined);
+      const h = navRef.current.clientHeight;
+      // dejar un pequeño margen
+      const size = Math.max(20, Math.floor(h * 0.9));
+      setNavMarkSize(size);
+    }
+
+    updateMarkSize();
+    window.addEventListener("resize", updateMarkSize);
+    return () => window.removeEventListener("resize", updateMarkSize);
   }, []);
 
   useEffect(() => {
@@ -58,7 +74,14 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <BullLogo size="md" withSubtitle={scrolled} withMark={false} />
+        <BullLogo
+          size="md"
+          layout="horizontal"
+          withMark
+          withSubtitle
+          animateMark
+          markSize={navMarkSize}
+        />
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (

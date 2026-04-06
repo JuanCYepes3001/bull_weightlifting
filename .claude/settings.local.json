@@ -18,7 +18,8 @@
       "mcp__plugin_context-mode_context-mode__ctx_search",
       "Bash(taskkill /PID 6316 /F)",
       "Bash(cmd /c \"taskkill /PID 6316 /F\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm install:*)"
     ]
   },
   "disabledMcpjsonServers": [

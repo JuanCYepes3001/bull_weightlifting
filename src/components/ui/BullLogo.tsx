@@ -4,70 +4,94 @@ import { BullMark } from "./BullMark";
 
 interface BullLogoProps {
   /**
-   * sm  → navbar horizontal compacto
+   * sm  → navbar compacto
    * md  → navbar con subtítulo
    * lg  → footer
    * xl  → hero / landing
    */
   size?: "sm" | "md" | "lg" | "xl";
-  /** Muestra "WEIGHTLIFTING" debajo de BULL */
+  /**
+   * horizontal → [LOGO] [BULL / WEIGHTLIFTING]  (navbar)
+   * stack      → BULL / WEIGHTLIFTING apilados   (footer, hero)
+   */
+  layout?: "horizontal" | "stack";
+  /** Muestra "WEIGHTLIFTING" */
   withSubtitle?: boolean;
-  /** Muestra el ícono de marca sobre el texto */
+  /** Muestra el ícono de marca */
   withMark?: boolean;
+  /** Activa animación GSAP en el ícono */
+  animateMark?: boolean;
   asLink?: boolean;
   className?: string;
+  /** Tamaño en px para el ícono (sobrescribe el calculado por `size`) */
+  markSize?: number;
 }
 
-/* ── Escala por tamaño ─────────────────────────────────── */
+/* ── Escalas por tamaño ───────────────────────────────── */
 const SIZE_MAP = {
-  //            BULL text              WEIGHTLIFTING text     mark px
-  sm: { bull: "text-xl  tracking-[0.15em]", sub: "text-[9px]  tracking-[0.4em]",  mark: 28 },
-  md: { bull: "text-2xl tracking-[0.18em]", sub: "text-[11px] tracking-[0.45em]", mark: 36 },
-  lg: { bull: "text-4xl tracking-[0.2em]",  sub: "text-[15px] tracking-[0.5em]",  mark: 52 },
-  xl: { bull: "text-7xl tracking-[0.22em]", sub: "text-[26px] tracking-[0.55em]", mark: 80 },
+  sm: { bull: "text-lg   tracking-[0.15em]", sub: "text-[8px]  tracking-[0.4em]",  mark: 24, gap: "gap-1.5" },
+  md: { bull: "text-xl   tracking-[0.18em]", sub: "text-[9px]  tracking-[0.42em]", mark: 32, gap: "gap-2"   },
+  lg: { bull: "text-4xl  tracking-[0.2em]",  sub: "text-[15px] tracking-[0.5em]",  mark: 52, gap: "gap-3"   },
+  // XL reduzido para que el conjunto texto+marca sea más homogéneo
+  xl: { bull: "text-5xl  tracking-[0.22em]", sub: "text-[20px] tracking-[0.5em]", mark: 96, gap: "gap-4"   },
 };
 
 function LogoContent({
   size = "md",
+  layout = "stack",
   withSubtitle = true,
   withMark = false,
+  animateMark = false,
+  markSize,
   className,
 }: Omit<BullLogoProps, "asLink">) {
   const s = SIZE_MAP[size];
+  const isHorizontal = layout === "horizontal";
 
   return (
     <span
       className={cn(
-        "inline-flex flex-col items-center leading-none select-none",
+        "inline-flex leading-none select-none",
+        isHorizontal
+          ? `flex-row items-center ${s.gap}`
+          : "flex-col items-center",
         className
       )}
     >
-      {/* Ícono de marca (opcional) */}
+      {/* ── Ícono de marca ─────────────────────────────── */}
       {withMark && (
-        <BullMark size={s.mark} className="mb-2" />
+        <BullMark
+          size={markSize ?? s.mark}
+          animate={animateMark}
+          className={isHorizontal ? "" : "mb-2"}
+        />
       )}
 
-      {/* BULL — Horizon Bull, crimson */}
-      <span
-        className={cn(
-          "font-heading text-crimson uppercase block",
-          s.bull
-        )}
-      >
-        BULL
-      </span>
-
-      {/* WEIGHTLIFTING — Impact, blanco, prominente */}
-      {withSubtitle && (
+      {/* ── Texto ──────────────────────────────────────── */}
+      <span className={cn("inline-flex leading-none", isHorizontal ? "flex-col items-start" : "flex-col items-center")}>
+        {/* BULL — Horizon Bull, crimson */}
         <span
           className={cn(
-            "font-impact text-white uppercase block -mt-1",
-            s.sub
+            "font-heading text-crimson uppercase block",
+            s.bull
           )}
         >
-          WEIGHTLIFTING
+          BULL
         </span>
-      )}
+
+        {/* WEIGHTLIFTING — Impact, blanco */}
+        {withSubtitle && (
+          <span
+            className={cn(
+              "font-impact text-white uppercase block",
+              isHorizontal ? "-mt-0.5" : "-mt-1",
+              s.sub
+            )}
+          >
+            WEIGHTLIFTING
+          </span>
+        )}
+      </span>
     </span>
   );
 }
@@ -77,7 +101,7 @@ export function BullLogo({ asLink = true, ...props }: BullLogoProps) {
     return (
       <Link
         href="/"
-        className="hover:opacity-80 transition-opacity"
+        className="hover:opacity-85 transition-opacity"
         aria-label="Bull Weightlifting — Inicio"
       >
         <LogoContent {...props} />

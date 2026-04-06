@@ -1,13 +1,32 @@
 import Link from "next/link";
 import { getAdminProducts } from "@/lib/queries/admin";
+import { getCategories } from "@/lib/queries/categories";
 import { AdminProductRow } from "./AdminProductRow";
+import { AdminProductFilters } from "./AdminProductFilters";
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Productos | Admin" };
 
-export default async function AdminProductsPage() {
-  const products = await getAdminProducts().catch(() => []);
+interface AdminProductsPageProps {
+  searchParams: Promise<{
+    search?: string;
+    category?: string;
+    status?: string;
+  }>;
+}
+
+export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
+  const { search, category, status } = await searchParams;
+
+  const [products, categories] = await Promise.all([
+    getAdminProducts({
+      search,
+      category_id: category,
+      status: status as "active" | "inactive" | undefined,
+    }).catch(() => []),
+    getCategories().catch(() => []),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -28,21 +47,28 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
 
+      {/* Filtros */}
+      <AdminProductFilters
+        categories={categories}
+        search={search}
+        categoryId={category}
+        status={status}
+        total={products.length}
+      />
+
       {/* Table */}
       <div className="border border-white/5 rounded-sm overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
-              {["Producto", "Categoría", "Precio", "Variantes", "Estado", ""].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="text-left px-4 py-3 font-body text-[10px] tracking-[0.25em] uppercase text-white/30"
-                  >
-                    {h}
-                  </th>
-                )
-              )}
+              {["Producto", "Categoría", "Precio", "Variantes", "Estado", ""].map((h) => (
+                <th
+                  key={h}
+                  className="text-left px-4 py-3 font-body text-[10px] tracking-[0.25em] uppercase text-white/30"
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -52,7 +78,7 @@ export default async function AdminProductsPage() {
                   colSpan={6}
                   className="px-4 py-12 text-center font-body text-sm text-white/20"
                 >
-                  No hay productos. Crea el primero.
+                  No se encontraron productos.
                 </td>
               </tr>
             ) : (

@@ -60,6 +60,7 @@ export interface ProductVariant {
   product_id: string;
   size: string;
   color: string;
+  color_hex: string | null;
   stock: number;
   sku: string | null;
 }

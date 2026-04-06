@@ -18,19 +18,19 @@ const socialLinks = [
 export function Footer() {
   return (
     <footer className="border-t border-white/5 bg-background">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-8">
 
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
             <BullLogo size="lg" withSubtitle withMark className="mb-4" />
-            <p className="font-body text-xs text-white/30 leading-relaxed max-w-[180px] mt-2">
+            <p className="font-body text-xs text-white/30 leading-relaxed max-w-[200px] mt-2">
               Ropa deportiva de alto rendimiento. Diseñada para quienes no se detienen.
             </p>
           </div>
 
           {/* Tienda */}
-          <div>
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h3 className="font-bebas text-sm tracking-[0.3em] text-white mb-4">
               TIENDA
             </h3>
@@ -49,7 +49,7 @@ export function Footer() {
           </div>
 
           {/* Redes sociales */}
-          <div>
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h3 className="font-bebas text-sm tracking-[0.3em] text-white mb-4">
               SÍGUENOS
             </h3>
@@ -60,7 +60,7 @@ export function Footer() {
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex flex-col gap-0.5"
+                    className="group flex flex-col gap-0.5 items-center md:items-start"
                   >
                     <span className="font-body text-xs text-white/60 group-hover:text-white transition-colors tracking-wide flex items-center gap-1">
                       {s.label}
@@ -76,7 +76,7 @@ export function Footer() {
           </div>
 
           {/* Contacto */}
-          <div>
+          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
             <h3 className="font-bebas text-sm tracking-[0.3em] text-white mb-4">
               CONTACTO
             </h3>

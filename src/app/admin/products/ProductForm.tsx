@@ -31,6 +31,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 interface VariantState {
+  id?: string;
   size: string;
   color: string;
   color_hex: string;
@@ -54,7 +55,7 @@ interface ProductFormProps {
     discount_percent?: number | null;
     sale_start_at?: string | null;
     sale_end_at?: string | null;
-    variants?: { size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
+    variants?: { id: string; size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
     images?: { url: string; alt: string | null }[];
   };
 }
@@ -75,6 +76,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
   const [variants, setVariants] = useState<VariantState[]>(
     (product?.variants ?? []).map((v) => ({
+      id: v.id,
       size: v.size ?? "",
       color: v.color ?? "",
       color_hex: v.color_hex ?? "",
@@ -149,6 +151,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
     formData.append("variant_count", String(variants.length));
     variants.forEach((v, i) => {
+      if (v.id) formData.append(`variant_id_${i}`, v.id);
       formData.append(`variant_size_${i}`, v.size);
       formData.append(`variant_color_${i}`, v.color);
       formData.append(`variant_color_hex_${i}`, v.color_hex);

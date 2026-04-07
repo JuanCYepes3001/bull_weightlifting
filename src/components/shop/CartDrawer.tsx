@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -12,6 +13,9 @@ export function CartDrawer() {
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Portal mount guard — avoids SSR mismatch
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const drawer = drawerRef.current;
@@ -38,7 +42,11 @@ export function CartDrawer() {
 
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
-  return (
+  // Render into document.body via portal to escape the GSAP-transformed nav
+  // (transforms on ancestors break fixed positioning of descendants)
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       ref={containerRef}
       className="fixed inset-0 z-[200]"
@@ -197,6 +205,7 @@ export function CartDrawer() {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

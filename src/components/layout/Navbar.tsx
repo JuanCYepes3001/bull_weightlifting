@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import gsap from "gsap";
 import { useUser } from "@/hooks/useUser";
@@ -19,6 +20,24 @@ export function Navbar() {
   const { user, profile, isAdmin } = useUser();
   const itemCount = useCartStore((s) => s.itemCount);
   const setCartOpen = useCartStore((s) => s.setIsOpen);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isActive = (href: string) => {
+    const [path, query] = href.split("?");
+    if (path === "/") return pathname === "/";
+    if (!pathname.startsWith(path)) return false;
+    if (query) {
+      const params = new URLSearchParams(query);
+      for (const [k, v] of params.entries()) {
+        if (searchParams.get(k) !== v) return false;
+      }
+      return true;
+    }
+    // /products without query: active only if no on_sale param
+    if (path === "/products") return !searchParams.get("on_sale");
+    return true;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -60,9 +79,10 @@ export function Navbar() {
   }, [menuOpen]);
 
   const navLinks = [
+    { label: "Inicio",     href: "/" },
     { label: "Categorías", href: "/products#categories" },
-    { label: "Colección", href: "/products" },
-    { label: "Ofertas", href: "/products?on_sale=true", isSpecial: true },
+    { label: "Colección",  href: "/products" },
+    { label: "Ofertas",    href: "/products?on_sale=true", isOferta: true },
   ];
 
   return (
@@ -85,19 +105,32 @@ export function Navbar() {
         />
 
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`font-body text-[10px] tracking-widest uppercase transition-colors ${
-                link.isSpecial
-                  ? "text-crimson hover:text-crimson-light font-bold"
-                  : "text-white/50 hover:text-white"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative font-body text-[10px] tracking-widest uppercase transition-colors ${
+                  link.isOferta
+                    ? active
+                      ? "text-amber-300 font-bold"
+                      : "text-amber-400 hover:text-amber-300 font-bold"
+                    : active
+                    ? "text-white"
+                    : "text-white/50 hover:text-white"
+                }`}
+              >
+                {link.label}
+                {active && !link.isOferta && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-px bg-crimson" />
+                )}
+                {link.isOferta && (
+                  <span className="ml-1.5 inline-block w-1 h-1 rounded-full bg-amber-400 align-middle animate-pulse" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -159,18 +192,28 @@ export function Navbar() {
 
       {menuOpen && (
         <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className={`font-body text-sm tracking-widest uppercase transition-colors ${
-                link.isSpecial ? "text-crimson" : "text-white/60 hover:text-white"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={`font-body text-sm tracking-widest uppercase transition-colors ${
+                  link.isOferta
+                    ? "text-amber-400 font-bold"
+                    : active
+                    ? "text-white"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                {link.label}
+                {link.isOferta && (
+                  <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-amber-400 align-middle animate-pulse" />
+                )}
+              </Link>
+            );
+          })}
           <div className="border-t border-white/5 pt-5 flex flex-col gap-4">
             {user ? (
               <>

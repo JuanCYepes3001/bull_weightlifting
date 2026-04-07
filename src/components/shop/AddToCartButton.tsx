@@ -13,6 +13,7 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({ product, selectedVariant }: AddToCartButtonProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const setCartOpen = useCartStore((s) => s.setIsOpen);
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
@@ -25,11 +26,13 @@ export function AddToCartButton({ product, selectedVariant }: AddToCartButtonPro
       productSlug: product.slug,
       size: selectedVariant.size,
       color: selectedVariant.color,
-      price: product.price,
+      price: product.is_on_sale && product.sale_price ? product.sale_price : product.price,
       imageUrl: product.images?.[0]?.url ?? null,
     });
 
     setAdded(true);
+    // Brief delay before opening so the user sees the "Agregado" confirmation
+    setTimeout(() => setCartOpen(true), 400);
     setTimeout(() => setAdded(false), 2000);
   };
 

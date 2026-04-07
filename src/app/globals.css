@@ -5,9 +5,9 @@
 /* Horizon Bull — titular principal de marca */
 @font-face {
   font-family: "Horizon Bull";
-  src: url("/fonts/HorizonBull.woff2") format("woff2"),
-       url("/fonts/HorizonBull.woff") format("woff"),
-       url("/fonts/HorizonBull.ttf") format("truetype");
+  /* Usar los archivos disponibles en /public/fonts/ */
+  src: url("/fonts/Horizon.woff2") format("woff2"),
+       url("/fonts/Horizon.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -16,9 +16,10 @@
 /* Anantason — tipografía de apoyo */
 @font-face {
   font-family: "Anantason";
-  src: url("/fonts/Anantason.woff2") format("woff2"),
-       url("/fonts/Anantason.woff") format("woff"),
-       url("/fonts/Anantason.ttf") format("truetype");
+  /* No se dispone de Anantason; usar Bebas Neue como alternativa disponible
+     (archivo presente: public/fonts/BebasNeue-Regular.ttf). Esto permite
+     que las clases que usan "Anantason" sigan funcionando sin 404s. */
+  src: url("/fonts/BebasNeue-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

@@ -9,14 +9,16 @@ import {
   ChevronRight,
   Home,
   Tag,
+  Archive,
 } from "lucide-react";
 
 const adminNav = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Productos", href: "/admin/products", icon: Package },
-  { label: "Ofertas", href: "/admin/offers", icon: Tag },
-  { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
-  { label: "Usuarios", href: "/admin/users", icon: Users },
+  { label: "Dashboard",   href: "/admin/dashboard",  icon: LayoutDashboard },
+  { label: "Productos",   href: "/admin/products",   icon: Package },
+  { label: "Inventario",  href: "/admin/inventory",  icon: Archive },
+  { label: "Ofertas",     href: "/admin/offers",     icon: Tag },
+  { label: "Órdenes",     href: "/admin/orders",     icon: ShoppingCart },
+  { label: "Usuarios",    href: "/admin/users",      icon: Users },
 ];
 
 export default async function AdminLayout({

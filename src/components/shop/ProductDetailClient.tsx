@@ -100,6 +100,18 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </div>
         )}
 
+        {/* Low-stock urgency message */}
+        {selectedVariant && selectedVariant.stock > 0 && selectedVariant.stock <= 10 && (
+          <div className="flex items-center gap-2.5 border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+            <p className="font-body text-xs text-amber-400/90 leading-snug">
+              {selectedVariant.stock === 1
+                ? "¡Solo queda 1 en stock! Cómpralo antes de que se agote."
+                : `Solo quedan ${selectedVariant.stock} en stock. ¡No te quedes sin el tuyo!`}
+            </p>
+          </div>
+        )}
+
         {/* Info adicional */}
         <div className="border-t border-white/5 pt-4 space-y-2">
           <div className="flex justify-between">

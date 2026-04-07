@@ -34,12 +34,12 @@ export async function createProductAction(
     name: formData.get("name"),
     slug: formData.get("slug"),
     description: formData.get("description") || undefined,
-    price: formData.get("price"),
+    price: formData.get("price") ? Number(formData.get("price")) : undefined,
     category_id: formData.get("category_id"),
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
-    sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
-    discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
+    sale_price: formData.get("sale_price") && formData.get("sale_price") !== "" ? Number(formData.get("sale_price")) : null,
+    discount_percent: formData.get("discount_percent") && formData.get("discount_percent") !== "" ? Number(formData.get("discount_percent")) : null,
     sale_start_at: (formData.get("sale_start_at") as string) || null,
     sale_end_at: (formData.get("sale_end_at") as string) || null,
   };
@@ -107,12 +107,12 @@ export async function updateProductAction(
     name: formData.get("name"),
     slug: formData.get("slug"),
     description: formData.get("description") || undefined,
-    price: formData.get("price"),
+    price: formData.get("price") ? Number(formData.get("price")) : undefined,
     category_id: formData.get("category_id"),
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
-    sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
-    discount_percent: formData.get("discount_percent") ? Number(formData.get("discount_percent")) : null,
+    sale_price: formData.get("sale_price") && formData.get("sale_price") !== "" ? Number(formData.get("sale_price")) : null,
+    discount_percent: formData.get("discount_percent") && formData.get("discount_percent") !== "" ? Number(formData.get("discount_percent")) : null,
     sale_start_at: (formData.get("sale_start_at") as string) || null,
     sale_end_at: (formData.get("sale_end_at") as string) || null,
   };
@@ -129,9 +129,68 @@ export async function updateProductAction(
 
   if (error) return { error: "Error al actualizar el producto" };
 
+  // Variantes: actualizar existentes, insertar nuevas, borrar eliminadas
+  const variantCount = parseInt(formData.get("variant_count") as string) || 0;
+  const submittedVariants = Array.from({ length: variantCount }, (_, i) => ({
+    id: (formData.get(`variant_id_${i}`) as string) || null,
+    product_id: id,
+    size: formData.get(`variant_size_${i}`) as string,
+    color: formData.get(`variant_color_${i}`) as string,
+    color_hex: (formData.get(`variant_color_hex_${i}`) as string) || null,
+    stock: parseInt(formData.get(`variant_stock_${i}`) as string) || 0,
+    sku: (formData.get(`variant_sku_${i}`) as string) || null,
+  })).filter((v) => v.size && v.color);
+
+  const { data: existingVariants } = await supabase
+    .from("product_variants")
+    .select("id")
+    .eq("product_id", id);
+
+  const existingIds = new Set((existingVariants ?? []).map((v) => v.id));
+  const submittedIds = new Set(submittedVariants.filter((v) => v.id).map((v) => v.id!));
+
+  // Borrar solo las que ya no están en el formulario
+  const idsToDelete = [...existingIds].filter((vid) => !submittedIds.has(vid));
+  if (idsToDelete.length > 0) {
+    await supabase.from("product_variants").delete().in("id", idsToDelete);
+  }
+
+  // Actualizar las existentes
+  for (const v of submittedVariants.filter((v) => v.id && existingIds.has(v.id))) {
+    await supabase
+      .from("product_variants")
+      .update({ size: v.size, color: v.color, color_hex: v.color_hex, stock: v.stock, sku: v.sku || null })
+      .eq("id", v.id!);
+  }
+
+  // Insertar las nuevas (sin ID)
+  const toInsert = submittedVariants
+    .filter((v) => !v.id)
+    .map(({ id: _id, ...rest }) => rest);
+  if (toInsert.length > 0) {
+    await supabase.from("product_variants").insert(toInsert);
+  }
+
+  // Imágenes: borrar y reinsertar
+  await supabase.from("product_images").delete().eq("product_id", id);
+  const imageCount = parseInt(formData.get("image_count") as string) || 0;
+  if (imageCount > 0) {
+    const images = Array.from({ length: imageCount }, (_, i) => ({
+      product_id: id,
+      url: formData.get(`image_url_${i}`) as string,
+      alt: (formData.get(`image_alt_${i}`) as string) || null,
+      position: i,
+    })).filter((img) => img.url);
+
+    if (images.length > 0) {
+      await supabase.from("product_images").insert(images);
+    }
+  }
+
   revalidatePath("/admin/products");
   revalidatePath(`/products/${parsed.data.slug}`);
-  return { success: true };
+  revalidatePath("/products");
+  redirect("/admin/products");
 }
 
 export async function deleteProductAction(id: string): Promise<ActionResult> {

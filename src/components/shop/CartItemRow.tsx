@@ -54,24 +54,32 @@ export function CartItemRow({ item }: CartItemRowProps) {
         </button>
 
         {/* Controles cantidad */}
-        <div className="flex items-center border border-white/10">
-          <button
-            onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-            className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white transition-colors"
-            aria-label="Reducir"
-          >
-            <Minus size={12} />
-          </button>
-          <span className="w-8 text-center font-body text-xs text-white">
-            {item.quantity}
-          </span>
-          <button
-            onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-            className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white transition-colors"
-            aria-label="Aumentar"
-          >
-            <Plus size={12} />
-          </button>
+        <div className="flex flex-col items-end gap-1">
+          {item.maxStock !== undefined && item.quantity >= item.maxStock && (
+            <p className="font-body text-[9px] text-yellow-500/80 tracking-wide whitespace-nowrap">
+              Máx. {item.maxStock} uds.
+            </p>
+          )}
+          <div className="flex items-center border border-white/10">
+            <button
+              onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+              className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+              aria-label="Reducir"
+            >
+              <Minus size={12} />
+            </button>
+            <span className="w-8 text-center font-body text-xs text-white">
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+              disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
+              className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Aumentar"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

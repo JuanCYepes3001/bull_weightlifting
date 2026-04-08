@@ -15,9 +15,11 @@ export interface CheckoutItem {
 export interface ShippingAddress {
   full_name: string;
   phone: string;
-  address: string;
+  country: string;
+  state: string;
   city: string;
-  department: string;
+  address: string;
+  zip_code?: string;
   notes?: string;
 }
 
@@ -66,7 +68,7 @@ export async function createOrderAction(
     .from("orders")
     .insert({
       user_id: user.id,
-      status: "processing",
+      status: "pending",
       total,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       shipping_address: shipping as any,

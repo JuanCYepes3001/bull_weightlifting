@@ -122,14 +122,15 @@ export default async function OrderDetailPage({
           </p>
           {addr ? (
             <div className="font-body text-sm text-white space-y-1">
-              <p>{addr.street}</p>
+              <p>{addr.address ?? addr.street}</p>
               <p className="text-white/50">
                 {addr.city}
-                {addr.department ? `, ${addr.department}` : ""}
+                {(addr.state ?? addr.department) ? `, ${addr.state ?? addr.department}` : ""}
+                {addr.country ? `, ${addr.country}` : ""}
                 {addr.zip_code ? ` — ${addr.zip_code}` : ""}
               </p>
-              {addr.label && (
-                <p className="text-white/30 text-xs">{addr.label}</p>
+              {addr.full_name && (
+                <p className="text-white/40 text-xs">{addr.full_name}{addr.phone ? ` · ${addr.phone}` : ""}</p>
               )}
             </div>
           ) : (

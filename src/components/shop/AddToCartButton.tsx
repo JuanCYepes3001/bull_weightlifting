@@ -12,32 +12,46 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ product, selectedVariant }: AddToCartButtonProps) {
-  const addItem = useCartStore((s) => s.addItem);
+  const addItem     = useCartStore((s) => s.addItem);
   const setCartOpen = useCartStore((s) => s.setIsOpen);
+  const cartItems   = useCartStore((s) => s.items);
   const [added, setAdded] = useState(false);
 
+  const existingQty = selectedVariant
+    ? (cartItems.find((i) => i.variantId === selectedVariant.id)?.quantity ?? 0)
+    : 0;
+
+  const isOutOfStock  = selectedVariant ? selectedVariant.stock === 0 : false;
+  const isAtMaxStock  = selectedVariant ? existingQty >= selectedVariant.stock : false;
+  const isDisabled    = !selectedVariant || isOutOfStock || isAtMaxStock;
+
   const handleAdd = () => {
-    if (!selectedVariant) return;
+    if (!selectedVariant || isDisabled) return;
 
     addItem({
-      variantId: selectedVariant.id,
-      productId: product.id,
+      variantId:   selectedVariant.id,
+      productId:   product.id,
       productName: product.name,
       productSlug: product.slug,
-      size: selectedVariant.size,
-      color: selectedVariant.color,
-      price: product.is_on_sale && product.sale_price ? product.sale_price : product.price,
-      imageUrl: product.images?.[0]?.url ?? null,
+      size:        selectedVariant.size,
+      color:       selectedVariant.color,
+      price:       product.is_on_sale && product.sale_price ? product.sale_price : product.price,
+      imageUrl:    product.images?.[0]?.url ?? null,
+      maxStock:    selectedVariant.stock,
     });
 
     setAdded(true);
-    // Brief delay before opening so the user sees the "Agregado" confirmation
     setTimeout(() => setCartOpen(true), 400);
     setTimeout(() => setAdded(false), 2000);
   };
 
-  const isOutOfStock = selectedVariant ? selectedVariant.stock === 0 : false;
-  const isDisabled = !selectedVariant || isOutOfStock;
+  const label = (() => {
+    if (added)           return <><Check size={16} />Agregado al carrito</>;
+    if (!selectedVariant) return <><ShoppingBag size={16} />Selecciona color y talla</>;
+    if (isOutOfStock)    return "Sin stock";
+    if (isAtMaxStock)    return `Solo hay ${selectedVariant.stock} unidad${selectedVariant.stock !== 1 ? "es" : ""} disponible${selectedVariant.stock !== 1 ? "s" : ""}`;
+    return <><ShoppingBag size={16} />Agregar al carrito</>;
+  })();
 
   return (
     <button
@@ -52,24 +66,7 @@ export function AddToCartButton({ product, selectedVariant }: AddToCartButtonPro
           : "bg-crimson hover:bg-crimson-light text-white active:scale-[0.98]"
       )}
     >
-      {added ? (
-        <>
-          <Check size={16} />
-          Agregado al carrito
-        </>
-      ) : isOutOfStock ? (
-        "Sin stock"
-      ) : !selectedVariant ? (
-        <>
-          <ShoppingBag size={16} />
-          Selecciona color y talla
-        </>
-      ) : (
-        <>
-          <ShoppingBag size={16} />
-          Agregar al carrito
-        </>
-      )}
+      {label}
     </button>
   );
 }

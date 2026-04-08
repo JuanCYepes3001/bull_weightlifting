@@ -183,8 +183,8 @@
   "hotPaths": [
     {
       "path": "src\\app\\actions\\products.ts",
-      "accessCount": 19,
-      "lastAccessed": 1775627258532,
+      "accessCount": 20,
+      "lastAccessed": 1775667805925,
       "type": "file"
     },
     {
@@ -194,9 +194,27 @@
       "type": "file"
     },
     {
+      "path": "src\\store\\cartStore.ts",
+      "accessCount": 8,
+      "lastAccessed": 1775669876976,
+      "type": "file"
+    },
+    {
       "path": "src\\types\\database.ts",
+      "accessCount": 7,
+      "lastAccessed": 1775667805399,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\001_initial_schema.sql",
       "accessCount": 6,
-      "lastAccessed": 1775627068901,
+      "lastAccessed": 1775667824361,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\index.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775669851421,
       "type": "file"
     },
     {
@@ -206,15 +224,15 @@
       "type": "file"
     },
     {
-      "path": "supabase\\migrations\\001_initial_schema.sql",
+      "path": "src\\lib\\queries\\admin.ts",
       "accessCount": 5,
-      "lastAccessed": 1775614492850,
+      "lastAccessed": 1775667816581,
       "type": "file"
     },
     {
-      "path": "src\\lib\\queries\\admin.ts",
-      "accessCount": 4,
-      "lastAccessed": 1775614439217,
+      "path": "src\\components\\shop\\AddToCartButton.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1775670055703,
       "type": "file"
     },
     {
@@ -231,8 +249,32 @@
     },
     {
       "path": "src\\app\\admin\\orders\\page.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1775612303688,
+      "accessCount": 4,
+      "lastAccessed": 1775667812781,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\orders\\OrdersClient.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775667813140,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\cart\\page.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775667896663,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 4,
+      "lastAccessed": 1775667985392,
+      "type": "directory"
+    },
+    {
+      "path": "src\\app\\admin\\orders\\[id]\\page.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775669919784,
       "type": "file"
     },
     {
@@ -242,27 +284,9 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\admin\\orders\\OrdersClient.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1775612489611,
-      "type": "file"
-    },
-    {
       "path": "src\\app\\admin\\inventory\\InventoryManager.tsx",
       "accessCount": 3,
       "lastAccessed": 1775614445696,
-      "type": "file"
-    },
-    {
-      "path": "src\\store\\cartStore.ts",
-      "accessCount": 3,
-      "lastAccessed": 1775626928438,
-      "type": "file"
-    },
-    {
-      "path": "src\\types\\index.ts",
-      "accessCount": 3,
-      "lastAccessed": 1775627153411,
       "type": "file"
     },
     {
@@ -272,16 +296,34 @@
       "type": "file"
     },
     {
+      "path": "src\\app\\actions\\orders.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775667805863,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\inventory\\CategoryManager.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775667813260,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 3,
+      "lastAccessed": 1775667984725,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\shop\\CartItemRow.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775669886335,
+      "type": "file"
+    },
+    {
       "path": "src\\app\\admin\\layout.tsx",
       "accessCount": 2,
       "lastAccessed": 1775611871796,
       "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 2,
-      "lastAccessed": 1775611897674,
-      "type": "directory"
     },
     {
       "path": "src\\app\\api\\admin\\reports\\orders\\route.ts",
@@ -302,24 +344,6 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\admin\\inventory\\CategoryManager.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1775614445495,
-      "type": "file"
-    },
-    {
-      "path": "src\\app\\actions\\orders.ts",
-      "accessCount": 2,
-      "lastAccessed": 1775626819058,
-      "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 2,
-      "lastAccessed": 1775626897879,
-      "type": "directory"
-    },
-    {
       "path": "src\\components\\layout\\Navbar.tsx",
       "accessCount": 2,
       "lastAccessed": 1775626932782,
@@ -332,9 +356,15 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\(shop)\\cart\\page.tsx",
+      "path": "supabase\\migrations\\010_admin_activity_log.sql",
       "accessCount": 2,
-      "lastAccessed": 1775626940297,
+      "lastAccessed": 1775667824475,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\009_more_categories.sql",
+      "accessCount": 2,
+      "lastAccessed": 1775667989576,
       "type": "file"
     },
     {
@@ -347,12 +377,6 @@
       "path": "src\\app\\admin\\products\\bulk\\page.tsx",
       "accessCount": 1,
       "lastAccessed": 1775611780564,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\010_admin_activity_log.sql",
-      "accessCount": 1,
-      "lastAccessed": 1775611783375,
       "type": "file"
     },
     {
@@ -410,12 +434,6 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\admin\\orders\\[id]\\page.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1775612342055,
-      "type": "file"
-    },
-    {
       "path": "src\\app\\admin\\orders\\[id]\\OrderStatusUpdater.tsx",
       "accessCount": 1,
       "lastAccessed": 1775612350857,
@@ -458,27 +476,9 @@
       "type": "file"
     },
     {
-      "path": "src\\components\\shop\\AddToCartButton.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1775626827167,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\009_more_categories.sql",
-      "accessCount": 1,
-      "lastAccessed": 1775626828070,
-      "type": "file"
-    },
-    {
       "path": "src\\lib\\queries\\categories.ts",
       "accessCount": 1,
       "lastAccessed": 1775626828274,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\shop\\CartItemRow.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1775626893042,
       "type": "file"
     }
   ],

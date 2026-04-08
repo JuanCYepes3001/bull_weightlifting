@@ -17,7 +17,9 @@ export interface Address {
   label: string;
   street: string;
   city: string;
-  department: string;
+  state?: string;      // unified field: department / estado / provincia
+  department?: string; // legacy — kept for backward compat with existing orders
+  country?: string;
   zip_code?: string;
   is_default: boolean;
 }

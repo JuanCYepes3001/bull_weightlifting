@@ -12,6 +12,7 @@ export interface LocalCartItem {
   price: number;
   imageUrl: string | null;
   quantity: number;
+  maxStock?: number; // stock available at the time of adding — used for client-side limit
 }
 
 interface CartStore {
@@ -38,15 +39,20 @@ export const useCartStore = create<CartStore>()(
             (i) => i.variantId === incoming.variantId
           );
           if (existing) {
+            const max = incoming.maxStock ?? existing.maxStock;
+            const newQty = existing.quantity + quantity;
+            const capped = max !== undefined ? Math.min(newQty, max) : newQty;
             return {
               items: state.items.map((i) =>
                 i.variantId === incoming.variantId
-                  ? { ...i, quantity: i.quantity + quantity }
+                  ? { ...i, quantity: capped, maxStock: max }
                   : i
               ),
             };
           }
-          return { items: [...state.items, { ...incoming, quantity }] };
+          const max = incoming.maxStock;
+          const capped = max !== undefined ? Math.min(quantity, max) : quantity;
+          return { items: [...state.items, { ...incoming, quantity: capped }] };
         });
       },
 
@@ -61,9 +67,12 @@ export const useCartStore = create<CartStore>()(
           return;
         }
         set((state) => ({
-          items: state.items.map((i) =>
-            i.variantId === variantId ? { ...i, quantity } : i
-          ),
+          items: state.items.map((i) => {
+            if (i.variantId !== variantId) return i;
+            const capped =
+              i.maxStock !== undefined ? Math.min(quantity, i.maxStock) : quantity;
+            return { ...i, quantity: capped };
+          }),
         }));
       },
 

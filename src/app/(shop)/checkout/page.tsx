@@ -1,49 +1,73 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { createOrderAction } from "@/app/actions/checkout";
+import { getUserAddressesAction } from "@/app/actions/addresses";
+import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/AddressForm";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { STATES_BY_COUNTRY } from "@/lib/locationData";
+import type { Address } from "@/types";
 
 const PAYMENT_METHODS = [
-  { id: "nequi",        label: "Nequi",          icon: "📱" },
-  { id: "daviplata",    label: "Daviplata",       icon: "💳" },
-  { id: "contraentrega",label: "Contra entrega",  icon: "🚚" },
-  { id: "simulado",     label: "Pago simulado ✓", icon: "🧪" },
+  { id: "nequi",         label: "Nequi",          icon: "📱" },
+  { id: "daviplata",     label: "Daviplata",       icon: "💳" },
+  { id: "contraentrega", label: "Contra entrega",  icon: "🚚" },
+  { id: "simulado",      label: "Pago simulado ✓", icon: "🧪" },
 ];
 
+function stateName(countryCode: string, stateCode: string): string {
+  return STATES_BY_COUNTRY[countryCode]?.find((s) => s.code === stateCode)?.name ?? stateCode;
+}
+
 export default function CheckoutPage() {
-  const items = useCartStore((s) => s.items);
-  const total = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
-  const clearCart = useCartStore((s) => s.clearCart);
+  const items      = useCartStore((s) => s.items);
+  const total      = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
+  const clearCart  = useCartStore((s) => s.clearCart);
 
   const [paymentMethod, setPaymentMethod] = useState("simulado");
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError]     = useState<string | null>(null);
+  const [isPending, startTransition]      = useTransition();
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    full_name: "",
-    phone: "",
-    address: "",
-    city: "",
-    department: "",
-    notes: "",
-  });
+  // Contact fields
+  const [contact, setContact] = useState({ full_name: "", phone: "", notes: "" });
+  const setC = (key: keyof typeof contact, val: string) =>
+    setContact((c) => ({ ...c, [key]: val }));
 
-  const set = (key: keyof typeof form, val: string) =>
-    setForm((f) => ({ ...f, [key]: val }));
+  // Address
+  const [addrValue, setAddrValue] = useState<AddressValue>(EMPTY_ADDRESS);
+
+  // Saved addresses (for logged-in users)
+  const [savedAddresses, setSavedAddresses]           = useState<Address[]>([]);
+  const [selectedSavedId, setSelectedSavedId]         = useState<string | null>(null);
+
+  useEffect(() => {
+    getUserAddressesAction().then(setSavedAddresses);
+  }, []);
+
+  const applySavedAddress = (addr: Address) => {
+    setSelectedSavedId(addr.id);
+    setAddrValue({
+      country: addr.country ?? "CO",
+      state:   addr.state ?? addr.department ?? "",
+      city:    addr.city ?? "",
+      address: addr.street ?? "",
+      zip_code: addr.zip_code ?? "",
+    });
+  };
 
   const isFormValid =
-    form.full_name.trim() &&
-    form.phone.trim() &&
-    form.address.trim() &&
-    form.city.trim() &&
-    form.department.trim();
+    contact.full_name.trim() &&
+    contact.phone.trim() &&
+    addrValue.country &&
+    addrValue.state &&
+    addrValue.city &&
+    addrValue.address.trim();
 
   if (items.length === 0) {
     return (
@@ -66,28 +90,29 @@ export default function CheckoutPage() {
     setServerError(null);
 
     const checkoutItems = items.map((i) => ({
-      variantId: i.variantId,
+      variantId:   i.variantId,
       productName: i.productName,
-      size: i.size,
-      color: i.color,
-      price: i.price,
-      quantity: i.quantity,
+      size:        i.size,
+      color:       i.color,
+      price:       i.price,
+      quantity:    i.quantity,
     }));
 
     startTransition(async () => {
       const result = await createOrderAction(
         checkoutItems,
         {
-          full_name: form.full_name,
-          phone: form.phone,
-          address: form.address,
-          city: form.city,
-          department: form.department,
-          notes: form.notes || undefined,
+          full_name: contact.full_name,
+          phone:     contact.phone,
+          country:   addrValue.country,
+          state:     stateName(addrValue.country, addrValue.state),
+          city:      addrValue.city,
+          address:   addrValue.address,
+          zip_code:  addrValue.zip_code || undefined,
+          notes:     contact.notes || undefined,
         },
         paymentMethod
       );
-      // Only reaches here on error (success redirects server-side)
       if (result && "error" in result) {
         setServerError(result.error);
       } else if (result && "orderId" in result) {
@@ -108,56 +133,80 @@ export default function CheckoutPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-10">
-        {/* LEFT — Envío + Pago */}
+        {/* LEFT */}
         <div className="flex-1 space-y-8">
 
-          {/* Envío */}
+          {/* Saved addresses */}
+          {savedAddresses.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                <MapPin size={13} className="text-crimson" />
+                <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-white/40">
+                  Direcciones guardadas
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {savedAddresses.map((addr) => (
+                  <button
+                    key={addr.id}
+                    type="button"
+                    onClick={() => applySavedAddress(addr)}
+                    className={`text-left px-4 py-3 border transition-all ${
+                      selectedSavedId === addr.id
+                        ? "border-crimson bg-crimson/10"
+                        : "border-white/10 hover:border-white/30"
+                    }`}
+                  >
+                    <p className="font-body text-xs text-white">{addr.label}</p>
+                    <p className="font-body text-[10px] text-white/40 mt-0.5">
+                      {addr.street}, {addr.city}
+                    </p>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => { setSelectedSavedId(null); setAddrValue(EMPTY_ADDRESS); }}
+                  className={`text-left px-4 py-3 border transition-all ${
+                    selectedSavedId === null
+                      ? "border-crimson bg-crimson/10"
+                      : "border-white/10 hover:border-white/30"
+                  }`}
+                >
+                  <p className="font-body text-xs text-white">+ Nueva dirección</p>
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Contacto */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-white/5">
               <Truck size={13} className="text-crimson" />
               <h2 className="font-body text-[10px] tracking-[0.3em] uppercase text-white/40">
-                Datos de envío
+                Datos de contacto y envío
               </h2>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Nombre completo"
                 placeholder="Juan García"
-                value={form.full_name}
-                onChange={(e) => set("full_name", e.target.value)}
+                value={contact.full_name}
+                onChange={(e) => setC("full_name", e.target.value)}
                 required
               />
               <Input
                 label="Teléfono / WhatsApp"
                 placeholder="3001234567"
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
+                value={contact.phone}
+                onChange={(e) => setC("phone", e.target.value)}
                 required
               />
             </div>
-            <Input
-              label="Dirección"
-              placeholder="Calle 80 #25-40, Apto 301"
-              value={form.address}
-              onChange={(e) => set("address", e.target.value)}
-              required
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Ciudad"
-                placeholder="Bogotá"
-                value={form.city}
-                onChange={(e) => set("city", e.target.value)}
-                required
-              />
-              <Input
-                label="Departamento"
-                placeholder="Cundinamarca"
-                value={form.department}
-                onChange={(e) => set("department", e.target.value)}
-                required
-              />
-            </div>
+
+            {/* Address selects */}
+            <AddressForm value={addrValue} onChange={setAddrValue} />
+
             <div>
               <label className="block font-body text-[11px] tracking-widest uppercase text-white/50 mb-1.5">
                 Notas (opcional)
@@ -166,8 +215,8 @@ export default function CheckoutPage() {
                 rows={2}
                 placeholder="Instrucciones especiales para la entrega..."
                 className="w-full bg-white/5 border border-white/10 px-4 py-3 font-body text-sm text-white placeholder-white/20 focus:outline-none focus:border-crimson/60 resize-none"
-                value={form.notes}
-                onChange={(e) => set("notes", e.target.value)}
+                value={contact.notes}
+                onChange={(e) => setC("notes", e.target.value)}
               />
             </div>
           </section>
@@ -217,7 +266,6 @@ export default function CheckoutPage() {
           <div className="border border-white/5 p-6 space-y-5 sticky top-24">
             <h2 className="text-white text-xl">RESUMEN</h2>
 
-            {/* Items */}
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {items.map((item) => (
                 <div key={item.variantId} className="flex gap-3">
@@ -234,6 +282,11 @@ export default function CheckoutPage() {
                     <p className="font-body text-[10px] text-white/40">
                       {item.quantity} × ${item.price.toLocaleString("es-CO")}
                     </p>
+                    {item.maxStock !== undefined && item.quantity >= item.maxStock && (
+                      <p className="font-body text-[9px] text-yellow-500/70 mt-0.5">
+                        Stock máximo alcanzado
+                      </p>
+                    )}
                   </div>
                   <p className="font-bebas text-sm tracking-wider text-white shrink-0">
                     ${(item.price * item.quantity).toLocaleString("es-CO")}

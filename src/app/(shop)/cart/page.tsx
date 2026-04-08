@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
-  const total = useCartStore((s) => s.total);
+  const total = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   const clearCart = useCartStore((s) => s.clearCart);
 
   if (items.length === 0) {

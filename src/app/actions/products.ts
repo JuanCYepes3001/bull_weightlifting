@@ -42,6 +42,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().positive("Precio debe ser mayor a 0"),
   category_id: z.string().uuid("Categoría requerida"),
+  gender: z.enum(["hombre", "mujer", "unisex"]).default("unisex"),
   is_active: z.coerce.boolean().default(true),
   is_on_sale: z.coerce.boolean().default(false),
   sale_price: z.coerce.number().nullable().optional(),
@@ -61,6 +62,7 @@ export async function createProductAction(
     description: formData.get("description") || undefined,
     price: formData.get("price"),
     category_id: formData.get("category_id"),
+    gender: formData.get("gender") || "unisex",
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
@@ -99,7 +101,8 @@ export async function createProductAction(
     })).filter((v) => v.size && v.color);
 
     if (variants.length > 0) {
-      await supabase.from("product_variants").insert(variants);
+      const { error: variantsError } = await supabase.from("product_variants").insert(variants);
+      if (variantsError) return { error: `Error al guardar variantes: ${variantsError.message}` };
     }
   }
 
@@ -121,7 +124,7 @@ export async function createProductAction(
   await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "product_created", parsed.data.name, product.id);
 
   revalidatePath("/admin/products");
-  redirect("/admin/products");
+  redirect("/admin/products?saved=true");
 }
 
 export async function updateProductAction(
@@ -136,6 +139,7 @@ export async function updateProductAction(
     description: formData.get("description") || undefined,
     price: formData.get("price"),
     category_id: formData.get("category_id"),
+    gender: formData.get("gender") || "unisex",
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") ? Number(formData.get("sale_price")) : null,
@@ -170,7 +174,8 @@ export async function updateProductAction(
     })).filter((v) => v.size && v.color);
 
     if (variants.length > 0) {
-      await supabase.from("product_variants").insert(variants);
+      const { error: variantsError } = await supabase.from("product_variants").insert(variants);
+      if (variantsError) return { error: `Error al guardar variantes: ${variantsError.message}` };
     }
   }
 
@@ -195,7 +200,7 @@ export async function updateProductAction(
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
   revalidatePath(`/products/${parsed.data.slug}`);
-  redirect("/admin/products");
+  redirect("/admin/products?saved=true");
 }
 
 export async function deleteProductAction(id: string): Promise<ActionResult> {
@@ -399,6 +404,43 @@ export async function bulkCreateProductsAction(
   }
 
   return { success: true, created, errors: errors.length ? errors : undefined };
+}
+
+/* ─── Category actions ─────────────────────────────────── */
+
+export async function createCategoryAction(formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+
+  const name   = (formData.get("name") as string)?.trim();
+  const gender = formData.get("gender") as string;
+
+  if (!name) return { error: "Nombre requerido" };
+  if (!["hombre", "mujer", "unisex"].includes(gender))
+    return { error: "Género inválido" };
+
+  const slug = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("categories")
+    .insert({ name, slug, gender: gender as "hombre" | "mujer" | "unisex" });
+
+  if (error) {
+    if (error.code === "23505")
+      return { error: "Ya existe una categoría con ese nombre" };
+    return { error: "Error al crear la categoría" };
+  }
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/products/new");
+  return { success: true };
 }
 
 /* ─── Inventory actions ────────────────────────────────── */

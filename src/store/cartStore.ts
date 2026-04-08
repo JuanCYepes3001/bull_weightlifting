@@ -22,8 +22,6 @@ interface CartStore {
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
-  itemCount: number;
-  total: number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -70,17 +68,6 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => set({ items: [] }),
-
-      get itemCount() {
-        return get().items.reduce((sum, i) => sum + i.quantity, 0);
-      },
-
-      get total() {
-        return get().items.reduce(
-          (sum, i) => sum + i.price * i.quantity,
-          0
-        );
-      },
     }),
     {
       name: "bull-cart",

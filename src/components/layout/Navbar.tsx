@@ -18,7 +18,7 @@ export function Navbar() {
   const [navMarkSize, setNavMarkSize] = useState<number | undefined>(undefined);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { user, profile, isAdmin } = useUser();
-  const itemCount = useCartStore((s) => s.itemCount);
+  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const setCartOpen = useCartStore((s) => s.setIsOpen);
   const pathname = usePathname();
   const searchParams = useSearchParams();

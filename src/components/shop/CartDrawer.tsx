@@ -8,8 +8,8 @@ import gsap from "gsap";
 import { useCartStore } from "@/store/cartStore";
 
 export function CartDrawer() {
-  const { items, isOpen, setIsOpen, total, removeItem, updateQuantity } =
-    useCartStore();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity } = useCartStore();
+  const total = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

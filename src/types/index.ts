@@ -42,6 +42,7 @@ export interface Product {
   description: string | null;
   price: number;
   category_id: string;
+  gender: Gender;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -60,6 +61,7 @@ export interface ProductVariant {
   product_id: string;
   size: string;
   color: string;
+  color_hex: string | null;
   stock: number;
   sku: string | null;
 }

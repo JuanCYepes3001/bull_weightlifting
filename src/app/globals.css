@@ -8,19 +8,29 @@
   /* Usar los archivos disponibles en /public/fonts/ */
   src: url("/fonts/Horizon.woff2") format("woff2"),
        url("/fonts/Horizon.otf") format("opentype");
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
-/* Anantason — tipografía de apoyo */
+/* Variante bold de Horizon (para la marca BULL) */
 @font-face {
-  font-family: "Anantason";
-  /* No se dispone de Anantason; usar Bebas Neue como alternativa disponible
-     (archivo presente: public/fonts/BebasNeue-Regular.ttf). Esto permite
-     que las clases que usan "Anantason" sigan funcionando sin 404s. */
+  font-family: "Horizon Bull";
+  src: url("/fonts/Horizon.woff2") format("woff2"),
+       url("/fonts/Horizon.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Antonason — tipografía de apoyo
+   Nota: la familia "Antonason" no está incluida en el repositorio; se mapea
+   temporalmente a Bebas Neue (archivo disponible) como fallback para evitar 404s.
+   Si añade los archivos de Antonason, reemplace la src por los archivos reales. */
+@font-face {
+  font-family: "Antonason";
   src: url("/fonts/BebasNeue-Regular.ttf") format("truetype");
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -45,7 +55,7 @@
   --font-horizon:    "Horizon Bull",    Impact, sans-serif;
   --font-bebas:      var(--font-bebas-neue), "Bebas Neue", Impact, sans-serif;
   --font-impact:     Impact,            "Haettenschweiler", Arial Narrow Bold, sans-serif;
-  --font-anantason:  "Anantason",       serif;
+  --font-antonason:  "Antonason",       serif;
   --font-arimo:      var(--font-arimo-gf), "Arimo", Arial, sans-serif;
   --font-body:       var(--font-arimo-gf), "Arimo", Arial, sans-serif;
 
@@ -84,9 +94,9 @@ body::before {
 
 /* ─── Typography defaults ─────────────────────────────── */
 
-/* H1 → Anantason + Impact fallback: títulos de sección, manifiestos */
+/* H1 → Antonason: título principal */
 h1 {
-  font-family: "Anantason", Impact, "Haettenschweiler", Arial Narrow Bold, sans-serif;
+  font-family: "Antonason", var(--font-bebas), Impact, "Haettenschweiler", Arial Narrow Bold, sans-serif;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.05;
@@ -100,12 +110,12 @@ h2 {
   line-height: 1.05;
 }
 
-/* H3–H6 → Horizon Bull: headings secundarios */
+/* H3–H6 → usar fuente de cuerpo (Arimo) por defecto */
 h3, h4, h5, h6 {
-  font-family: var(--font-horizon);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  line-height: 1.1;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.2;
 }
 
 /* ─── Scrollbar ───────────────────────────────────────── */
@@ -124,3 +134,16 @@ h3, h4, h5, h6 {
   outline: 2px solid #8C1A0A;
   outline-offset: 2px;
 }
+
+/* Utilidades rápidas para forzar las familias esperadas donde se usan clases */
+.font-heading { font-family: var(--font-horizon); font-weight: 700; }
+.font-horizon { font-family: var(--font-horizon); }
+.font-bebas { font-family: var(--font-bebas); }
+.font-body { font-family: var(--font-body); }
+
+/* Marca: forzar que cualquier texto con la clase .brand-bull use Horizon bold */
+.brand-bull, .brand-bull * { font-family: var(--font-horizon) !important; font-weight: 700 !important; }
+
+/* Antonason helpers / alias (corregir typo histórico 'anantason') */
+.font-antonason { font-family: var(--font-antonason); }
+.font-anantason { font-family: var(--font-antonason); /* alias legacy */ }

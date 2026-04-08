@@ -86,6 +86,7 @@ export type Database = {
           price: number;
           category_id: string;
           is_active: boolean;
+          gender: "hombre" | "mujer" | "unisex";
           created_at: string;
           updated_at: string;
           is_on_sale: boolean;
@@ -102,6 +103,7 @@ export type Database = {
           price: number;
           category_id: string;
           is_active?: boolean;
+          gender?: "hombre" | "mujer" | "unisex";
           created_at?: string;
           updated_at?: string;
           is_on_sale?: boolean;
@@ -118,6 +120,7 @@ export type Database = {
           price?: number;
           category_id?: string;
           is_active?: boolean;
+          gender?: "hombre" | "mujer" | "unisex";
           created_at?: string;
           updated_at?: string;
           is_on_sale?: boolean;
@@ -142,6 +145,7 @@ export type Database = {
           product_id: string;
           size: string;
           color: string;
+          color_hex: string | null;
           stock: number;
           sku: string | null;
           created_at: string;
@@ -152,6 +156,7 @@ export type Database = {
           product_id: string;
           size: string;
           color: string;
+          color_hex?: string | null;
           stock?: number;
           sku?: string | null;
           created_at?: string;
@@ -162,6 +167,7 @@ export type Database = {
           product_id?: string;
           size?: string;
           color?: string;
+          color_hex?: string | null;
           stock?: number;
           sku?: string | null;
           created_at?: string;

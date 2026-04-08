@@ -42,6 +42,7 @@ const schema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().positive("Precio debe ser mayor a 0"),
   category_id: z.string().uuid("Selecciona una categoría"),
+  gender: z.enum(["hombre", "mujer", "unisex"]).default("unisex"),
   is_active: z.boolean().default(true),
   is_on_sale: z.boolean().default(false),
   sale_price: z.coerce.number().nullable().optional(),
@@ -51,6 +52,12 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+
+const GENDERS = [
+  { value: "hombre",  label: "Hombre" },
+  { value: "mujer",   label: "Mujer" },
+  { value: "unisex",  label: "Unisex" },
+] as const;
 
 interface MatrixEntry { stock: number; sku: string; }
 
@@ -63,6 +70,7 @@ interface ProductFormProps {
     description: string | null;
     price: number;
     category_id: string;
+    gender?: "hombre" | "mujer" | "unisex";
     is_active: boolean;
     is_on_sale?: boolean;
     sale_price?: number | null;
@@ -121,6 +129,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       description: product?.description ?? "",
       price: product?.price ?? 0,
       category_id: product?.category_id ?? "",
+      gender: product?.gender ?? "unisex",
       is_active: product?.is_active ?? true,
       is_on_sale: product?.is_on_sale ?? false,
       sale_price: product?.sale_price ?? null,
@@ -366,6 +375,26 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             )}
           </div>
         </div>
+        {/* Género */}
+        <div>
+          <label className="block font-body text-[11px] tracking-widest uppercase text-white/50 mb-1.5">
+            Género
+          </label>
+          <div className="flex gap-2">
+            {GENDERS.map((g) => (
+              <label key={g.value} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value={g.value}
+                  className="accent-crimson"
+                  {...register("gender")}
+                />
+                <span className="font-body text-sm text-white/60">{g.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <label className="flex items-center gap-3 cursor-pointer select-none">
           <input type="checkbox" className="w-4 h-4 accent-crimson" {...register("is_active")} />
           <span className="font-body text-sm text-white/60">Producto activo (visible en tienda)</span>

@@ -19,7 +19,12 @@
       "Bash(taskkill /PID 6316 /F)",
       "Bash(cmd /c \"taskkill /PID 6316 /F\")",
       "Bash(git add:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics_directory",
+      "mcp__plugin_oh-my-claudecode_t__state_list_active",
+      "mcp__plugin_oh-my-claudecode_t__state_write",
+      "mcp__plugin_oh-my-claudecode_t__state_clear"
     ]
   },
   "disabledMcpjsonServers": [

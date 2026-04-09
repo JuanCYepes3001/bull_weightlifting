@@ -69,16 +69,16 @@ export default function CheckoutSuccessPage() {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-        <Link href="/profile/account" className="flex-1">
-          <Button variant="ghost" size="lg" className="w-full gap-2">
-            <ShoppingBag size={14} />
+        <Link href="/profile/account" className="flex-1 min-w-0">
+          <Button variant="secondary" size="md" className="w-full gap-2 text-[10px] tracking-widest">
+            <ShoppingBag size={13} />
             Mis órdenes
           </Button>
         </Link>
-        <Link href="/products" className="flex-1">
-          <Button size="lg" className="w-full gap-2">
+        <Link href="/products" className="flex-1 min-w-0">
+          <Button size="md" className="w-full gap-2 text-[10px] tracking-widest">
             Seguir comprando
-            <ArrowRight size={14} />
+            <ArrowRight size={13} />
           </Button>
         </Link>
       </div>

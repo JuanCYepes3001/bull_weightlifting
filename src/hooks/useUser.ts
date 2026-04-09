@@ -29,9 +29,12 @@ export function useUser(): UseUserReturn {
       setProfile(data as Profile | null);
     };
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      if (user) fetchProfile(user.id);
+    // Use getSession() first — reads from cookie/localStorage immediately (no network).
+    // This eliminates the flash where the navbar shows "Ingresar" on page load/back.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      if (sessionUser) fetchProfile(sessionUser.id);
       setLoading(false);
     });
 
@@ -42,6 +45,7 @@ export function useUser(): UseUserReturn {
           fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setLoading(false);
         }
       }
     );

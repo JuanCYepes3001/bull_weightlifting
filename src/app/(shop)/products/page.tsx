@@ -21,23 +21,16 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const { gender, category, q, page, on_sale } = await searchParams;
   const isSalePage = on_sale === "true";
 
+  const currentPage = Math.max(1, parseInt(page ?? "1", 10));
+
   const filters: ProductFilters = {
     ...(category && { category_id: category }),
+    ...(gender && { gender: gender as Gender }),
     ...(q && { search: q }),
     ...(isSalePage && { on_sale: true }),
   };
 
-  // Filtro por género: buscar categorías de ese género primero
-  let categoryIds: string[] | null = null;
-  if (gender) {
-    const cats = await getCategories(gender as Gender).catch(() => []);
-    categoryIds = cats.map((c) => c.id);
-    if (categoryIds.length === 0) categoryIds = ["__none__"];
-  }
-
-  const currentPage = Math.max(1, parseInt(page ?? "1", 10));
-
-  const [{ data: products, total, total_pages }, allCategories] =
+  const [{ data: filteredProducts, total, total_pages }, allCategories] =
     await Promise.all([
       getProducts(filters, { page: currentPage, limit: 12 }).catch(() => ({
         data: [],
@@ -48,11 +41,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       })),
       getCategories().catch(() => []),
     ]);
-
-  // Filtrar por gender en memoria si no está directo en query
-  const filteredProducts = categoryIds
-    ? products.filter((p) => categoryIds!.includes(p.category_id))
-    : products;
 
   const genders: Array<{ value: Gender | "all"; label: string }> = [
     { value: "all", label: "Todo" },

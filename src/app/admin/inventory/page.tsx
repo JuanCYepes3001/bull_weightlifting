@@ -70,7 +70,30 @@ export default async function InventoryPage() {
       )}
 
       {/* Category manager */}
-      <CategoryManager categories={categories as any} />
+      <div className="space-y-1">
+        <p className="font-body text-[9px] tracking-[0.4em] uppercase text-white/20 px-1">
+          Filtros de productos
+        </p>
+        <CategoryManager categories={categories as any} />
+      </div>
+
+      {/* Collection section (empty — for future campaigns/seasons) */}
+      <div className="border border-white/5 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-white/10" />
+            <h3 className="font-body text-[10px] tracking-[0.3em] uppercase text-white/40">
+              Colección (0)
+            </h3>
+          </div>
+          <span className="font-body text-[9px] tracking-widest uppercase px-3 py-1.5 border border-white/5 text-white/20">
+            Próximamente
+          </span>
+        </div>
+        <p className="font-body text-xs text-white/20">
+          Esta sección se usará para campañas de temporada, drops y colecciones especiales. Actualmente vacía.
+        </p>
+      </div>
 
       {/* Product inventory manager */}
       <InventoryManager products={products as any} />

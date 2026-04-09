@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Menu, X, ShoppingBag, Search } from "lucide-react";
 import gsap from "gsap";
 import { useUser } from "@/hooks/useUser";
 import { logoutAction } from "@/app/actions/auth";
@@ -14,6 +14,10 @@ import { CartDrawer } from "@/components/shop/CartDrawer";
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
   const [navMarkSize, setNavMarkSize] = useState<number | undefined>(undefined);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -78,6 +82,20 @@ export function Navbar() {
     );
   }, [menuOpen]);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    setSearchQuery("");
+    router.push(`/products?q=${encodeURIComponent(q)}`);
+  };
+
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50);
+  }, [searchOpen]);
+
   const navLinks = [
     { label: "Inicio",     href: "/" },
     { label: "Categorías", href: "/products#categories" },
@@ -134,6 +152,31 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          {/* Search */}
+          {searchOpen ? (
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar productos..."
+                className="w-48 bg-white/5 border border-white/20 px-3 py-1.5 font-body text-xs text-white placeholder-white/30 focus:outline-none focus:border-crimson/60 transition-colors"
+                onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+              />
+              <button type="submit" className="text-white/50 hover:text-white transition-colors" aria-label="Buscar">
+                <Search size={15} />
+              </button>
+              <button type="button" onClick={() => setSearchOpen(false)} className="text-white/30 hover:text-white transition-colors" aria-label="Cerrar búsqueda">
+                <X size={15} />
+              </button>
+            </form>
+          ) : (
+            <button onClick={() => setSearchOpen(true)} className="text-white/50 hover:text-white transition-colors" aria-label="Buscar">
+              <Search size={16} />
+            </button>
+          )}
+
           {/* Cart icon con badge */}
           <button onClick={() => setCartOpen(true)} className="relative text-white/50 hover:text-white transition-colors" aria-label="Carrito">
             <ShoppingBag size={18} />
@@ -192,6 +235,18 @@ export function Navbar() {
 
       {menuOpen && (
         <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
+          {/* Mobile search */}
+          <form onSubmit={(e) => { handleSearch(e); setMenuOpen(false); }} className="flex items-center gap-2 border border-white/10 px-3 py-2">
+            <Search size={14} className="text-white/30 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar productos o categorías..."
+              className="flex-1 bg-transparent font-body text-xs text-white placeholder-white/25 focus:outline-none"
+            />
+          </form>
+
           {navLinks.map((link) => {
             const active = isActive(link.href);
             return (

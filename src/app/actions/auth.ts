@@ -79,23 +79,29 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
   const street  = formData.get("address") as string | null;
   const zipCode = formData.get("zip_code") as string | null;
 
-  if (signUpData.user && country && state && city && street) {
-    const initialAddress = {
-      id: crypto.randomUUID(),
-      label: "Casa",
-      street,
-      city,
-      state,
-      department: state, // backward compat
-      country,
-      zip_code: zipCode || undefined,
-      is_default: true,
-    };
-    // Best-effort: update profile created by trigger
+  if (signUpData.user) {
+    const updates: Record<string, unknown> = { name: fullName };
+
+    if (country && state && city && street) {
+      updates.addresses = [
+        {
+          id: crypto.randomUUID(),
+          label: "Casa",
+          street,
+          city,
+          state,
+          department: state,
+          country,
+          zip_code: zipCode || undefined,
+          is_default: true,
+        },
+      ];
+    }
+
+    // Upsert handles the race condition where the trigger hasn't created the row yet
     await supabase
       .from("profiles")
-      .update({ addresses: [initialAddress], name: fullName })
-      .eq("user_id", signUpData.user.id);
+      .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
   }
 
   redirect("/");

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sendWhatsApp, buildOrderConfirmationMessage } from "@/lib/whatsapp";
 
 export interface CheckoutItem {
   variantId: string;
@@ -72,7 +73,7 @@ export async function createOrderAction(
       total,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       shipping_address: shipping as any,
-      payment_id: `SIM-${Date.now()}`,
+      payment_id: `${paymentMethod.toUpperCase()}-${Date.now()}`,
       payment_status: paymentStatus,
       notes: shipping.notes || null,
     })
@@ -104,6 +105,18 @@ export async function createOrderAction(
       .update({ stock: v.stock - item.quantity })
       .eq("id", item.variantId);
   }
+
+  // Send WhatsApp confirmation (non-blocking)
+  void sendWhatsApp(
+    shipping.phone,
+    buildOrderConfirmationMessage({
+      orderId: order.id,
+      items,
+      total,
+      paymentMethod,
+      shipping,
+    })
+  );
 
   redirect(`/checkout/success?order=${order.id}`);
 }

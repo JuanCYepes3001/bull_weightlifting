@@ -13,7 +13,11 @@ export function VariantSelector({ variants, onSelect }: VariantSelectorProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
-  const colors = [...new Set(variants.map((v) => v.color))];
+  // Colores únicos con su hex
+  const colorMap = new Map<string, string | null>();
+  variants.forEach((v) => {
+    if (!colorMap.has(v.color)) colorMap.set(v.color, v.color_hex ?? null);
+  });
 
   const sizesForColor = selectedColor
     ? variants.filter((v) => v.color === selectedColor)
@@ -36,31 +40,51 @@ export function VariantSelector({ variants, onSelect }: VariantSelectorProps) {
       {/* Selector de color */}
       <div>
         <p className="font-body text-xs tracking-widest uppercase text-white/40 mb-3">
-          Color{selectedColor ? <span className="text-white/70 ml-2 normal-case tracking-normal">{selectedColor}</span> : ""}
+          Color
+          {selectedColor && (
+            <span className="text-white/70 ml-2 normal-case tracking-normal">
+              {selectedColor}
+            </span>
+          )}
         </p>
         <div className="flex flex-wrap gap-2">
-          {colors.map((color) => (
-            <button
-              key={color}
-              onClick={() => handleColorSelect(color)}
-              className={cn(
-                "font-body text-xs tracking-wide px-3 py-1.5 border transition-colors",
-                selectedColor === color
-                  ? "border-crimson text-white bg-crimson/10"
-                  : "border-white/10 text-white/50 hover:border-white/30 hover:text-white"
-              )}
-            >
-              {color}
-            </button>
-          ))}
+          {Array.from(colorMap.entries()).map(([color, hex]) => {
+            const isSelected = selectedColor === color;
+            return (
+              <button
+                key={color}
+                onClick={() => handleColorSelect(color)}
+                title={color}
+                className={cn(
+                  "flex items-center gap-2 font-body text-xs tracking-wide px-3 py-1.5 border transition-colors",
+                  isSelected
+                    ? "border-crimson text-white bg-crimson/10"
+                    : "border-white/10 text-white/50 hover:border-white/30 hover:text-white"
+                )}
+              >
+                {hex && (
+                  <span
+                    className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
+                    style={{ backgroundColor: hex }}
+                  />
+                )}
+                {color}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Selector de talla (visible solo si hay color seleccionado) */}
+      {/* Selector de talla */}
       {selectedColor && (
         <div>
           <p className="font-body text-xs tracking-widest uppercase text-white/40 mb-3">
-            Talla{selectedSize ? <span className="text-white/70 ml-2 normal-case tracking-normal">{selectedSize}</span> : ""}
+            Talla
+            {selectedSize && (
+              <span className="text-white/70 ml-2 normal-case tracking-normal">
+                {selectedSize}
+              </span>
+            )}
           </p>
           <div className="flex flex-wrap gap-2">
             {sizesForColor.map((v) => (

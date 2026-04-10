@@ -77,7 +77,7 @@ interface ProductFormProps {
     discount_percent?: number | null;
     sale_start_at?: string | null;
     sale_end_at?: string | null;
-    variants?: { size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
+    variants?: { id: string; size: string; color: string; color_hex?: string | null; stock: number; sku?: string | null }[];
     images?: { url: string; alt: string | null }[];
   };
 }

@@ -14,10 +14,13 @@ import { STATES_BY_COUNTRY } from "@/lib/locationData";
 import type { Address } from "@/types";
 
 const PAYMENT_METHODS = [
-  { id: "nequi",         label: "Nequi",          icon: "📱" },
-  { id: "daviplata",     label: "Daviplata",       icon: "💳" },
-  { id: "contraentrega", label: "Contra entrega",  icon: "🚚" },
-  { id: "simulado",      label: "Pago simulado ✓", icon: "🧪" },
+  { id: "nequi",         label: "Nequi",          icon: "📱", note: null },
+  { id: "daviplata",     label: "Daviplata",       icon: "💳", note: null },
+  { id: "contraentrega", label: "Contra entrega",  icon: "🚚", note: "Pago en efectivo al recibir" },
+  { id: "paypal",        label: "PayPal",          icon: "🌐", note: "Pago internacional" },
+  { id: "dollar_app",   label: "Dollar App",      icon: "💵", note: "Pago en dólares" },
+  { id: "global66",     label: "Global 66",       icon: "🌍", note: "Transferencia internacional" },
+  { id: "simulado",      label: "Pago simulado ✓", icon: "🧪", note: null },
 ];
 
 function stateName(countryCode: string, stateCode: string): string {
@@ -235,16 +238,21 @@ export default function CheckoutPage() {
                   key={m.id}
                   type="button"
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`flex items-center gap-3 px-4 py-3 border text-left transition-all ${
+                  className={`flex items-start gap-3 px-4 py-3 border text-left transition-all ${
                     paymentMethod === m.id
                       ? "border-crimson bg-crimson/10 text-white"
                       : "border-white/10 text-white/40 hover:border-white/30 hover:text-white/70"
                   }`}
                 >
-                  <span className="text-base">{m.icon}</span>
-                  <span className="font-body text-xs tracking-wide">{m.label}</span>
+                  <span className="text-base mt-0.5">{m.icon}</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="font-body text-xs tracking-wide block">{m.label}</span>
+                    {m.note && (
+                      <span className="font-body text-[10px] text-white/25 block mt-0.5">{m.note}</span>
+                    )}
+                  </span>
                   {paymentMethod === m.id && (
-                    <CheckCircle2 size={13} className="ml-auto text-crimson" />
+                    <CheckCircle2 size={13} className="mt-0.5 text-crimson shrink-0" />
                   )}
                 </button>
               ))}

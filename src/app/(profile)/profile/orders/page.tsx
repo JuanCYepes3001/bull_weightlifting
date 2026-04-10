@@ -80,9 +80,10 @@ export default async function OrdersPage() {
             const statusClass = STATUS_COLOR[order.status] ?? "text-white/40 border-white/10 bg-white/5";
 
             return (
-              <div
+              <Link
                 key={order.id}
-                className="flex items-center gap-4 border border-white/5 bg-white/[0.02] px-5 py-4"
+                href={`/profile/orders/${order.id}`}
+                className="flex items-center gap-4 border border-white/5 bg-white/[0.02] px-5 py-4 hover:bg-white/[0.04] hover:border-white/10 transition-colors"
               >
                 {/* Order info */}
                 <div className="flex-1 min-w-0 space-y-1">
@@ -117,7 +118,7 @@ export default async function OrdersPage() {
                   </p>
                   <p className="font-body text-[9px] text-white/25 uppercase tracking-wider">COP</p>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

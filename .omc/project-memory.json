@@ -182,6 +182,127 @@
       ]
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "src\\app\\actions\\orders.ts",
+      "accessCount": 9,
+      "lastAccessed": 1775788190695,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 7,
+      "lastAccessed": 1775787989763,
+      "type": "directory"
+    },
+    {
+      "path": "src\\app\\actions\\checkout.ts",
+      "accessCount": 4,
+      "lastAccessed": 1775788051048,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\shop\\ProductDetailClient.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775788118678,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(profile)\\profile\\orders\\page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775787893920,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\checkout\\page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775788136887,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\whatsapp.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775788142242,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(profile)\\profile\\orders\\[id]\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1775788185429,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\orders\\[id]\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775787834562,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\queries",
+      "accessCount": 1,
+      "lastAccessed": 1775787834774,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib\\queries\\orders.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775787838245,
+      "type": "file"
+    },
+    {
+      "path": "docs\\notifications-technical-report.md",
+      "accessCount": 1,
+      "lastAccessed": 1775787900851,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\products\\[slug]\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775787913381,
+      "type": "file"
+    },
+    {
+      "path": "src\\types",
+      "accessCount": 1,
+      "lastAccessed": 1775787925710,
+      "type": "directory"
+    },
+    {
+      "path": "supabase\\migrations\\008_add_sales_dates.sql",
+      "accessCount": 1,
+      "lastAccessed": 1775787942648,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 1,
+      "lastAccessed": 1775787948149,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib\\supabase\\admin.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775787992338,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\email.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775788038406,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\shop\\SaleTimer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775788079503,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\shop\\SizeGuide.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775788100872,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }

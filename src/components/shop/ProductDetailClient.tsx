@@ -5,6 +5,8 @@ import Image from "next/image";
 import type { Product, ProductVariant } from "@/types";
 import { VariantSelector } from "./VariantSelector";
 import { AddToCartButton } from "./AddToCartButton";
+import { SaleTimer } from "./SaleTimer";
+import { SizeGuide } from "./SizeGuide";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -72,10 +74,32 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         </h1>
 
         {/* Precio */}
-        <p className="font-bebas text-3xl tracking-wider text-white">
-          ${product.price.toLocaleString("es-CO")}
-          <span className="font-body text-sm text-white/30 ml-2 tracking-normal normal-case">COP</span>
-        </p>
+        {product.is_on_sale && product.sale_price ? (
+          <div className="space-y-1">
+            <p className="font-bebas text-3xl tracking-wider text-crimson">
+              ${product.sale_price.toLocaleString("es-CO")}
+              <span className="font-body text-sm text-crimson/60 ml-2 tracking-normal normal-case">COP</span>
+            </p>
+            <p className="font-body text-sm text-white/30 line-through">
+              ${product.price.toLocaleString("es-CO")} COP
+            </p>
+            {product.discount_percent && (
+              <span className="inline-block font-body text-[10px] tracking-widest uppercase bg-crimson text-white px-2 py-0.5">
+                −{product.discount_percent}% OFF
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="font-bebas text-3xl tracking-wider text-white">
+            ${product.price.toLocaleString("es-CO")}
+            <span className="font-body text-sm text-white/30 ml-2 tracking-normal normal-case">COP</span>
+          </p>
+        )}
+
+        {/* Sale timer */}
+        {product.is_on_sale && product.sale_end_at && (
+          <SaleTimer saleEndAt={product.sale_end_at} />
+        )}
 
         {/* Separador */}
         <div className="h-px bg-white/5" />
@@ -111,6 +135,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             </p>
           </div>
         )}
+
+        {/* Guía de tallas */}
+        <SizeGuide />
 
         {/* Info adicional */}
         <div className="border-t border-white/5 pt-4 space-y-2">

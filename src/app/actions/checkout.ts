@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { sendWhatsApp, buildOrderConfirmationMessage } from "@/lib/whatsapp";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export interface CheckoutItem {
   variantId: string;
@@ -106,17 +107,21 @@ export async function createOrderAction(
       .eq("id", item.variantId);
   }
 
-  // Send WhatsApp confirmation (non-blocking)
+  // Send notifications (non-blocking)
   void sendWhatsApp(
     shipping.phone,
-    buildOrderConfirmationMessage({
+    buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping })
+  );
+  if (user.email) {
+    void sendOrderConfirmationEmail({
+      to: user.email,
       orderId: order.id,
       items,
       total,
       paymentMethod,
       shipping,
-    })
-  );
+    });
+  }
 
   redirect(`/checkout/success?order=${order.id}`);
 }

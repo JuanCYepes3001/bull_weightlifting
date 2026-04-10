@@ -50,6 +50,9 @@ export function buildOrderConfirmationMessage(params: {
     nequi:        "Nequi",
     daviplata:    "Daviplata",
     contraentrega:"Contra entrega (pago en efectivo al recibir)",
+    paypal:       "PayPal",
+    dollar_app:   "Dollar App",
+    global66:     "Global 66",
     simulado:     "Pago simulado",
   };
 
@@ -73,6 +76,28 @@ export function buildOrderConfirmationMessage(params: {
     `*Destinatario:* ${shipping.full_name}` +
     codNote +
     `\n\n¡Gracias por tu compra! Pronto confirmaremos el envío. 🚀`
+  );
+}
+
+export function buildDeliveredMessage(params: {
+  orderId: string;
+  total: number;
+  isContraEntrega: boolean;
+}): string {
+  const { orderId, total, isContraEntrega } = params;
+  const shortId = orderId.slice(0, 8).toUpperCase();
+
+  const codNote = isContraEntrega
+    ? `\n\n💵 Esperamos que hayas podido realizar el pago de *$${total.toLocaleString("es-CO")} COP* al mensajero.`
+    : "";
+
+  return (
+    `🏋️ *BULL WEIGHTLIFTING*\n` +
+    `✅ *¡Tu pedido fue entregado!*\n\n` +
+    `*Orden #${shortId}*\n` +
+    `*Estado:* Entregado` +
+    codNote +
+    `\n\n¡Gracias por confiar en BULL WEIGHTLIFTING! 💪🏆\nSi tienes algún problema con tu pedido, contáctanos.`
   );
 }
 

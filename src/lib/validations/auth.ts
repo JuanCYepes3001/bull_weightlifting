@@ -11,10 +11,14 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z
+  firstName: z
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(60, "El nombre es demasiado largo"),
+  lastName: z
+    .string()
+    .min(2, "El apellido debe tener al menos 2 caracteres")
+    .max(60, "El apellido es demasiado largo"),
   email: z
     .string()
     .min(1, "El email es requerido")

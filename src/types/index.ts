@@ -17,7 +17,9 @@ export interface Address {
   label: string;
   street: string;
   city: string;
-  department: string;
+  state?: string;      // unified field: department / estado / provincia
+  department?: string; // legacy — kept for backward compat with existing orders
+  country?: string;
   zip_code?: string;
   is_default: boolean;
 }
@@ -42,6 +44,7 @@ export interface Product {
   description: string | null;
   price: number;
   category_id: string;
+  gender: Gender;
   is_active: boolean;
   created_at: string;
   updated_at: string;

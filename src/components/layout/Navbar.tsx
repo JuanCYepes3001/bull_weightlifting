@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Menu, X, ShoppingBag, Search } from "lucide-react";
 import gsap from "gsap";
 import { useUser } from "@/hooks/useUser";
 import { logoutAction } from "@/app/actions/auth";
@@ -13,12 +14,34 @@ import { CartDrawer } from "@/components/shop/CartDrawer";
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
   const [navMarkSize, setNavMarkSize] = useState<number | undefined>(undefined);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { user, profile, isAdmin } = useUser();
-  const itemCount = useCartStore((s) => s.itemCount);
+  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const setCartOpen = useCartStore((s) => s.setIsOpen);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isActive = (href: string) => {
+    const [path, query] = href.split("?");
+    if (path === "/") return pathname === "/";
+    if (!pathname.startsWith(path)) return false;
+    if (query) {
+      const params = new URLSearchParams(query);
+      for (const [k, v] of params.entries()) {
+        if (searchParams.get(k) !== v) return false;
+      }
+      return true;
+    }
+    // /products without query: active only if no on_sale param
+    if (path === "/products") return !searchParams.get("on_sale");
+    return true;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -59,10 +82,25 @@ export function Navbar() {
     );
   }, [menuOpen]);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    setSearchQuery("");
+    router.push(`/products?q=${encodeURIComponent(q)}`);
+  };
+
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50);
+  }, [searchOpen]);
+
   const navLinks = [
-    { label: "Categorías", href: "/categories" },
-    { label: "Colección", href: "/products" },
-    { label: "Ofertas", href: "/products?on_sale=true" },
+    { label: "Inicio",     href: "/" },
+    { label: "Categorías", href: "/products#categories" },
+    { label: "Colección",  href: "/products" },
+    { label: "Ofertas",    href: "/products?on_sale=true", isOferta: true },
   ];
 
   return (
@@ -85,18 +123,60 @@ export function Navbar() {
         />
 
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-body text-[10px] tracking-widest uppercase transition-colors text-white/50 hover:text-white"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative font-body text-[10px] tracking-widest uppercase transition-colors ${
+                  link.isOferta
+                    ? active
+                      ? "text-amber-300 font-bold"
+                      : "text-amber-400 hover:text-amber-300 font-bold"
+                    : active
+                    ? "text-white"
+                    : "text-white/50 hover:text-white"
+                }`}
+              >
+                {link.label}
+                {active && !link.isOferta && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-px bg-crimson" />
+                )}
+                {link.isOferta && (
+                  <span className="ml-1.5 inline-block w-1 h-1 rounded-full bg-amber-400 align-middle animate-pulse" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          {/* Search */}
+          {searchOpen ? (
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar productos..."
+                className="w-48 bg-white/5 border border-white/20 px-3 py-1.5 font-body text-xs text-white placeholder-white/30 focus:outline-none focus:border-crimson/60 transition-colors"
+                onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+              />
+              <button type="submit" className="text-white/50 hover:text-white transition-colors" aria-label="Buscar">
+                <Search size={15} />
+              </button>
+              <button type="button" onClick={() => setSearchOpen(false)} className="text-white/30 hover:text-white transition-colors" aria-label="Cerrar búsqueda">
+                <X size={15} />
+              </button>
+            </form>
+          ) : (
+            <button onClick={() => setSearchOpen(true)} className="text-white/50 hover:text-white transition-colors" aria-label="Buscar">
+              <Search size={16} />
+            </button>
+          )}
+
           {/* Cart icon con badge */}
           <button onClick={() => setCartOpen(true)} className="relative text-white/50 hover:text-white transition-colors" aria-label="Carrito">
             <ShoppingBag size={18} />
@@ -155,16 +235,40 @@ export function Navbar() {
 
       {menuOpen && (
         <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="font-body text-sm tracking-widest uppercase transition-colors text-white/60 hover:text-white"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {/* Mobile search */}
+          <form onSubmit={(e) => { handleSearch(e); setMenuOpen(false); }} className="flex items-center gap-2 border border-white/10 px-3 py-2">
+            <Search size={14} className="text-white/30 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar productos o categorías..."
+              className="flex-1 bg-transparent font-body text-xs text-white placeholder-white/25 focus:outline-none"
+            />
+          </form>
+
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={`font-body text-sm tracking-widest uppercase transition-colors ${
+                  link.isOferta
+                    ? "text-amber-400 font-bold"
+                    : active
+                    ? "text-white"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                {link.label}
+                {link.isOferta && (
+                  <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-amber-400 align-middle animate-pulse" />
+                )}
+              </Link>
+            );
+          })}
           <div className="border-t border-white/5 pt-5 flex flex-col gap-4">
             {user ? (
               <>

@@ -25,6 +25,7 @@ export async function getProducts(
     .range(offset, offset + limit - 1);
 
   if (filters.category_id) query = query.eq("category_id", filters.category_id);
+  if (filters.gender) query = query.or(`gender.eq.${filters.gender},gender.eq.unisex`);
   if (filters.min_price !== undefined) query = query.gte("price", filters.min_price);
   if (filters.max_price !== undefined) query = query.lte("price", filters.max_price);
   if (filters.on_sale !== undefined) {

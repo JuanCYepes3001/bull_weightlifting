@@ -6,6 +6,31 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 
+/* ─── Activity log helper ──────────────────────────────── */
+async function logActivity(
+  adminId: string,
+  adminName: string,
+  action: string,
+  entityName: string,
+  entityId?: string,
+  details?: Record<string, unknown>
+) {
+  try {
+    const supabase = await createClient();
+    await supabase.from("admin_activity_log").insert({
+      admin_id: adminId,
+      admin_name: adminName,
+      action,
+      entity_type: "product",
+      entity_id: entityId ?? null,
+      entity_name: entityName,
+      details: details ?? null,
+    });
+  } catch {
+    // Non-critical — don't fail the main action if logging fails
+  }
+}
+
 type ActionResult = { error?: string; success?: boolean; id?: string };
 
 const productSchema = z.object({
@@ -17,6 +42,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().positive("Precio debe ser mayor a 0"),
   category_id: z.string().uuid("Categoría requerida"),
+  gender: z.enum(["hombre", "mujer", "unisex"]).default("unisex"),
   is_active: z.coerce.boolean().default(true),
   is_on_sale: z.coerce.boolean().default(false),
   sale_price: z.coerce.number().nullable().optional(),
@@ -28,7 +54,7 @@ const productSchema = z.object({
 export async function createProductAction(
   formData: FormData
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const { profile: adminProfile } = await requireAdmin();
 
   const raw = {
     name: formData.get("name"),
@@ -36,6 +62,7 @@ export async function createProductAction(
     description: formData.get("description") || undefined,
     price: formData.get("price") ? Number(formData.get("price")) : undefined,
     category_id: formData.get("category_id"),
+    gender: formData.get("gender") || "unisex",
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") && formData.get("sale_price") !== "" ? Number(formData.get("sale_price")) : null,
@@ -74,7 +101,8 @@ export async function createProductAction(
     })).filter((v) => v.size && v.color);
 
     if (variants.length > 0) {
-      await supabase.from("product_variants").insert(variants);
+      const { error: variantsError } = await supabase.from("product_variants").insert(variants);
+      if (variantsError) return { error: `Error al guardar variantes: ${variantsError.message}` };
     }
   }
 
@@ -93,15 +121,17 @@ export async function createProductAction(
     }
   }
 
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "product_created", parsed.data.name, product.id);
+
   revalidatePath("/admin/products");
-  redirect("/admin/products");
+  redirect("/admin/products?saved=true");
 }
 
 export async function updateProductAction(
   id: string,
   formData: FormData
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const { profile: adminProfile } = await requireAdmin();
 
   const raw = {
     name: formData.get("name"),
@@ -109,6 +139,7 @@ export async function updateProductAction(
     description: formData.get("description") || undefined,
     price: formData.get("price") ? Number(formData.get("price")) : undefined,
     category_id: formData.get("category_id"),
+    gender: formData.get("gender") || "unisex",
     is_active: formData.get("is_active") === "true",
     is_on_sale: formData.get("is_on_sale") === "true",
     sale_price: formData.get("sale_price") && formData.get("sale_price") !== "" ? Number(formData.get("sale_price")) : null,
@@ -129,49 +160,26 @@ export async function updateProductAction(
 
   if (error) return { error: "Error al actualizar el producto" };
 
-  // Variantes: actualizar existentes, insertar nuevas, borrar eliminadas
+  // Delete + reinsert variants
+  await supabase.from("product_variants").delete().eq("product_id", id);
   const variantCount = parseInt(formData.get("variant_count") as string) || 0;
-  const submittedVariants = Array.from({ length: variantCount }, (_, i) => ({
-    id: (formData.get(`variant_id_${i}`) as string) || null,
-    product_id: id,
-    size: formData.get(`variant_size_${i}`) as string,
-    color: formData.get(`variant_color_${i}`) as string,
-    color_hex: (formData.get(`variant_color_hex_${i}`) as string) || null,
-    stock: parseInt(formData.get(`variant_stock_${i}`) as string) || 0,
-    sku: (formData.get(`variant_sku_${i}`) as string) || null,
-  })).filter((v) => v.size && v.color);
+  if (variantCount > 0) {
+    const variants = Array.from({ length: variantCount }, (_, i) => ({
+      product_id: id,
+      size: formData.get(`variant_size_${i}`) as string,
+      color: formData.get(`variant_color_${i}`) as string,
+      color_hex: (formData.get(`variant_color_hex_${i}`) as string) || null,
+      stock: parseInt(formData.get(`variant_stock_${i}`) as string) || 0,
+      sku: (formData.get(`variant_sku_${i}`) as string) || null,
+    })).filter((v) => v.size && v.color);
 
-  const { data: existingVariants } = await supabase
-    .from("product_variants")
-    .select("id")
-    .eq("product_id", id);
-
-  const existingIds = new Set((existingVariants ?? []).map((v) => v.id));
-  const submittedIds = new Set(submittedVariants.filter((v) => v.id).map((v) => v.id!));
-
-  // Borrar solo las que ya no están en el formulario
-  const idsToDelete = [...existingIds].filter((vid) => !submittedIds.has(vid));
-  if (idsToDelete.length > 0) {
-    await supabase.from("product_variants").delete().in("id", idsToDelete);
+    if (variants.length > 0) {
+      const { error: variantsError } = await supabase.from("product_variants").insert(variants);
+      if (variantsError) return { error: `Error al guardar variantes: ${variantsError.message}` };
+    }
   }
 
-  // Actualizar las existentes
-  for (const v of submittedVariants.filter((v) => v.id && existingIds.has(v.id))) {
-    await supabase
-      .from("product_variants")
-      .update({ size: v.size, color: v.color, color_hex: v.color_hex, stock: v.stock, sku: v.sku || null })
-      .eq("id", v.id!);
-  }
-
-  // Insertar las nuevas (sin ID)
-  const toInsert = submittedVariants
-    .filter((v) => !v.id)
-    .map(({ id: _id, ...rest }) => rest);
-  if (toInsert.length > 0) {
-    await supabase.from("product_variants").insert(toInsert);
-  }
-
-  // Imágenes: borrar y reinsertar
+  // Delete + reinsert images
   await supabase.from("product_images").delete().eq("product_id", id);
   const imageCount = parseInt(formData.get("image_count") as string) || 0;
   if (imageCount > 0) {
@@ -187,20 +195,45 @@ export async function updateProductAction(
     }
   }
 
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "product_updated", parsed.data.name, id);
+
   revalidatePath("/admin/products");
+  revalidatePath("/admin/inventory");
   revalidatePath(`/products/${parsed.data.slug}`);
-  revalidatePath("/products");
-  redirect("/admin/products");
+  redirect("/admin/products?saved=true");
 }
 
 export async function deleteProductAction(id: string): Promise<ActionResult> {
-  await requireAdmin();
+  const { profile: adminProfile } = await requireAdmin();
   const supabase = await createClient();
+
+  // Grab name before deletion for the log
+  const { data: prod } = await supabase.from("products").select("name").eq("id", id).single();
 
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return { error: "Error al eliminar el producto" };
 
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "product_deleted", prod?.name ?? id);
+
   revalidatePath("/admin/products");
+  revalidatePath("/admin/inventory");
+  return { success: true };
+}
+
+export async function bulkDeleteProductsAction(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { error: "Nada seleccionado" };
+  const { profile: adminProfile } = await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: prods } = await supabase.from("products").select("name").in("id", ids);
+  const { error } = await supabase.from("products").delete().in("id", ids);
+  if (error) return { error: "Error al eliminar productos" };
+
+  const names = (prods ?? []).map((p: any) => p.name).join(", ");
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "bulk_deleted", names, undefined, { count: ids.length });
+
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/inventory");
   return { success: true };
 }
 
@@ -283,7 +316,192 @@ export async function bulkUpdateOffersAction(
   revalidatePath("/admin/products");
   revalidatePath("/admin/offers");
   revalidatePath("/products");
-  
+
   return { success: true };
+}
+
+/* ─── Bulk create ─────────────────────────────────────── */
+
+export interface BulkProductInput {
+  name: string;
+  price: number;
+  category_id: string;
+  description?: string;
+  sizes: string[];       // e.g. ["S","M","L"]
+  colors: string[];      // e.g. ["Negro","Blanco"]
+  stock: number;         // applied to all generated variants
+}
+
+export async function bulkCreateProductsAction(
+  inputs: BulkProductInput[]
+): Promise<ActionResult & { created?: number; errors?: string[] }> {
+  if (!inputs.length) return { error: "Sin productos para crear" };
+  const { profile: adminProfile } = await requireAdmin();
+  const supabase = await createClient();
+
+  let created = 0;
+  const errors: string[] = [];
+
+  for (const input of inputs) {
+    if (!input.name || !input.price || !input.category_id) {
+      errors.push(`"${input.name || "sin nombre"}": faltan campos requeridos`);
+      continue;
+    }
+
+    const slug = input.name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-") + `-${Date.now().toString(36)}`;
+
+    const { data: product, error: prodError } = await supabase
+      .from("products")
+      .insert({
+        name: input.name,
+        slug,
+        description: input.description || null,
+        price: input.price,
+        category_id: input.category_id,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (prodError) {
+      errors.push(`"${input.name}": ${prodError.message}`);
+      continue;
+    }
+
+    // Generate variants from sizes × colors
+    if (input.sizes.length > 0 && input.colors.length > 0) {
+      const variants = input.sizes.flatMap((size) =>
+        input.colors.map((color) => ({
+          product_id: product.id,
+          size,
+          color,
+          stock: input.stock,
+        }))
+      );
+      await supabase.from("product_variants").insert(variants);
+    }
+
+    created++;
+  }
+
+  if (created > 0) {
+    await logActivity(
+      adminProfile.user_id,
+      adminProfile.name ?? "Admin",
+      "product_created",
+      `${created} productos (carga masiva)`,
+      undefined,
+      { count: created }
+    );
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/inventory");
+  }
+
+  return { success: true, created, errors: errors.length ? errors : undefined };
+}
+
+/* ─── Category actions ─────────────────────────────────── */
+
+export async function createCategoryAction(formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+
+  const name   = (formData.get("name") as string)?.trim();
+  const gender = formData.get("gender") as string;
+
+  if (!name) return { error: "Nombre requerido" };
+  if (!["hombre", "mujer", "unisex"].includes(gender))
+    return { error: "Género inválido" };
+
+  const slug = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("categories")
+    .insert({ name, slug, gender: gender as "hombre" | "mujer" | "unisex" });
+
+  if (error) {
+    if (error.code === "23505")
+      return { error: "Ya existe una categoría con ese nombre" };
+    return { error: "Error al crear la categoría" };
+  }
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/products/new");
+  return { success: true };
+}
+
+/* ─── Inventory actions ────────────────────────────────── */
+
+export async function updateVariantStockAction(
+  variantId: string,
+  stock: number
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("product_variants")
+    .update({ stock })
+    .eq("id", variantId);
+
+  if (error) return { error: "Error al actualizar stock" };
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
+export async function deleteVariantAction(variantId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("product_variants")
+    .delete()
+    .eq("id", variantId);
+
+  if (error) return { error: "Error al eliminar variante" };
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
+export async function addVariantToProductAction(
+  productId: string,
+  data: { size: string; color: string; color_hex: string; stock: number; sku?: string }
+): Promise<ActionResult & { id?: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: inserted, error } = await supabase
+    .from("product_variants")
+    .insert({
+      product_id: productId,
+      size: data.size,
+      color: data.color,
+      color_hex: data.color_hex || null,
+      stock: data.stock,
+      sku: data.sku || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: "Error al agregar variante" };
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  return { success: true, id: inserted.id };
 }
 

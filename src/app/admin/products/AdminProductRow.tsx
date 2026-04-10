@@ -16,12 +16,16 @@ interface AdminProductRowProps {
     sale_price?: number | null;
     discount_percent?: number | null;
     category?: { name: string } | null;
-    variants?: { id: string }[];
+    variants?: { id: string; stock?: number }[];
     images?: { url: string }[];
   };
+  /** When true, renders only <td> cells (no wrapping <tr>) for use inside AdminProductsTable */
+  asTableCells?: boolean;
+  /** Whether any variant of this product has stock ≤ 10 */
+  hasLowStock?: boolean;
 }
 
-export function AdminProductRow({ product }: AdminProductRowProps) {
+export function AdminProductRow({ product, asTableCells, hasLowStock }: AdminProductRowProps) {
   const [isActive, setIsActive] = useState(product.is_active);
   const [loading, setLoading] = useState(false);
 
@@ -37,8 +41,8 @@ export function AdminProductRow({ product }: AdminProductRowProps) {
     await deleteProductAction(product.id);
   };
 
-  return (
-    <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+  const cells = (
+    <>
       {/* Nombre */}
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
@@ -52,9 +56,14 @@ export function AdminProductRow({ product }: AdminProductRowProps) {
             <div className="w-9 h-11 bg-white/5 flex-shrink-0" />
           )}
           <div>
-            <p className="font-horizon text-[11px] tracking-widest text-white uppercase">
-              {product.name}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-horizon text-[11px] tracking-widest text-white uppercase">
+                {product.name}
+              </p>
+              {hasLowStock && (
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" title="Stock bajo" />
+              )}
+            </div>
             <p className="font-body text-[10px] text-white/30">{product.slug}</p>
           </div>
         </div>
@@ -133,6 +142,14 @@ export function AdminProductRow({ product }: AdminProductRowProps) {
           </button>
         </div>
       </td>
+    </>
+  );
+
+  if (asTableCells) return cells;
+
+  return (
+    <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+      {cells}
     </tr>
   );
 }

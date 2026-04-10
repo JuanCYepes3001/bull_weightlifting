@@ -1,94 +1,43 @@
-import Link from "next/link";
-import { getAdminProducts } from "@/lib/queries/admin";
-import { getCategories } from "@/lib/queries/categories";
-import { AdminProductRow } from "./AdminProductRow";
-import { AdminProductFilters } from "./AdminProductFilters";
-import { Plus } from "lucide-react";
+import { getAdminProducts, getLowStockProducts } from "@/lib/queries/admin";
+import { AdminProductsTable } from "./AdminProductsTable";
+import { CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Productos | Admin" };
 
-interface AdminProductsPageProps {
-  searchParams: Promise<{
-    search?: string;
-    category?: string;
-    status?: string;
-  }>;
-}
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
+  const { saved } = await searchParams;
 
-export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
-  const { search, category, status } = await searchParams;
-
-  const [products, categories] = await Promise.all([
-    getAdminProducts({
-      search,
-      category_id: category,
-      status: status as "active" | "inactive" | undefined,
-    }).catch(() => []),
-    getCategories().catch(() => []),
+  const [products, lowStock] = await Promise.all([
+    getAdminProducts().catch(() => []),
+    getLowStockProducts(10).catch(() => []),
   ]);
+
+  const lowStockProductIds = new Set(lowStock.map((v) => v.productId));
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-body text-[10px] tracking-[0.4em] text-crimson uppercase mb-1">
-            Inventario
+      <div>
+        <p className="font-body text-[10px] tracking-[0.4em] text-crimson uppercase mb-1">
+          Inventario
+        </p>
+        <h1 className="text-2xl text-white">PRODUCTOS</h1>
+      </div>
+
+      {saved === "true" && (
+        <div className="flex items-center gap-3 border border-green-500/25 bg-green-500/5 px-5 py-3">
+          <CheckCircle2 size={14} className="text-green-400 flex-shrink-0" />
+          <p className="font-body text-xs tracking-widest uppercase text-green-400">
+            Producto guardado satisfactoriamente
           </p>
-          <h1 className="text-2xl text-white">PRODUCTOS</h1>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="flex items-center gap-2 bg-crimson hover:bg-crimson-light text-white font-body text-xs tracking-widest uppercase px-4 py-2.5 transition-colors"
-        >
-          <Plus size={13} />
-          Nuevo producto
-        </Link>
-      </div>
+      )}
 
-      {/* Filtros */}
-      <AdminProductFilters
-        categories={categories}
-        search={search}
-        categoryId={category}
-        status={status}
-        total={products.length}
-      />
-
-      {/* Table */}
-      <div className="border border-white/5 rounded-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/5 bg-white/[0.02]">
-              {["Producto", "Categoría", "Precio", "Variantes", "Estado", ""].map((h) => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3 font-body text-[10px] tracking-[0.25em] uppercase text-white/30"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-12 text-center font-body text-sm text-white/20"
-                >
-                  No se encontraron productos.
-                </td>
-              </tr>
-            ) : (
-              products.map((product) => (
-                <AdminProductRow key={product.id} product={product} />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AdminProductsTable products={products as any} lowStockIds={lowStockProductIds} />
     </div>
   );
 }

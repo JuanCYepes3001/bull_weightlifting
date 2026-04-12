@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ["xlsx"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

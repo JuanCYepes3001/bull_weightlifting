@@ -37,6 +37,17 @@ export function CartItemRow({ item }: CartItemRowProps) {
         <p className="font-body text-xs text-white/30">
           {item.color} · {item.size}
         </p>
+        {item.customization && (item.customization.name || item.customization.number || item.customization.color) && (
+          <p className="font-body text-[10px] text-crimson/70 leading-snug">
+            {[
+              item.customization.name,
+              item.customization.number && `#${item.customization.number}`,
+              item.customization.color && `Color: ${item.customization.color}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        )}
         <p className="font-bebas text-base tracking-wider text-white mt-auto">
           ${(item.price * item.quantity).toLocaleString("es-CO")}
         </p>

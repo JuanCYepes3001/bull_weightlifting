@@ -235,7 +235,7 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       </div>
 
       {/* ── Scroll indicator — Arimo ── */}
-      <div className="hero-scroll absolute bottom-10 flex flex-col items-center gap-2 text-white/20">
+      <div className="hero-scroll absolute bottom-4 flex flex-col items-center gap-2 text-white/20">
         <ArrowDown size={16} />
         <p className="font-body text-[10px] tracking-widest uppercase">Scroll</p>
       </div>

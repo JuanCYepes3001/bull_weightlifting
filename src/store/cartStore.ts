@@ -2,6 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /* ── Tipos locales del carrito (sin depender de la DB) ─── */
+export interface CartCustomization {
+  name?: string;   // nombre en la prenda
+  number?: string; // número en la prenda
+  color?: string;  // color del estampado
+}
+
 export interface LocalCartItem {
   variantId: string;
   productId: string;
@@ -13,6 +19,7 @@ export interface LocalCartItem {
   imageUrl: string | null;
   quantity: number;
   maxStock?: number; // stock available at the time of adding — used for client-side limit
+  customization?: CartCustomization;
 }
 
 interface CartStore {

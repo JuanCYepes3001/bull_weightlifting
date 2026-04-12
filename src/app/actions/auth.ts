@@ -112,3 +112,59 @@ export async function logoutAction(): Promise<void> {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function requestPasswordResetAction(formData: FormData): Promise<AuthResult> {
+  const email = (formData.get("email") as string)?.trim();
+  if (!email) return { error: "Email requerido" };
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/api/auth/callback?next=/reset-password`,
+  });
+
+  if (error) return { error: "Error al enviar el correo. Intenta de nuevo." };
+  return {};
+}
+
+export async function resetPasswordAction(formData: FormData): Promise<AuthResult> {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!password || password.length < 8)
+    return { error: "La contraseña debe tener al menos 8 caracteres" };
+  if (password !== confirmPassword)
+    return { error: "Las contraseñas no coinciden" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { error: "Error al actualizar la contraseña. Intenta de nuevo." };
+  redirect("/profile/account");
+}
+
+export async function changePasswordAction(formData: FormData): Promise<AuthResult> {
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!newPassword || newPassword.length < 8)
+    return { error: "La nueva contraseña debe tener al menos 8 caracteres" };
+  if (newPassword !== confirmPassword)
+    return { error: "Las contraseñas no coinciden" };
+
+  const supabase = await createClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user?.email) return { error: "Sesión inválida" };
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (signInError) return { error: "Contraseña actual incorrecta" };
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: "Error al actualizar la contraseña" };
+  return {};
+}

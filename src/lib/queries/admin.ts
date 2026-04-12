@@ -56,19 +56,13 @@ export async function getAdminStats(): Promise<AdminStats> {
 
 export async function getAdminProducts() {
   const supabase = await createClient();
-  let query = supabase
+  const { data, error } = await supabase
     .from("products")
     .select(
       `*, category:categories(name, slug), variants:product_variants(*), images:product_images(*)`
     )
     .order("created_at", { ascending: false });
 
-  if (filters?.search) query = query.ilike("name", `%${filters.search}%`);
-  if (filters?.category_id) query = query.eq("category_id", filters.category_id);
-  if (filters?.status === "active") query = query.eq("is_active", true);
-  if (filters?.status === "inactive") query = query.eq("is_active", false);
-
-  const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
 }
@@ -325,4 +319,149 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
     created_at:   p.created_at,
     last_sign_in: emailMap.get(p.user_id)?.last_sign_in ?? null,
   }));
+}
+
+/* ─── Daily stats for charts ──────────────────────────── */
+
+export interface DailyStat {
+  date: string;   // "YYYY-MM-DD"
+  orders: number;
+  revenue: number;
+}
+
+export async function getDailyStats(days: 7 | 30): Promise<DailyStat[]> {
+  const supabase = await createClient();
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  cutoff.setHours(0, 0, 0, 0);
+
+  const { data } = await supabase
+    .from("orders")
+    .select("created_at, total")
+    .gte("created_at", cutoff.toISOString());
+
+  // Build a map of day → { orders, revenue }
+  const map = new Map<string, { orders: number; revenue: number }>();
+
+  // Pre-fill every day in the range with zeros
+  for (let i = 0; i < days; i++) {
+    const d = new Date(cutoff);
+    d.setDate(cutoff.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    map.set(key, { orders: 0, revenue: 0 });
+  }
+
+  for (const row of data ?? []) {
+    const key = row.created_at.slice(0, 10);
+    const entry = map.get(key);
+    if (entry) {
+      entry.orders += 1;
+      entry.revenue += Number(row.total ?? 0);
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({ date, ...v }));
+}
+
+/* ─── Weekly stats ────────────────────────────────────── */
+
+export interface WeeklyStat {
+  week: string;   // "YYYY-Www" e.g. "2026-W14"
+  label: string;  // "Sem 14" — human label
+  orders: number;
+  revenue: number;
+}
+
+export async function getWeeklyStats(weeks = 12): Promise<WeeklyStat[]> {
+  const supabase = await createClient();
+
+  const cutoff = new Date();
+  // Go back to the start of `weeks` ago (Monday of that week)
+  cutoff.setDate(cutoff.getDate() - weeks * 7);
+  cutoff.setHours(0, 0, 0, 0);
+
+  const { data } = await supabase
+    .from("orders")
+    .select("created_at, total")
+    .gte("created_at", cutoff.toISOString());
+
+  const getWeekKey = (d: Date) => {
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+    const year = tmp.getUTCFullYear();
+    const week = Math.ceil(((tmp.getTime() - Date.UTC(year, 0, 1)) / 86400000 + 1) / 7);
+    return { key: `${year}-W${String(week).padStart(2, "0")}`, weekNum: week };
+  };
+
+  // Pre-fill the last `weeks` ISO weeks
+  const map = new Map<string, { label: string; orders: number; revenue: number }>();
+  const now = new Date();
+  for (let i = weeks - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i * 7);
+    const { key, weekNum } = getWeekKey(d);
+    if (!map.has(key)) map.set(key, { label: `Sem ${weekNum}`, orders: 0, revenue: 0 });
+  }
+
+  for (const row of data ?? []) {
+    const { key } = getWeekKey(new Date(row.created_at));
+    const entry = map.get(key);
+    if (entry) {
+      entry.orders += 1;
+      entry.revenue += Number(row.total ?? 0);
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([week, v]) => ({ week, ...v }));
+}
+
+/* ─── Monthly stats ───────────────────────────────────── */
+
+export interface MonthlyStat {
+  month: string;  // "YYYY-MM"
+  label: string;  // "Abr 2026"
+  orders: number;
+  revenue: number;
+}
+
+const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+export async function getMonthlyStats(months = 12): Promise<MonthlyStat[]> {
+  const supabase = await createClient();
+
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+
+  const { data } = await supabase
+    .from("orders")
+    .select("created_at, total")
+    .gte("created_at", cutoff.toISOString());
+
+  const map = new Map<string, { label: string; orders: number; revenue: number }>();
+
+  // Pre-fill all months
+  for (let i = 0; i < months; i++) {
+    const d = new Date(cutoff.getFullYear(), cutoff.getMonth() + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    map.set(key, { label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`, orders: 0, revenue: 0 });
+  }
+
+  for (const row of data ?? []) {
+    const d = new Date(row.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const entry = map.get(key);
+    if (entry) {
+      entry.orders += 1;
+      entry.revenue += Number(row.total ?? 0);
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, v]) => ({ month, ...v }));
 }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1775751874898,
+  "lastScanned": 1775969036959,
   "projectRoot": "c:\\Users\\User\\Documents\\GitHub\\bull_weightlifting",
   "techStack": {
     "languages": [
@@ -69,6 +69,7 @@
     "mainDirectories": [
       "docs",
       "public",
+      "scripts",
       "src"
     ],
     "gitBranches": {
@@ -82,7 +83,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 6,
-      "lastAccessed": 1775751874853,
+      "lastAccessed": 1775969036931,
       "keyFiles": [
         "backlog.json",
         "MVP.md",
@@ -95,7 +96,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 5,
-      "lastAccessed": 1775751874854,
+      "lastAccessed": 1775969036932,
       "keyFiles": [
         "file.svg",
         "globe.svg",
@@ -104,11 +105,20 @@
         "window.svg"
       ]
     },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1775969036939,
+      "keyFiles": [
+        "migrate.mjs"
+      ]
+    },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 1,
-      "lastAccessed": 1775751874865,
+      "lastAccessed": 1775969036940,
       "keyFiles": [
         "proxy.ts"
       ]
@@ -117,7 +127,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1775751874866,
+      "lastAccessed": 1775969036940,
       "keyFiles": [
         "config.toml"
       ]
@@ -126,7 +136,7 @@
       "path": "src\\app",
       "purpose": "Application code",
       "fileCount": 5,
-      "lastAccessed": 1775751874873,
+      "lastAccessed": 1775969036941,
       "keyFiles": [
         "favicon.ico",
         "globals.css",
@@ -137,25 +147,25 @@
       "path": "src\\components",
       "purpose": "UI components",
       "fileCount": 0,
-      "lastAccessed": 1775751874875,
+      "lastAccessed": 1775969036941,
       "keyFiles": []
     },
     "src\\lib": {
       "path": "src\\lib",
       "purpose": "Library code",
-      "fileCount": 3,
-      "lastAccessed": 1775751874875,
+      "fileCount": 4,
+      "lastAccessed": 1775969036942,
       "keyFiles": [
         "auth.ts",
-        "locationData.ts",
-        "whatsapp.ts"
+        "email.ts",
+        "locationData.ts"
       ]
     },
     "src\\types": {
       "path": "src\\types",
       "purpose": "Type definitions",
       "fileCount": 2,
-      "lastAccessed": 1775751874877,
+      "lastAccessed": 1775969036942,
       "keyFiles": [
         "database.ts",
         "index.ts"
@@ -165,7 +175,7 @@
       "path": "src\\utils",
       "purpose": "Utility functions",
       "fileCount": 1,
-      "lastAccessed": 1775751874877,
+      "lastAccessed": 1775969036943,
       "keyFiles": [
         "cn.ts"
       ]
@@ -173,8 +183,8 @@
     "supabase\\migrations": {
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
-      "fileCount": 12,
-      "lastAccessed": 1775751874880,
+      "fileCount": 13,
+      "lastAccessed": 1775969036943,
       "keyFiles": [
         "001_initial_schema.sql",
         "002_functions_triggers.sql",
@@ -190,10 +200,34 @@
       "type": "file"
     },
     {
+      "path": "src\\lib\\queries\\admin.ts",
+      "accessCount": 9,
+      "lastAccessed": 1775972838624,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\shop\\ProductDetailClient.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1775972086401,
+      "type": "file"
+    },
+    {
       "path": "",
       "accessCount": 7,
       "lastAccessed": 1775787989763,
       "type": "directory"
+    },
+    {
+      "path": "src\\components\\layout\\Navbar.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1775972746973,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\queries\\products.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775972824216,
+      "type": "file"
     },
     {
       "path": "src\\app\\actions\\checkout.ts",
@@ -202,9 +236,27 @@
       "type": "file"
     },
     {
-      "path": "src\\components\\shop\\ProductDetailClient.tsx",
+      "path": "src\\app\\(profile)\\profile\\orders\\[id]\\page.tsx",
       "accessCount": 4,
-      "lastAccessed": 1775788118678,
+      "lastAccessed": 1775971625686,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(auth)\\login\\LoginForm.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775971801500,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\orders\\OrdersClient.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775972251714,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\layout.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775972762007,
       "type": "file"
     },
     {
@@ -226,10 +278,70 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\(profile)\\profile\\orders\\[id]\\page.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1775788185429,
+      "path": "src\\app\\(profile)\\profile\\account\\page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775971814596,
       "type": "file"
+    },
+    {
+      "path": "src\\types\\index.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775972043786,
+      "type": "file"
+    },
+    {
+      "path": "src\\store\\cartStore.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775972055003,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775972755321,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\home\\HeroSection.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1775971351539,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 2,
+      "lastAccessed": 1775971501956,
+      "type": "directory"
+    },
+    {
+      "path": "next.config.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775971606107,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\products\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1775971611285,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\actions\\auth.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775971726212,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\products\\[slug]\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1775972019662,
+      "type": "file"
+    },
+    {
+      "path": "src\\types",
+      "accessCount": 2,
+      "lastAccessed": 1775972035359,
+      "type": "directory"
     },
     {
       "path": "src\\app\\admin\\orders\\[id]\\page.tsx",
@@ -256,28 +368,10 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\(shop)\\products\\[slug]\\page.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1775787913381,
-      "type": "file"
-    },
-    {
-      "path": "src\\types",
-      "accessCount": 1,
-      "lastAccessed": 1775787925710,
-      "type": "directory"
-    },
-    {
       "path": "supabase\\migrations\\008_add_sales_dates.sql",
       "accessCount": 1,
       "lastAccessed": 1775787942648,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 1,
-      "lastAccessed": 1775787948149,
-      "type": "directory"
     },
     {
       "path": "src\\lib\\supabase\\admin.ts",
@@ -301,6 +395,102 @@
       "path": "src\\components\\shop\\SizeGuide.tsx",
       "accessCount": 1,
       "lastAccessed": 1775788100872,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\inventory\\InventoryManager.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971202266,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\offers\\BulkOfferManager.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971202706,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\api\\admin\\reports\\orders\\route.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775971203256,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\inventory\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971218913,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\offers\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971219302,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\orders\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971219704,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\admin\\dashboard\\ReportDownloader.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971359009,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1775971382553,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\home\\CategoriesSection.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971382583,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\012_add_gender_to_products.sql",
+      "accessCount": 1,
+      "lastAccessed": 1775971455030,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(shop)\\layout.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971455163,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(auth)\\login\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971655721,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\supabase\\client.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775971683959,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\api\\auth\\callback\\route.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775971713793,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(auth)\\forgot-password\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971741521,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(auth)\\reset-password\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775971751449,
       "type": "file"
     }
   ],

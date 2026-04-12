@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Inter, Arimo } from "next/font/google";
 import "./globals.css";
+import { CartSyncProvider } from "@/components/CartSyncProvider";
 
 /* ─── Google Fonts ────────────────────────────────────── */
 const bebasNeue = Bebas_Neue({
@@ -50,7 +51,10 @@ export default function RootLayout({
       lang="es"
       className={`${bebasNeue.variable} ${inter.variable} ${arimo.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        <CartSyncProvider />
+        {children}
+      </body>
     </html>
   );
 }

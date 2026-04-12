@@ -10,10 +10,12 @@ import {
   Home,
   Tag,
   Archive,
+  BarChart2,
 } from "lucide-react";
 
 const adminNav = [
   { label: "Dashboard",   href: "/admin/dashboard",  icon: LayoutDashboard },
+  { label: "Analíticas",  href: "/admin/analytics",  icon: BarChart2 },
   { label: "Productos",   href: "/admin/products",   icon: Package },
   { label: "Inventario",  href: "/admin/inventory",  icon: Archive },
   { label: "Ofertas",     href: "/admin/offers",     icon: Tag },
@@ -29,9 +31,9 @@ export default async function AdminLayout({
   const { profile } = await requireAdmin();
 
   return (
-    <div className="min-h-screen flex bg-[#0D0D0D]">
+    <div className="h-screen overflow-hidden flex bg-[#0D0D0D]">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 border-r border-white/5 flex flex-col">
+      <aside className="w-56 flex-shrink-0 border-r border-white/5 flex flex-col h-screen overflow-y-auto sticky top-0">
         {/* Brand */}
         <Link href="/" className="h-16 flex items-center px-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors">
           <div className="group">

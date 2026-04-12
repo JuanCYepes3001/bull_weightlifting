@@ -88,6 +88,29 @@ export async function getProductById(id: string) {
   return data as Product;
 }
 
+/** Fetch all active products belonging to the category with the given slug. */
+export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
+  const supabase = await createClient();
+
+  const { data: cat } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", categorySlug)
+    .maybeSingle();
+
+  if (!cat) return [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(`*, category:categories(*), variants:product_variants(*), images:product_images(*)`)
+    .eq("category_id", cat.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as Product[]) ?? [];
+}
+
 export async function getRelatedProducts(
   categoryId: string,
   excludeId: string,

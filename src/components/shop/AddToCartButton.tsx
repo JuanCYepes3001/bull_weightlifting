@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { ShoppingBag, Check } from "lucide-react";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, type CartCustomization } from "@/store/cartStore";
 import type { Product, ProductVariant } from "@/types";
 import { cn } from "@/utils/cn";
 
 interface AddToCartButtonProps {
   product: Product;
   selectedVariant: ProductVariant | null;
+  customization?: CartCustomization;
 }
 
-export function AddToCartButton({ product, selectedVariant }: AddToCartButtonProps) {
+export function AddToCartButton({ product, selectedVariant, customization }: AddToCartButtonProps) {
   const addItem     = useCartStore((s) => s.addItem);
   const setCartOpen = useCartStore((s) => s.setIsOpen);
   const cartItems   = useCartStore((s) => s.items);
@@ -35,9 +36,10 @@ export function AddToCartButton({ product, selectedVariant }: AddToCartButtonPro
       productSlug: product.slug,
       size:        selectedVariant.size,
       color:       selectedVariant.color,
-      price:       product.is_on_sale && product.sale_price ? product.sale_price : product.price,
-      imageUrl:    product.images?.[0]?.url ?? null,
-      maxStock:    selectedVariant.stock,
+      price:         product.is_on_sale && product.sale_price ? product.sale_price : product.price,
+      imageUrl:      product.images?.[0]?.url ?? null,
+      maxStock:      selectedVariant.stock,
+      customization: customization && Object.values(customization).some(Boolean) ? customization : undefined,
     });
 
     setAdded(true);

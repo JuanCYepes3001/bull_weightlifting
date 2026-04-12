@@ -1,4 +1,4 @@
-import { getAdminStats, getLowStockProducts, getRecentActivity } from "@/lib/queries/admin";
+import { getAdminStats, getLowStockProducts, getRecentActivity, getDailyStats } from "@/lib/queries/admin";
 import {
   ShoppingCart,
   DollarSign,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import ReportDownloader from "./ReportDownloader";
+import { SalesChart } from "./SalesChart";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dashboard | Admin" };
@@ -44,7 +45,7 @@ const COP = (n: number) =>
   "$" + n.toLocaleString("es-CO", { maximumFractionDigits: 0 });
 
 export default async function AdminDashboardPage() {
-  const [stats, lowStock, activity] = await Promise.all([
+  const [stats, lowStock, activity, daily7, daily30] = await Promise.all([
     getAdminStats().catch(() => ({
       totalOrders: 0, totalRevenue: 0,
       monthlyOrders: 0, monthlyRevenue: 0,
@@ -53,6 +54,8 @@ export default async function AdminDashboardPage() {
     })),
     getLowStockProducts(10).catch(() => []),
     getRecentActivity(15).catch(() => []),
+    getDailyStats(7).catch(() => []),
+    getDailyStats(30).catch(() => []),
   ]);
 
   const now    = new Date();
@@ -217,6 +220,9 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Sales trend chart */}
+      <SalesChart data7={daily7} data30={daily30} />
 
       {/* Report downloader */}
       <ReportDownloader />

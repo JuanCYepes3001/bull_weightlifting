@@ -1,17 +1,13 @@
 import { getServerUser } from "@/lib/auth";
-import { getCategories } from "@/lib/queries/categories";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { BrandStatement } from "@/components/home/BrandStatement";
-import { CategoriesSection } from "@/components/home/CategoriesSection";
+import { TrusasSection } from "@/components/home/TrusasSection";
 import { FeaturedCTA } from "@/components/home/FeaturedCTA";
 
 export default async function HomePage() {
-  const [{ user, profile }, categories] = await Promise.all([
-    getServerUser(),
-    getCategories().catch(() => []),
-  ]);
+  const { user, profile } = await getServerUser();
 
   return (
     <>
@@ -25,7 +21,7 @@ export default async function HomePage() {
 
         <BrandStatement />
 
-        <CategoriesSection categories={categories} />
+        <TrusasSection />
 
         <FeaturedCTA isAuthenticated={!!user} />
       </main>

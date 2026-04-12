@@ -7,6 +7,8 @@ import { VariantSelector } from "./VariantSelector";
 import { AddToCartButton } from "./AddToCartButton";
 import { SaleTimer } from "./SaleTimer";
 import { SizeGuide } from "./SizeGuide";
+import { TrusasCustomizer } from "./TrusasCustomizer";
+import type { CartCustomization } from "@/store/cartStore";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -15,6 +17,8 @@ interface ProductDetailClientProps {
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [activeImage, setActiveImage] = useState(0);
+  const [customization, setCustomization] = useState<CartCustomization>({});
+  const isTrusas = product.category?.slug === "trusas";
   const images = product.images ?? [];
   const variants = product.variants ?? [];
 
@@ -111,8 +115,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <p className="font-body text-sm text-white/30">Sin variantes disponibles.</p>
         )}
 
+        {/* Personalización (solo trusas) */}
+        {isTrusas && (
+          <TrusasCustomizer value={customization} onChange={setCustomization} />
+        )}
+
         {/* Botón agregar */}
-        <AddToCartButton product={product} selectedVariant={selectedVariant} />
+        <AddToCartButton
+          product={product}
+          selectedVariant={selectedVariant}
+          customization={isTrusas ? customization : undefined}
+        />
 
         {/* Descripción */}
         {product.description && (

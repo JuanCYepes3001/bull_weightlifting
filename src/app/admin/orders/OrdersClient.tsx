@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, ExternalLink, ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -106,6 +106,11 @@ export default function OrdersClient({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
+
+  useEffect(() => {
+    setOrders(initialOrders);
+    setSearch("");
+  }, [initialOrders]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return orders;

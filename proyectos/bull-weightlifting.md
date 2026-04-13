@@ -25,3 +25,4 @@ E-commerce de ropa deportiva de alto rendimiento.
 
 ## Notas relacionadas
 - [[diario/2026-04-11]] — Sesión 2026-04-11: cart sync, trusas, dashboard charts
+- [[diario/2026-04-12]] — Sesión 2026-04-12: tipos Supabase, Realtime cart sync, bugs auth/UI, email verificación

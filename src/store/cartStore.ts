@@ -3,9 +3,14 @@ import { persist } from "zustand/middleware";
 
 /* ── Tipos locales del carrito (sin depender de la DB) ─── */
 export interface CartCustomization {
-  name?: string;   // nombre en la prenda
-  number?: string; // número en la prenda
-  color?: string;  // color del estampado
+  name?: string;      // nombre estampado en la prenda
+  number?: string;    // número estampado
+  printColor?: string; // color del estampado
+  design?: string;    // estilo de diseño: "clasico" | "bull" | "minimalista"
+  // Medidas personalizadas (opcional, para talla custom)
+  chest?: string;     // pecho en cm
+  hip?: string;       // cadera en cm
+  torso?: string;     // largo de tronco en cm
 }
 
 export interface LocalCartItem {
@@ -30,6 +35,7 @@ interface CartStore {
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
+  replaceItems: (items: LocalCartItem[]) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -84,6 +90,8 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => set({ items: [] }),
+
+      replaceItems: (newItems) => set({ items: newItems }),
     }),
     {
       name: "bull-cart",

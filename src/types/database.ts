@@ -14,6 +14,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action: string;
+          admin_id: string | null;
+          admin_name: string;
+          created_at: string;
+          details: Json | null;
+          entity_id: string | null;
+          entity_name: string | null;
+          entity_type: string;
+          id: string;
+        };
+        Insert: {
+          action: string;
+          admin_id?: string | null;
+          admin_name?: string;
+          created_at?: string;
+          details?: Json | null;
+          entity_id?: string | null;
+          entity_name?: string | null;
+          entity_type?: string;
+          id?: string;
+        };
+        Update: {
+          action?: string;
+          admin_id?: string | null;
+          admin_name?: string;
+          created_at?: string;
+          details?: Json | null;
+          entity_id?: string | null;
+          entity_name?: string | null;
+          entity_type?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;

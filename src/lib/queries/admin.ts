@@ -167,7 +167,7 @@ export async function getRecentActivity(limit = 15): Promise<ActivityLogEntry[]>
     .limit(limit);
 
   if (error) return [];
-  return (data as ActivityLogEntry[]) ?? [];
+  return (data as unknown as ActivityLogEntry[]) ?? [];
 }
 
 /* ─── Orders ───────────────────────────────────────────── */
@@ -197,7 +197,7 @@ export async function getAdminOrders(status?: string): Promise<AdminOrder[]> {
     .order("created_at", { ascending: false });
 
   if (status && status !== "all") {
-    query = query.eq("status", status);
+    query = query.eq("status", status as "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded");
   }
 
   const { data: orders, error } = await query;
@@ -464,4 +464,67 @@ export async function getMonthlyStats(months = 12): Promise<MonthlyStat[]> {
   return Array.from(map.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, v]) => ({ month, ...v }));
+}
+
+/* ─── Top products ─────────────────────────────────────── */
+
+export interface TopProduct {
+  productId: string;
+  productName: string;
+  slug: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export async function getTopProducts(limit = 5): Promise<TopProduct[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("order_items")
+    .select(`quantity, unit_price, variant:product_variants(product:products(id, name, slug))`);
+
+  if (!data?.length) return [];
+
+  const map = new Map<string, TopProduct>();
+  for (const item of data) {
+    const product = (item.variant as any)?.product;
+    if (!product?.id) continue;
+    const existing = map.get(product.id);
+    if (existing) {
+      existing.unitsSold += item.quantity;
+      existing.revenue += item.quantity * item.unit_price;
+    } else {
+      map.set(product.id, {
+        productId: product.id,
+        productName: product.name,
+        slug: product.slug,
+        unitsSold: item.quantity,
+        revenue: item.quantity * item.unit_price,
+      });
+    }
+  }
+
+  return Array.from(map.values())
+    .sort((a, b) => b.unitsSold - a.unitsSold)
+    .slice(0, limit);
+}
+
+/* ─── Order completion stats ───────────────────────────── */
+
+export interface CompletionStats {
+  total: number;
+  delivered: number;
+  cancelled: number;
+  completionRate: number; // % of non-cancelled orders (all-time)
+}
+
+export async function getOrderCompletionStats(): Promise<CompletionStats> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("orders").select("status");
+  if (!data?.length) return { total: 0, delivered: 0, cancelled: 0, completionRate: 0 };
+
+  const total = data.length;
+  const delivered = data.filter((o) => o.status === "delivered").length;
+  const cancelled = data.filter((o) => o.status === "cancelled").length;
+  const completionRate = total > 0 ? Math.round(((total - cancelled) / total) * 100) : 0;
+  return { total, delivered, cancelled, completionRate };
 }

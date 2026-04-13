@@ -6,6 +6,7 @@ import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
 type AuthResult = {
   error?: string;
+  verificationSent?: boolean;
 };
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
@@ -28,6 +29,9 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
   if (error) {
     if (error.code === "invalid_credentials") {
       return { error: "Email o contraseña incorrectos" };
+    }
+    if (error.code === "email_not_confirmed") {
+      return { error: "Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada." };
     }
     return { error: "Error al iniciar sesión. Intenta de nuevo." };
   }
@@ -57,6 +61,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/api/auth/callback`,
       data: {
         name: fullName,
         first_name: parsed.data.firstName,
@@ -104,7 +109,12 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
       .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
   }
 
-  redirect("/");
+  // If session exists, email confirmation is disabled — user is already logged in
+  if (signUpData.session) {
+    redirect("/");
+  }
+  // Email confirmation required — notify user to check their inbox
+  return { verificationSent: true };
 }
 
 export async function logoutAction(): Promise<void> {

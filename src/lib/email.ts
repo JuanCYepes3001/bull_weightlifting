@@ -66,6 +66,56 @@ function baseLayout(content: string): string {
   </html>`;
 }
 
+/**
+ * Branded verification email HTML.
+ * Pass `confirmationUrl` directly when sending via Resend/custom SMTP.
+ * For the Supabase Dashboard template, replace `${confirmationUrl}` with `{{ .ConfirmationURL }}`.
+ */
+export function getVerificationEmailHtml(confirmationUrl: string): string {
+  return baseLayout(`
+    <div style="text-align:center;padding:8px 0 24px">
+      <div style="display:inline-block;width:48px;height:2px;background:#dc2626;margin-bottom:20px"></div>
+      <h1 style="margin:0;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;color:#dc2626;font-weight:900">
+        Verifica tu cuenta
+      </h1>
+    </div>
+
+    <div class="card" style="text-align:center;padding:32px 24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.6;margin:0 0 8px">
+        Bienvenido a <strong style="color:#fff">BULL Weightlifting</strong>.
+      </p>
+      <p style="font-size:13px;color:#666;line-height:1.6;margin:0 0 32px">
+        Haz clic en el botón para activar tu cuenta y comenzar a entrenar sin parar.
+      </p>
+
+      <a href="${confirmationUrl}"
+         style="display:inline-block;background:#dc2626;color:#fff;text-decoration:none;
+                font-size:12px;font-weight:900;letter-spacing:0.25em;text-transform:uppercase;
+                padding:14px 36px;margin-bottom:24px">
+        Verificar mi cuenta
+      </a>
+
+      <p style="font-size:11px;color:#444;margin:0">
+        O copia y pega este enlace en tu navegador:<br/>
+        <a href="${confirmationUrl}" style="color:#dc2626;word-break:break-all;font-size:11px">
+          ${confirmationUrl}
+        </a>
+      </p>
+    </div>
+
+    <p style="font-size:11px;color:#333;text-align:center;margin-top:16px;line-height:1.6">
+      Si no creaste esta cuenta, ignora este mensaje.<br/>
+      Este enlace expira en 24 horas.
+    </p>
+
+    <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid #1a1a1a">
+      <p style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#333;margin:0">
+        El que para, pierde
+      </p>
+    </div>
+  `);
+}
+
 export async function sendOrderConfirmationEmail(params: {
   to: string;
   orderId: string;

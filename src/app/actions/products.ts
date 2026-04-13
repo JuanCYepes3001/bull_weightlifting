@@ -24,7 +24,7 @@ async function logActivity(
       entity_type: "product",
       entity_id: entityId ?? null,
       entity_name: entityName,
-      details: details ?? null,
+      details: (details ?? null) as import("@/types/database").Json | null,
     });
   } catch {
     // Non-critical — don't fail the main action if logging fails

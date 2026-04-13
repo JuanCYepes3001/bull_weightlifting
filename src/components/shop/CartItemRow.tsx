@@ -37,12 +37,14 @@ export function CartItemRow({ item }: CartItemRowProps) {
         <p className="font-body text-xs text-white/30">
           {item.color} · {item.size}
         </p>
-        {item.customization && (item.customization.name || item.customization.number || item.customization.color) && (
+        {item.customization && (item.customization.name || item.customization.number || item.customization.printColor || item.customization.design) && (
           <p className="font-body text-[10px] text-crimson/70 leading-snug">
             {[
               item.customization.name,
               item.customization.number && `#${item.customization.number}`,
-              item.customization.color && `Color: ${item.customization.color}`,
+              item.customization.design && `Diseño: ${item.customization.design}`,
+              item.customization.printColor && `Color: ${item.customization.printColor}`,
+              (item.customization.chest || item.customization.hip || item.customization.torso) && "Medidas personalizadas",
             ]
               .filter(Boolean)
               .join(" · ")}

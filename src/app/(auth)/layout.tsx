@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BullLogo } from "@/components/ui/BullLogo";
 
 export default function AuthLayout({
   children,
@@ -9,12 +9,7 @@ export default function AuthLayout({
     <div className="min-h-screen flex flex-col">
       {/* Header minimal */}
       <header className="h-16 flex items-center px-6 border-b border-white/5">
-        <Link
-          href="/"
-          className="font-heading text-xl tracking-[0.2em] text-white hover:text-crimson transition-colors"
-        >
-          BULL
-        </Link>
+        <BullLogo size="sm" layout="horizontal" withSubtitle withMark />
       </header>
 
       {/* Content */}

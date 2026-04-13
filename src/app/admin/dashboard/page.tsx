@@ -1,4 +1,4 @@
-import { getAdminStats, getLowStockProducts, getRecentActivity, getDailyStats } from "@/lib/queries/admin";
+import { getAdminStats, getLowStockProducts, getRecentActivity, getDailyStats, getTopProducts, getOrderCompletionStats } from "@/lib/queries/admin";
 import {
   ShoppingCart,
   DollarSign,
@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import ReportDownloader from "./ReportDownloader";
 import { SalesChart } from "./SalesChart";
+import { TopProductsWidget } from "./TopProductsWidget";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dashboard | Admin" };
@@ -45,7 +46,7 @@ const COP = (n: number) =>
   "$" + n.toLocaleString("es-CO", { maximumFractionDigits: 0 });
 
 export default async function AdminDashboardPage() {
-  const [stats, lowStock, activity, daily7, daily30] = await Promise.all([
+  const [stats, lowStock, activity, daily7, daily30, topProducts, completion] = await Promise.all([
     getAdminStats().catch(() => ({
       totalOrders: 0, totalRevenue: 0,
       monthlyOrders: 0, monthlyRevenue: 0,
@@ -56,6 +57,8 @@ export default async function AdminDashboardPage() {
     getRecentActivity(15).catch(() => []),
     getDailyStats(7).catch(() => []),
     getDailyStats(30).catch(() => []),
+    getTopProducts(5).catch(() => []),
+    getOrderCompletionStats().catch(() => ({ total: 0, delivered: 0, cancelled: 0, completionRate: 0 })),
   ]);
 
   const now    = new Date();
@@ -223,6 +226,9 @@ export default async function AdminDashboardPage() {
 
       {/* Sales trend chart */}
       <SalesChart data7={daily7} data30={daily30} />
+
+      {/* Top products + completion rate */}
+      <TopProductsWidget products={topProducts} completion={completion} />
 
       {/* Report downloader */}
       <ReportDownloader />

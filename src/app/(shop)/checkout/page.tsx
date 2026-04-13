@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { createOrderAction } from "@/app/actions/checkout";
+import { createOrderAction, createPayPalOrderAction } from "@/app/actions/checkout";
 import { getUserAddressesAction } from "@/app/actions/addresses";
 import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/AddressForm";
 import { Input } from "@/components/ui/Input";
@@ -35,7 +34,6 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("simulado");
   const [serverError, setServerError]     = useState<string | null>(null);
   const [isPending, startTransition]      = useTransition();
-  const router = useRouter();
 
   // Contact fields
   const [contact, setContact] = useState({ full_name: "", phone: "", notes: "" });
@@ -101,26 +99,33 @@ export default function CheckoutPage() {
       quantity:    i.quantity,
     }));
 
+    const shippingData = {
+      full_name: contact.full_name,
+      phone:     contact.phone,
+      country:   addrValue.country,
+      state:     stateName(addrValue.country, addrValue.state),
+      city:      addrValue.city,
+      address:   addrValue.address,
+      zip_code:  addrValue.zip_code || undefined,
+      notes:     contact.notes || undefined,
+    };
+
     startTransition(async () => {
-      const result = await createOrderAction(
-        checkoutItems,
-        {
-          full_name: contact.full_name,
-          phone:     contact.phone,
-          country:   addrValue.country,
-          state:     stateName(addrValue.country, addrValue.state),
-          city:      addrValue.city,
-          address:   addrValue.address,
-          zip_code:  addrValue.zip_code || undefined,
-          notes:     contact.notes || undefined,
-        },
-        paymentMethod
-      );
+      // PayPal: redirect to PayPal approval page
+      if (paymentMethod === "paypal") {
+        const result = await createPayPalOrderAction(checkoutItems, shippingData);
+        if ("error" in result) {
+          setServerError(result.error);
+        } else {
+          window.location.href = result.approvalUrl;
+        }
+        return;
+      }
+
+      // All other methods: standard server action (handles redirect internally)
+      const result = await createOrderAction(checkoutItems, shippingData, paymentMethod);
       if (result && "error" in result) {
         setServerError(result.error);
-      } else if (result && "orderId" in result) {
-        clearCart();
-        router.push(`/checkout/success?order=${result.orderId}`);
       }
     });
   };

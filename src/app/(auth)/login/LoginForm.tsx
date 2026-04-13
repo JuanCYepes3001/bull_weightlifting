@@ -78,9 +78,11 @@ export function LoginForm({ searchParams }: Props) {
       />
 
       <div className="space-y-1.5">
+        <label className="text-xs font-heading tracking-widest uppercase text-white/60">
+          Contraseña
+        </label>
         <div className="relative">
           <Input
-            label="Contraseña"
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             autoComplete="current-password"
@@ -91,7 +93,9 @@ export function LoginForm({ searchParams }: Props) {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-[38px] text-white/30 hover:text-white/60 transition-colors"
+            className="absolute right-3 top-0 h-11 flex items-center z-10 text-white/30 hover:text-white/60 transition-colors"
+            tabIndex={-1}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>

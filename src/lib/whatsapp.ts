@@ -16,7 +16,7 @@ export async function sendWhatsApp(to: string, body: string): Promise<void> {
   if (!ACCOUNT_SID || !AUTH_TOKEN) return; // silently skip if not configured
 
   try {
-    await fetch(
+    const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`,
       {
         method: "POST",
@@ -31,8 +31,11 @@ export async function sendWhatsApp(to: string, body: string): Promise<void> {
         }).toString(),
       }
     );
-  } catch {
-    // Non-blocking — never fail the order flow
+    if (!res.ok) {
+      console.error("[WhatsApp] Twilio error", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("[WhatsApp] Network error sending notification:", err);
   }
 }
 

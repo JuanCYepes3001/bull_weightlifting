@@ -1,27 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { logoutAction } from "@/app/actions/auth";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  ChevronRight,
-  Home,
-  Tag,
-  Archive,
-  BarChart2,
-} from "lucide-react";
-
-const adminNav = [
-  { label: "Dashboard",   href: "/admin/dashboard",  icon: LayoutDashboard },
-  { label: "Analíticas",  href: "/admin/analytics",  icon: BarChart2 },
-  { label: "Productos",   href: "/admin/products",   icon: Package },
-  { label: "Inventario",  href: "/admin/inventory",  icon: Archive },
-  { label: "Ofertas",     href: "/admin/offers",     icon: Tag },
-  { label: "Órdenes",     href: "/admin/orders",     icon: ShoppingCart },
-  { label: "Usuarios",    href: "/admin/users",      icon: Users },
-];
+import { ChevronRight, Home } from "lucide-react";
+import { adminNav } from "./admin-nav";
 
 export default async function AdminLayout({
   children,

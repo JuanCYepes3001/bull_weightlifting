@@ -11,7 +11,14 @@ const STATUSES = [
   { key: "delivered",  label: "Entregada" },
   { key: "cancelled",  label: "Cancelada" },
   { key: "refunded",   label: "Reembolsada" },
-];
+] as const;
+
+type OrderStatus = typeof STATUSES[number]["key"];
+const VALID_STATUS_KEYS = new Set<string>(STATUSES.map((s) => s.key));
+
+function toOrderStatus(val: string): OrderStatus | null {
+  return VALID_STATUS_KEYS.has(val) ? (val as OrderStatus) : null;
+}
 
 export default function OrderStatusUpdater({
   orderId,
@@ -21,13 +28,17 @@ export default function OrderStatusUpdater({
   currentStatus: string;
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState(currentStatus);
+  const [selected, setSelected] = useState<OrderStatus>(
+    toOrderStatus(currentStatus) ?? "pending"
+  );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   const save = () => {
     if (selected === currentStatus) return;
+    // Client-side guard — mirrors server validation (defense in depth)
+    if (!VALID_STATUS_KEYS.has(selected)) return;
     setError(null);
     startTransition(async () => {
       const res = await updateOrderStatusAction(orderId, selected);
@@ -53,7 +64,10 @@ export default function OrderStatusUpdater({
       <div className="flex items-center gap-3 flex-wrap">
         <select
           value={selected}
-          onChange={(e) => setSelected(e.target.value)}
+          onChange={(e) => {
+            const val = toOrderStatus(e.target.value);
+            if (val) setSelected(val);
+          }}
           disabled={pending}
           className="bg-white/5 border border-white/10 px-3 py-2 font-body text-sm text-white focus:outline-none focus:border-crimson/60 disabled:opacity-50"
         >

@@ -281,10 +281,16 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     for (const color of selectedColors) {
       for (const size of selectedSizes) {
         const entry = matrix[color.name]?.[size] ?? { stock: 0, sku: "" };
-        result.push({ size, color: color.name, color_hex: color.hex, stock: entry.stock, sku: entry.sku });
+        // Guard against NaN: parseInt on an empty field returns NaN; coerce to 0.
+        const stock = Number.isFinite(entry.stock) && entry.stock >= 0 ? Math.floor(entry.stock) : 0;
+        result.push({ size, color: color.name, color_hex: color.hex, stock, sku: entry.sku });
       }
     }
-    result.push(...customVariants);
+    // Custom variants: same guard + require non-empty size and color
+    for (const v of customVariants) {
+      const stock = Number.isFinite(v.stock) && v.stock >= 0 ? Math.floor(v.stock) : 0;
+      result.push({ ...v, stock });
+    }
     return result;
   };
 
@@ -300,6 +306,14 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     });
 
     const allVariants = buildAllVariants();
+
+    // Validate custom variants have required fields
+    const invalidVariant = allVariants.find((v) => !v.size.trim() || !v.color.trim());
+    if (invalidVariant) {
+      setServerError("Todas las variantes deben tener talla y color.");
+      return;
+    }
+
     formData.append("variant_count", String(allVariants.length));
     allVariants.forEach((v, i) => {
       formData.append(`variant_size_${i}`, v.size);

@@ -238,8 +238,14 @@
     },
     {
       "path": "STATE.md",
+      "accessCount": 20,
+      "lastAccessed": 1776192062746,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\actions\\checkout.ts",
       "accessCount": 11,
-      "lastAccessed": 1776189875387,
+      "lastAccessed": 1776190778658,
       "type": "file"
     },
     {
@@ -249,21 +255,27 @@
       "type": "directory"
     },
     {
+      "path": "src\\app\\admin\\dashboard\\page.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1776191109927,
+      "type": "file"
+    },
+    {
       "path": "diario\\2026-04-12.md",
       "accessCount": 7,
       "lastAccessed": 1776188280325,
       "type": "file"
     },
     {
-      "path": "src\\app\\admin\\dashboard\\page.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1776119680210,
-      "type": "file"
-    },
-    {
       "path": "src\\lib\\queries\\admin.ts",
       "accessCount": 6,
       "lastAccessed": 1776188787320,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\database.ts",
+      "accessCount": 6,
+      "lastAccessed": 1776190458955,
       "type": "file"
     },
     {
@@ -282,12 +294,6 @@
       "path": "src\\app\\(auth)\\register\\RegisterForm.tsx",
       "accessCount": 5,
       "lastAccessed": 1776120114562,
-      "type": "file"
-    },
-    {
-      "path": "src\\app\\actions\\checkout.ts",
-      "accessCount": 5,
-      "lastAccessed": 1776188814964,
       "type": "file"
     },
     {
@@ -315,6 +321,30 @@
       "type": "file"
     },
     {
+      "path": "proyectos\\bull-weightlifting.md",
+      "accessCount": 3,
+      "lastAccessed": 1776190252621,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\shop\\CartItemRow.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1776191043510,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 3,
+      "lastAccessed": 1776191078022,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib\\queries\\categories.ts",
+      "accessCount": 3,
+      "lastAccessed": 1776191106960,
+      "type": "file"
+    },
+    {
       "path": "src\\app\\(shop)\\checkout\\success\\page.tsx",
       "accessCount": 2,
       "lastAccessed": 1776058102968,
@@ -324,18 +354,6 @@
       "path": "src\\store\\cartStore.ts",
       "accessCount": 2,
       "lastAccessed": 1776058811538,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\shop\\CartItemRow.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1776058878670,
-      "type": "file"
-    },
-    {
-      "path": "proyectos\\bull-weightlifting.md",
-      "accessCount": 2,
-      "lastAccessed": 1776119564970,
       "type": "file"
     },
     {
@@ -375,15 +393,9 @@
       "type": "file"
     },
     {
-      "path": "src",
+      "path": "supabase\\migrations\\014_decrement_stock_fn.sql",
       "accessCount": 2,
-      "lastAccessed": 1776188661942,
-      "type": "directory"
-    },
-    {
-      "path": "src\\types\\database.ts",
-      "accessCount": 2,
-      "lastAccessed": 1776188835817,
+      "lastAccessed": 1776190413681,
       "type": "file"
     },
     {
@@ -489,12 +501,6 @@
       "type": "file"
     },
     {
-      "path": "src\\lib\\queries\\categories.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776119953704,
-      "type": "file"
-    },
-    {
       "path": "src\\app\\(shop)\\products\\[slug]\\page.tsx",
       "accessCount": 1,
       "lastAccessed": 1776119954088,
@@ -516,12 +522,6 @@
       "path": "src\\app\\admin\\products\\AdminProductsTable.tsx",
       "accessCount": 1,
       "lastAccessed": 1776188680833,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\014_decrement_stock_fn.sql",
-      "accessCount": 1,
-      "lastAccessed": 1776188808122,
       "type": "file"
     },
     {

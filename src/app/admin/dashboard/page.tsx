@@ -32,7 +32,9 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "—";
+  const diff = Date.now() - date.getTime();
   const min  = Math.floor(diff / 60000);
   const hr   = Math.floor(min / 60);
   const day  = Math.floor(hr / 24);

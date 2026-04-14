@@ -1,13 +1,13 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-04-14
+updated: 2026-04-14b
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-14  
-> Ver historial completo en [[diario/2026-04-14]]
+> Última actualización: 2026-04-14b  
+> Ver historial completo en [[diario/2026-04-14b]]
 
 ---
 
@@ -56,7 +56,18 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 
 ---
 
-## Tareas completadas (sesión 2026-04-14)
+## Tareas completadas (sesión 2026-04-14b — auditoría bugs medios/bajos)
+
+- [x] Bug #5+#6: `create_order` RPC transaccional — reemplaza 3 pasos separados, rollback automático (migración 015)
+- [x] Bug #7: `VALID_PAYMENT_METHODS` Set en checkout — early return si método no permitido
+- [x] Bug #8: `console.error` + `res.ok` check en `whatsapp.ts` y `email.ts`
+- [x] Bug #9: `buildAllVariants` sanitize NaN + validación campos vacíos en `onSubmit`
+- [x] Bug #10: `OrderStatus` type + `toOrderStatus()` guard en `OrderStatusUpdater`
+- [x] Bug #11: `getCategoryBySlug` eliminada (dead code)
+- [x] Bug #12: `adminNav` extraído a `admin-nav.ts`
+- [x] Bug #14: `timeAgo` guard `isNaN` → devuelve `"—"` en lugar de `NaN`
+
+## Tareas completadas (sesión 2026-04-14 — auditoría bugs críticos/altos)
 
 - [x] Bug #1: `getAdminProducts` con filtros reales + `AdminProductFilters` wired en página admin
 - [x] Bug #2: Race condition stock → `decrement_stock` RPC atómica (migración 014)
@@ -103,10 +114,11 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 ## Tareas pendientes
 
 ### Urgente — antes del deploy
-- [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto el checkout lanza error en producción
+- [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto `decrement_stock` RPC no existe
+- [ ] **Ejecutar migración 015** en Supabase Dashboard → SQL Editor (`supabase/migrations/015_create_order_fn.sql`) — sin esto el checkout falla completamente
 
-### Auditoría — bugs media/baja severidad
-- [ ] Continuar con los bugs restantes de la auditoría (severidad media y baja)
+### Auditoría
+- ✅ Completada — 14/14 bugs resueltos (ver [[diario/2026-04-14b]])
 
 ### Bloqueadas (esperando cuentas externas)
 - [ ] **Vercel**: crear cuenta, conectar repo, agregar env vars — ver [[diario/pendiente-configuracion]]
@@ -139,6 +151,10 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | Dos refs (`isSyncing` + `skipNextSync`) para Realtime | Resuelven problemas distintos: local vs receptor |
 | `decrement_stock` RPC en lugar de update desde JS | Único UPDATE atómico en PostgreSQL evita race condition de overselling |
 | Verificación de rol en middleware, no solo en layout | El middleware corre en el Edge antes de cualquier render; el layout es demasiado tarde para proteger datos |
+| `create_order` RPC reemplaza flujo multi-paso en JS | Una función PL/pgSQL con transacción implícita garantiza atomicidad; el rollback manual en JS no es fiable bajo fallos de red |
+| `VALID_PAYMENT_METHODS` Set en checkout | Boundary de entrada — cualquier string arbitrario se rechaza antes de tocar la DB |
+| `console.error` en libs de notificación, no en el caller | El error pertenece a la lib; el flujo de checkout no debe bifurcarse por fallos de notificación |
+| `toOrderStatus()` helper en lugar de cast directo | Centraliza la validación del enum; si los valores cambian, se actualiza en un solo lugar |
 
 ---
 
@@ -151,6 +167,7 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | `RESEND_API_KEY` no configurada en prod | Emails no se envían en producción | Agregar a Vercel env vars |
 | IP de red en Supabase Redirect URLs | OAuth y links de verificación pueden fallar desde otros dispositivos | Agregar en Supabase Dashboard |
 | Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe en Supabase | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
+| Migración 015 no ejecutada en DB | `checkout.ts` llama `create_order` RPC que aún no existe en Supabase | Ejecutar `015_create_order_fn.sql` en SQL Editor |
 
 ---
 

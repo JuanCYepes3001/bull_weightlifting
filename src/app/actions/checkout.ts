@@ -29,6 +29,12 @@ export interface ShippingAddress {
 
 export type CheckoutResult = { error: string } | { orderId: string };
 
+// All accepted payment methods — any other value is rejected before hitting the DB
+const VALID_PAYMENT_METHODS = new Set([
+  "nequi", "daviplata", "dollar_app", "global66",
+  "contraentrega", "simulado",
+]);
+
 // Payment methods that require manual verification before fulfillment
 const MANUAL_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
 
@@ -67,49 +73,35 @@ async function insertOrder(
 
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      user_id: user.id,
-      status: "pending",
-      total,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      shipping_address: shipping as any,
-      payment_id: paymentId,
-      payment_status: paymentStatus,
-      notes: shipping.notes || null,
-    })
-    .select("id")
-    .single();
+  // Single transactional RPC: inserts order + order_items + decrements stock
+  // atomically. Any failure (network, insufficient stock, constraint) rolls back
+  // everything — no orphan orders, no inconsistent stock (fixes #5 and #6).
+  const { data: orderId, error: orderError } = await supabase.rpc("create_order", {
+    p_user_id: user.id,
+    p_status: "pending",
+    p_total: total,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    p_shipping_address: shipping as any,
+    p_payment_id: paymentId,
+    p_payment_status: paymentStatus,
+    p_notes: shipping.notes || null,
+    p_items: items.map((i) => ({
+      variant_id: i.variantId,
+      quantity: i.quantity,
+      unit_price: i.price,
+    })),
+  });
 
-  if (orderError || !order) return { error: "Error al crear la orden" };
-
-  const orderItems = items.map((i) => ({
-    order_id: order.id,
-    product_variant_id: i.variantId,
-    quantity: i.quantity,
-    unit_price: i.price,
-  }));
-
-  const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-  if (itemsError) {
-    await supabase.from("orders").delete().eq("id", order.id);
-    return { error: "Error al registrar los productos de la orden" };
+  if (orderError || !orderId) {
+    const isStockError = orderError?.message?.includes("insufficient_stock");
+    return {
+      error: isStockError
+        ? "Sin stock suficiente para uno o más productos del carrito"
+        : "Error al crear la orden. Intenta de nuevo.",
+    };
   }
 
-  // Atomic stock decrement via RPC — prevents overselling under concurrent checkouts.
-  // The SQL function does UPDATE ... WHERE stock >= qty in a single statement;
-  // if stock is insufficient it raises an exception and we roll back the order.
-  for (const item of items) {
-    const { error: stockError } = await supabase.rpc("decrement_stock", {
-      p_variant_id: item.variantId,
-      p_qty: item.quantity,
-    });
-    if (stockError) {
-      await supabase.from("orders").delete().eq("id", order.id);
-      return { error: `Sin stock suficiente para ${item.productName} (${item.size} / ${item.color})` };
-    }
-  }
+  const order = { id: orderId as string };
 
   // Non-blocking notifications
   void sendWhatsApp(
@@ -138,6 +130,8 @@ export async function createOrderAction(
   paymentMethod: string
 ): Promise<CheckoutResult> {
   if (!items.length) return { error: "El carrito está vacío" };
+  if (!VALID_PAYMENT_METHODS.has(paymentMethod))
+    return { error: "Método de pago no válido." };
 
   const isManual = MANUAL_METHODS.has(paymentMethod);
   const paymentStatus = isManual

@@ -8,7 +8,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   if (!RESEND_API_KEY) return; // silently skip if not configured
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
@@ -16,8 +16,11 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       },
       body: JSON.stringify({ from: FROM, to, subject, html }),
     });
-  } catch {
-    // Non-blocking — never fail the order flow
+    if (!res.ok) {
+      console.error("[Email] Resend error", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("[Email] Network error sending notification:", err);
   }
 }
 

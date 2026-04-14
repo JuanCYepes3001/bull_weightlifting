@@ -425,6 +425,19 @@ export type Database = {
         Args: { p_variant_id: string; p_qty: number };
         Returns: void;
       };
+      create_order: {
+        Args: {
+          p_user_id: string;
+          p_status: string;
+          p_total: number;
+          p_shipping_address: Json;
+          p_payment_id: string;
+          p_payment_status: string;
+          p_notes: string | null;
+          p_items: Json; // Array<{ variant_id: string; quantity: number; unit_price: number }>
+        };
+        Returns: string; // order UUID
+      };
     };
     Enums: {
       user_role: "user" | "admin";

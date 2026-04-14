@@ -54,15 +54,32 @@ export async function getAdminStats(): Promise<AdminStats> {
 
 /* ─── Products ─────────────────────────────────────────── */
 
-export async function getAdminProducts() {
+export async function getAdminProducts(filters?: {
+  search?: string;
+  category?: string;
+  status?: string;
+}) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("products")
     .select(
       `*, category:categories(name, slug), variants:product_variants(*), images:product_images(*)`
     )
     .order("created_at", { ascending: false });
 
+  if (filters?.search) {
+    query = query.ilike("name", `%${filters.search}%`);
+  }
+  if (filters?.category) {
+    query = query.eq("category_id", filters.category);
+  }
+  if (filters?.status === "active") {
+    query = query.eq("is_active", true);
+  } else if (filters?.status === "inactive") {
+    query = query.eq("is_active", false);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
 }

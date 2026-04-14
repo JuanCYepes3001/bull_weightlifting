@@ -97,13 +97,18 @@ async function insertOrder(
     return { error: "Error al registrar los productos de la orden" };
   }
 
-  // Reduce stock
+  // Atomic stock decrement via RPC — prevents overselling under concurrent checkouts.
+  // The SQL function does UPDATE ... WHERE stock >= qty in a single statement;
+  // if stock is insufficient it raises an exception and we roll back the order.
   for (const item of items) {
-    const v = variants.find((v) => v.id === item.variantId)!;
-    await supabase
-      .from("product_variants")
-      .update({ stock: v.stock - item.quantity })
-      .eq("id", item.variantId);
+    const { error: stockError } = await supabase.rpc("decrement_stock", {
+      p_variant_id: item.variantId,
+      p_qty: item.quantity,
+    });
+    if (stockError) {
+      await supabase.from("orders").delete().eq("id", order.id);
+      return { error: `Sin stock suficiente para ${item.productName} (${item.size} / ${item.color})` };
+    }
   }
 
   // Non-blocking notifications

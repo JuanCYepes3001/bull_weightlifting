@@ -1,0 +1,26 @@
+{
+  "agents": [
+    {
+      "agent_id": "ab1f20d17531c7b16",
+      "agent_type": "oh-my-claudecode:tracer",
+      "started_at": "2026-04-14T01:19:13.340Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-14T01:21:06.363Z",
+      "duration_ms": 113023
+    },
+    {
+      "agent_id": "a1554addcbce7e08e",
+      "agent_type": "statusline-setup",
+      "started_at": "2026-04-14T17:52:45.743Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-14T17:54:03.230Z",
+      "duration_ms": 77487
+    }
+  ],
+  "total_spawned": 2,
+  "total_completed": 2,
+  "total_failed": 0,
+  "last_updated": "2026-04-14T17:54:03.336Z"
+}

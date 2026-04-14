@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\\\\src\\\\middleware.ts\"}",
+  "error": "File does not exist. Note: your current working directory is C:\\Users\\User\\Documents\\GitHub\\bull_weightlifting.",
+  "timestamp": "2026-04-14T17:55:52.106Z",
+  "retry_count": 1
+}

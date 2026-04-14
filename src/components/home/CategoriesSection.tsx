@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
@@ -10,7 +10,6 @@ import type { Category } from "@/types";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Palette: bg gradient + accent color per card
 const PALETTES = [
   { from: "#0d1b2a", to: "#0a1520", accent: "#3b82f6", label: "Azul" },
   { from: "#1a0a0a", to: "#150808", accent: "#dc2626", label: "Rojo" },
@@ -20,40 +19,33 @@ const PALETTES = [
   { from: "#0a1a1a", to: "#081515", accent: "#0891b2", label: "Cian" },
 ];
 
-// Inline SVG art for each palette index (abstract geometric shapes)
 const CARD_ART = [
-  // Camiseta / ropa superior
   <svg key="0" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <path d="M60 30 L30 60 L50 70 L50 180 L150 180 L150 70 L170 60 L140 30 L120 50 C115 65 85 65 80 50 Z" stroke="currentColor" strokeWidth="3" fill="none"/>
     <circle cx="100" cy="95" r="15" stroke="currentColor" strokeWidth="2" />
     <line x1="50" y1="100" x2="150" y2="100" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4"/>
   </svg>,
-  // Pantalón / ropa inferior
   <svg key="1" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <path d="M50 40 L50 130 L80 180 L100 130 L120 180 L150 130 L150 40 Z" stroke="currentColor" strokeWidth="3" fill="none"/>
     <line x1="100" y1="40" x2="100" y2="130" stroke="currentColor" strokeWidth="2"/>
     <rect x="50" y="40" width="100" height="20" stroke="currentColor" strokeWidth="2" fill="none"/>
   </svg>,
-  // Accesorios
   <svg key="2" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <circle cx="100" cy="90" r="45" stroke="currentColor" strokeWidth="3"/>
     <circle cx="100" cy="90" r="25" stroke="currentColor" strokeWidth="2"/>
     <path d="M100 45 L100 20 M155 90 L180 90 M100 135 L100 160 M45 90 L20 90" stroke="currentColor" strokeWidth="2"/>
     <circle cx="100" cy="90" r="8" fill="currentColor" opacity="0.4"/>
   </svg>,
-  // Zapatos / calzado
   <svg key="3" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <path d="M30 140 C30 140 50 100 80 95 L130 90 C150 88 170 100 175 120 C180 140 165 155 140 155 L40 155 C33 155 28 148 30 140 Z" stroke="currentColor" strokeWidth="3" fill="none"/>
     <path d="M80 95 L75 60 C75 55 80 50 85 50 L105 50 C110 50 115 55 115 60 L115 90" stroke="currentColor" strokeWidth="3" fill="none"/>
     <line x1="90" y1="120" x2="160" y2="115" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 3"/>
   </svg>,
-  // Hoodie / sudadera
   <svg key="4" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <path d="M70 30 L40 55 L30 90 L55 95 L55 185 L145 185 L145 95 L170 90 L160 55 L130 30 L115 50 L100 60 L85 50 Z" stroke="currentColor" strokeWidth="3" fill="none"/>
     <path d="M85 50 Q100 70 115 50" stroke="currentColor" strokeWidth="2" fill="none"/>
     <rect x="85" y="130" width="30" height="20" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
   </svg>,
-  // Gorra / headwear
   <svg key="5" viewBox="0 0 200 220" className="absolute inset-0 w-full h-full opacity-20" fill="none">
     <path d="M40 110 Q40 60 100 55 Q160 60 160 110 Z" stroke="currentColor" strokeWidth="3" fill="none"/>
     <path d="M30 110 L170 110 L155 125 L45 125 Z" stroke="currentColor" strokeWidth="2" fill="none"/>
@@ -67,84 +59,102 @@ interface CategoriesSectionProps {
 }
 
 export function CategoriesSection({ categories }: CategoriesSectionProps) {
-  const sectionRef  = useRef<HTMLDivElement>(null);
-  const wrapperRef  = useRef<HTMLDivElement>(null);
-  const trackRef    = useRef<HTMLDivElement>(null);
-  const headingRef  = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0); // 0–1 for the progress bar
 
   const items: Array<Partial<Category> & { placeholder?: boolean }> =
     categories.length > 0
       ? categories
       : [
-          { id: "1", name: "Camisetas",   slug: "camisetas",   gender: "unisex", placeholder: true },
-          { id: "2", name: "Pantalones",  slug: "pantalones",  gender: "hombre", placeholder: true },
-          { id: "3", name: "Accesorios",  slug: "accesorios",  gender: "unisex", placeholder: true },
-          { id: "4", name: "Calzado",     slug: "calzado",     gender: "unisex", placeholder: true },
-          { id: "5", name: "Sudaderas",   slug: "sudaderas",   gender: "unisex", placeholder: true },
-          { id: "6", name: "Gorras",      slug: "gorras",      gender: "unisex", placeholder: true },
+          { id: "1", name: "Camisetas",  slug: "camisetas",  gender: "unisex", placeholder: true },
+          { id: "2", name: "Pantalones", slug: "pantalones", gender: "hombre", placeholder: true },
+          { id: "3", name: "Accesorios", slug: "accesorios", gender: "unisex", placeholder: true },
+          { id: "4", name: "Calzado",    slug: "calzado",    gender: "unisex", placeholder: true },
+          { id: "5", name: "Sudaderas",  slug: "sudaderas",  gender: "unisex", placeholder: true },
+          { id: "6", name: "Gorras",     slug: "gorras",     gender: "unisex", placeholder: true },
         ];
 
   useEffect(() => {
-    const wrapper = wrapperRef.current;
+    const section = sectionRef.current;
     const track   = trackRef.current;
     const heading = headingRef.current;
-    if (!wrapper || !track || !heading) return;
+    if (!section || !track || !heading) return;
 
+    // ── Entrance animations ──────────────────────────────────
     const ctx = gsap.context(() => {
-      // Heading fade-in
-      gsap.fromTo(
-        heading,
+      gsap.fromTo(heading,
         { y: 30, opacity: 0 },
-        {
-          y: 0, opacity: 1, duration: 0.7, ease: "power2.out",
-          scrollTrigger: { trigger: wrapper, start: "top 75%" },
-        }
+        { y: 0, opacity: 1, duration: 0.7, ease: "power2.out",
+          scrollTrigger: { trigger: section, start: "top 75%" } }
       );
-
-      // Cards stagger on first appear
-      gsap.fromTo(
-        ".cat-card",
+      gsap.fromTo(".cat-card",
         { y: 50, opacity: 0 },
-        {
-          y: 0, opacity: 1, duration: 0.7, stagger: 0.1, ease: "power3.out",
-          scrollTrigger: { trigger: track, start: "top 80%" },
-        }
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.08, ease: "power3.out",
+          scrollTrigger: { trigger: track, start: "top 85%" } }
       );
+    }, section);
 
-      // Horizontal scroll: pin section, translate track.
-      // getScrollDistance = how far the track must move so its right edge aligns with viewport right.
-      // track.getBoundingClientRect().left accounts for the container's padding offset.
-      const getScrollDistance = () => {
-        const trackLeft = track.getBoundingClientRect().left;
-        return Math.max(0, track.scrollWidth + trackLeft - window.innerWidth);
-      };
+    // ── Scroll progress indicator ────────────────────────────
+    const updateProgress = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      if (max <= 0) { setProgress(0); return; }
+      setProgress(track.scrollLeft / max);
+    };
+    track.addEventListener("scroll", updateProgress, { passive: true });
 
-      const anim = gsap.to(track, {
-        x: () => -getScrollDistance(),
-        ease: "none",
-        duration: 1,
+    // ── Wheel → horizontal with GSAP smooth animation ────────
+    // Listener must be on trackRef (the scrollable element) so e.preventDefault()
+    // fires before the browser applies its own scroll action. Attaching to a
+    // non-scrollable ancestor means preventDefault() runs after the browser has
+    // already consumed the event on the scrollable child — too late to stop it.
+    let targetLeft = track.scrollLeft;
+
+    const onWheel = (e: WheelEvent) => {
+      const max = track.scrollWidth - track.clientWidth;
+      if (max <= 0) return; // nothing to scroll horizontally → let page scroll
+
+      // Re-sync if the user dragged/swiped since last wheel event
+      if (Math.abs(targetLeft - track.scrollLeft) > 8) {
+        targetLeft = track.scrollLeft;
+      }
+
+      const atStart = targetLeft <= 1        && e.deltaY < 0;
+      const atEnd   = targetLeft >= max - 1  && e.deltaY > 0;
+
+      // At boundaries → release to page scroll
+      if (atStart || atEnd) return;
+
+      // Must call preventDefault() here (on the scrollable element itself) to
+      // suppress both the native horizontal scroll and vertical page scroll.
+      e.preventDefault();
+      targetLeft = Math.max(0, Math.min(max, targetLeft + e.deltaY * 1.4));
+
+      gsap.to(track, {
+        scrollLeft: targetLeft,
+        duration: 0.65,
+        ease: "power3.out",
+        overwrite: true,
+        onUpdate: updateProgress,
       });
+    };
 
-      ScrollTrigger.create({
-        trigger: wrapper,
-        start: "top top",
-        end: () => `+=${getScrollDistance()}`,
-        pin: true,
-        anticipatePin: 1,
-        scrub: 1.2,
-        animation: anim,
-        invalidateOnRefresh: true,
-        onRefresh: () => anim.invalidate(),
-      });
-    }, wrapper);
+    // Attach to trackRef, not sectionRef — see comment above.
+    track.addEventListener("wheel", onWheel, { passive: false });
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      track.removeEventListener("wheel", onWheel);
+      track.removeEventListener("scroll", updateProgress);
+    };
   }, [items.length]);
 
   return (
-    <div ref={wrapperRef} className="bg-background">
-      <div ref={sectionRef} className="py-16 px-4 md:px-8">
+    <div ref={sectionRef} className="bg-background py-16">
+      <div className="px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
+
           {/* Heading */}
           <div ref={headingRef} className="flex items-end justify-between mb-10">
             <div>
@@ -164,22 +174,29 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
             </Link>
           </div>
 
-          {/* Horizontal track */}
+          {/* Track — nativo overflow-x + wheel interception vía GSAP */}
           <div
             ref={trackRef}
-            className="flex gap-5 will-change-transform"
-            style={{ width: "max-content" }}
+            className="flex gap-5 overflow-x-auto pb-6 [&::-webkit-scrollbar]:hidden"
+            style={{
+              scrollbarWidth: "none",
+              cursor: "grab",
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.cursor = "grabbing")}
+            onMouseUp={(e)   => (e.currentTarget.style.cursor = "grab")}
+            onMouseLeave={(e)=> (e.currentTarget.style.cursor = "grab")}
           >
+
             {items.map((cat, i) => {
               const palette = PALETTES[i % PALETTES.length];
               const art     = CARD_ART[i % CARD_ART.length];
-
               return (
                 <Link
                   key={cat.id}
                   href={cat.placeholder ? `/products?q=${cat.slug}` : `/products?category=${cat.id}`}
                   className="cat-card group relative flex-shrink-0 w-64 md:w-72 h-[420px] md:h-[480px] overflow-hidden border border-white/5 hover:border-white/20 transition-colors duration-300"
                   style={{ background: `linear-gradient(160deg, ${palette.from}, ${palette.to})` }}
+                  draggable={false}
                 >
                   {cat.image_url ? (
                     <Image
@@ -188,23 +205,21 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                       fill
                       sizes="288px"
                       className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-105"
+                      draggable={false}
                     />
                   ) : (
-                    <div
-                      className="absolute inset-0 flex items-center justify-center"
-                      style={{ color: palette.accent }}
-                    >
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ color: palette.accent }}>
                       {art}
                     </div>
                   )}
 
-                  {/* Glow top-right */}
+                  {/* Glow */}
                   <div
                     className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-20 transition-opacity duration-500 group-hover:opacity-40"
                     style={{ background: palette.accent }}
                   />
 
-                  {/* Overlay gradient */}
+                  {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
                   {/* Bottom reveal line */}
@@ -213,7 +228,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                     style={{ background: palette.accent }}
                   />
 
-                  {/* Accent pill top-left */}
+                  {/* Accent pill */}
                   <div
                     className="absolute top-5 left-5 px-3 py-1 text-[9px] font-body tracking-[0.3em] uppercase"
                     style={{ background: `${palette.accent}22`, color: palette.accent, border: `1px solid ${palette.accent}44` }}
@@ -221,17 +236,13 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                     {palette.label}
                   </div>
 
-                  {/* Card content */}
+                  {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h3 className="font-heading text-2xl tracking-wider text-white uppercase mb-2">
                       {cat.name}
                     </h3>
-                    <div
-                      className="flex items-center gap-1 text-white/40 group-hover:text-white/80 transition-colors"
-                    >
-                      <span className="font-body text-xs tracking-widest uppercase">
-                        Ver categoría
-                      </span>
+                    <div className="flex items-center gap-1 text-white/40 group-hover:text-white/80 transition-colors">
+                      <span className="font-body text-xs tracking-widest uppercase">Ver categoría</span>
                       <ArrowUpRight size={12} />
                     </div>
                   </div>
@@ -239,20 +250,33 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
               );
             })}
 
-            {/* End spacer card */}
-            <div className="flex-shrink-0 w-16 md:w-24" />
+            {/* End spacer */}
+            <div className="flex-shrink-0 w-8 md:w-16" />
           </div>
 
-          {/* Mobile "Ver todo" */}
-          <div className="mt-8 flex justify-center md:hidden">
+          {/* Progress bar + hint */}
+          <div className="mt-4 flex items-center gap-4">
+            {/* Barra de progreso */}
+            <div className="flex-1 h-px bg-white/5">
+              <div
+                className="h-full bg-crimson/60 transition-all duration-150"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+            {/* Hint texto */}
+            <p className="font-body text-[9px] tracking-[0.3em] uppercase text-white/20 shrink-0 hidden md:block">
+              scroll para explorar
+            </p>
+            {/* Mobile "Ver todo" */}
             <Link
               href="/products"
-              className="font-body text-xs tracking-widest uppercase text-white/40 hover:text-white transition-colors flex items-center gap-2"
+              className="font-body text-xs tracking-widest uppercase text-white/40 hover:text-white transition-colors flex items-center gap-1 md:hidden"
             >
-              Ver todas las categorías
-              <ArrowUpRight size={14} />
+              Ver todas
+              <ArrowUpRight size={12} />
             </Link>
           </div>
+
         </div>
       </div>
     </div>

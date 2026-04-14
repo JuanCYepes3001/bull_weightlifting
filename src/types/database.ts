@@ -421,6 +421,10 @@ export type Database = {
         Args: { p_slug: string };
         Returns: Json;
       };
+      decrement_stock: {
+        Args: { p_variant_id: string; p_qty: number };
+        Returns: void;
+      };
     };
     Enums: {
       user_role: "user" | "admin";

@@ -1,13 +1,13 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-04-12
+updated: 2026-04-14
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-12  
-> Ver historial completo en [[diario/2026-04-12]]
+> Última actualización: 2026-04-14  
+> Ver historial completo en [[diario/2026-04-14]]
 
 ---
 
@@ -56,6 +56,27 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 
 ---
 
+## Tareas completadas (sesión 2026-04-14)
+
+- [x] Bug #1: `getAdminProducts` con filtros reales + `AdminProductFilters` wired en página admin
+- [x] Bug #2: Race condition stock → `decrement_stock` RPC atómica (migración 014)
+- [x] Bug #3: Middleware `/admin` protección real con `get_user_role` RPC
+- [x] Bug #4: Guard `sale_price != null` en `ProductCard`
+- [x] StatusLine configurada (carpeta, rama, modelo, contexto %)
+
+---
+
+## Tareas completadas (sesión 2026-04-13)
+
+- [x] Fix definitivo botón ver contraseña — `<input>` nativo con `pl-4 pr-12` + `inset-y-0`
+- [x] Navbar: delay GSAP 1.2s → 0.1s (ya no tarda en aparecer al navegar)
+- [x] Logo auth: `size="sm"` → `size="md"` (más visible)
+- [x] `createCategoryAction`: agrega `logActivity` + revalida rutas de tienda
+- [x] Homepage: `CategoriesSection` restaurada con fetch de categorías real
+- [x] Scroll horizontal categorías: wheel interception en `trackRef` + GSAP smooth + barra de progreso
+
+---
+
 ## Tareas completadas (sesión 2026-04-12)
 
 ### Mañana
@@ -80,6 +101,12 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 ---
 
 ## Tareas pendientes
+
+### Urgente — antes del deploy
+- [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto el checkout lanza error en producción
+
+### Auditoría — bugs media/baja severidad
+- [ ] Continuar con los bugs restantes de la auditoría (severidad media y baja)
 
 ### Bloqueadas (esperando cuentas externas)
 - [ ] **Vercel**: crear cuenta, conectar repo, agregar env vars — ver [[diario/pendiente-configuracion]]
@@ -110,6 +137,8 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | SVG puro para gráficos del dashboard | Sin dependencias pesadas (recharts/chart.js) |
 | `replaceItems()` atómico en el carrito | Evita renders intermedios y loops de sync |
 | Dos refs (`isSyncing` + `skipNextSync`) para Realtime | Resuelven problemas distintos: local vs receptor |
+| `decrement_stock` RPC en lugar de update desde JS | Único UPDATE atómico en PostgreSQL evita race condition de overselling |
+| Verificación de rol en middleware, no solo en layout | El middleware corre en el Edge antes de cualquier render; el layout es demasiado tarde para proteger datos |
 
 ---
 
@@ -121,6 +150,7 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | Sin credenciales PayPal | El flujo PayPal cae al error "no configurado" | Crear app en developer.paypal.com |
 | `RESEND_API_KEY` no configurada en prod | Emails no se envían en producción | Agregar a Vercel env vars |
 | IP de red en Supabase Redirect URLs | OAuth y links de verificación pueden fallar desde otros dispositivos | Agregar en Supabase Dashboard |
+| Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe en Supabase | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
 
 ---
 

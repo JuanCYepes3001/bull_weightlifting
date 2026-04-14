@@ -9,7 +9,7 @@ export default function AuthLayout({
     <div className="min-h-screen flex flex-col">
       {/* Header minimal */}
       <header className="h-16 flex items-center px-6 border-b border-white/5">
-        <BullLogo size="sm" layout="horizontal" withSubtitle withMark />
+        <BullLogo size="md" layout="horizontal" withSubtitle withMark />
       </header>
 
       {/* Content */}

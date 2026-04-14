@@ -48,7 +48,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAdmin) {
-    // Role check happens in admin layout via server component
+    const { data: role } = await supabase.rpc("get_user_role");
+    if (role !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   if (user && isAuth) {

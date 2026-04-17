@@ -6,8 +6,8 @@ proyecto: "[[proyectos/bull-weightlifting]]"
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-16  
-> Ver historial completo en [[diario/2026-04-16]]
+> Última actualización: 2026-04-16 (tarde)
+> Ver historial completo en [[diario/2026-04-16]] y [[diario/2026-04-16b]]
 
 ---
 

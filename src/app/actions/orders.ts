@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
@@ -35,32 +36,35 @@ export async function updateOrderStatusAction(
 
   if (error) return { error: "Error al actualizar el estado de la orden" };
 
-  // Send notifications on status changes
+  // Send notifications on status changes — after() ensures these run after the response
   if ((status === "shipped" || status === "delivered") && order) {
     const addr = order.shipping_address as Record<string, string> | null;
     const phone = addr?.phone ?? "";
     const isContraEntrega = typeof order.payment_id === "string" &&
       order.payment_id.startsWith("CONTRAENTREGA");
+    const capturedOrder = order;
+    const capturedStatus = status;
 
-    if (phone) {
-      const message = status === "shipped"
-        ? buildShippedMessage({ orderId: order.id, total: order.total, isContraEntrega })
-        : buildDeliveredMessage({ orderId: order.id, total: order.total, isContraEntrega });
-      void sendWhatsApp(phone, message);
-    }
-
-    // Get user email via admin client
-    if (order.user_id) {
-      const adminClient = createAdminClient();
-      const { data: { user: orderUser } } = await adminClient.auth.admin.getUserById(order.user_id);
-      const email = orderUser?.email;
-      if (email) {
-        const emailParams = { to: email, orderId: order.id, total: order.total, isContraEntrega };
-        void (status === "shipped"
-          ? sendShippedEmail(emailParams)
-          : sendDeliveredEmail(emailParams));
+    after(async () => {
+      if (phone) {
+        const message = capturedStatus === "shipped"
+          ? buildShippedMessage({ orderId: capturedOrder.id, total: capturedOrder.total, isContraEntrega })
+          : buildDeliveredMessage({ orderId: capturedOrder.id, total: capturedOrder.total, isContraEntrega });
+        await sendWhatsApp(phone, message);
       }
-    }
+
+      if (capturedOrder.user_id) {
+        const adminClient = createAdminClient();
+        const { data: { user: orderUser } } = await adminClient.auth.admin.getUserById(capturedOrder.user_id);
+        const email = orderUser?.email;
+        if (email) {
+          const emailParams = { to: email, orderId: capturedOrder.id, total: capturedOrder.total, isContraEntrega };
+          await (capturedStatus === "shipped"
+            ? sendShippedEmail(emailParams)
+            : sendDeliveredEmail(emailParams));
+        }
+      }
+    });
   }
 
   revalidatePath("/admin/orders");

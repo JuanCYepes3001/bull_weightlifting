@@ -233,8 +233,8 @@
   "hotPaths": [
     {
       "path": "STATE.md",
-      "accessCount": 36,
-      "lastAccessed": 1776388471054,
+      "accessCount": 38,
+      "lastAccessed": 1776440949131,
       "type": "file"
     },
     {
@@ -244,16 +244,16 @@
       "type": "file"
     },
     {
-      "path": "",
-      "accessCount": 25,
-      "lastAccessed": 1776369768673,
-      "type": "directory"
+      "path": "src\\app\\actions\\checkout.ts",
+      "accessCount": 29,
+      "lastAccessed": 1776452067994,
+      "type": "file"
     },
     {
-      "path": "src\\app\\actions\\checkout.ts",
-      "accessCount": 23,
-      "lastAccessed": 1776387716288,
-      "type": "file"
+      "path": "",
+      "accessCount": 27,
+      "lastAccessed": 1776408572977,
+      "type": "directory"
     },
     {
       "path": "src",
@@ -263,8 +263,8 @@
     },
     {
       "path": "src\\app\\actions\\auth.ts",
-      "accessCount": 9,
-      "lastAccessed": 1776387734857,
+      "accessCount": 14,
+      "lastAccessed": 1776444108590,
       "type": "file"
     },
     {
@@ -412,6 +412,12 @@
       "type": "file"
     },
     {
+      "path": "diario\\pendiente-configuracion.md",
+      "accessCount": 2,
+      "lastAccessed": 1776454897987,
+      "type": "file"
+    },
+    {
       "path": "diario\\2026-04-11.md",
       "accessCount": 1,
       "lastAccessed": 1776057487494,
@@ -433,12 +439,6 @@
       "path": "src\\app\\(shop)\\checkout\\paypal-return\\page.tsx",
       "accessCount": 1,
       "lastAccessed": 1776058065955,
-      "type": "file"
-    },
-    {
-      "path": "diario\\pendiente-configuracion.md",
-      "accessCount": 1,
-      "lastAccessed": 1776058916887,
       "type": "file"
     },
     {

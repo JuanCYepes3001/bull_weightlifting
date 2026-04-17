@@ -2,25 +2,28 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
-// ── Simple in-memory rate limiter ────────────────────────────────────────────
-// Works for single-instance / local deployments.
-// For Vercel / multi-instance production, replace with @upstash/ratelimit + Redis.
-const _rateLimits = new Map<string, { count: number; resetAt: number }>();
+// ── Rate limiters (Upstash Redis — works across Vercel multi-instance) ───────
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-function isRateLimited(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now();
-  const entry = _rateLimits.get(key);
-  if (!entry || now > entry.resetAt) {
-    _rateLimits.set(key, { count: 1, resetAt: now + windowMs });
-    return false;
-  }
-  if (entry.count >= max) return true;
-  entry.count++;
-  return false;
-}
+const loginLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "15 m"),
+  prefix: "rl:login",
+});
+
+const resetLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "15 m"),
+  prefix: "rl:reset",
+});
 
 async function getClientIp(): Promise<string> {
   const h = await headers();
@@ -35,7 +38,8 @@ type AuthResult = {
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
   const ip = await getClientIp();
-  if (isRateLimited(`login:${ip}`, 10, 15 * 60 * 1000)) {
+  const { success: loginOk } = await loginLimiter.limit(`login:${ip}`);
+  if (!loginOk) {
     return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
   }
 
@@ -157,7 +161,8 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Au
   if (!email) return { error: "Email requerido" };
 
   // Rate limit by email: max 3 reset emails per 15 minutes
-  if (isRateLimited(`reset:${email.toLowerCase()}`, 3, 15 * 60 * 1000)) {
+  const { success: resetOk } = await resetLimiter.limit(`reset:${email.toLowerCase()}`);
+  if (!resetOk) {
     return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
   }
 

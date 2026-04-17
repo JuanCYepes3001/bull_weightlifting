@@ -203,7 +203,7 @@ export async function createPayPalOrderAction(
   }
 
   const total = items.reduce((s, i) => s + (paypalPriceMap.get(i.variantId) ?? 0) * i.quantity, 0);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
   try {
     const { paypalOrderId, approvalUrl } = await createPayPalOrder(

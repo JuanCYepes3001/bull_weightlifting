@@ -1,10 +1,9 @@
 // WhatsApp notifications via Twilio REST API
-// Required env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
-// Optional: TWILIO_WHATSAPP_FROM (defaults to sandbox number)
+// Required env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN;
-const FROM        = process.env.TWILIO_WHATSAPP_FROM ?? "whatsapp:+14155238886";
+const FROM        = process.env.TWILIO_WHATSAPP_FROM;
 
 function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -13,7 +12,10 @@ function formatPhone(phone: string): string {
 }
 
 export async function sendWhatsApp(to: string, body: string): Promise<void> {
-  if (!ACCOUNT_SID || !AUTH_TOKEN) return; // silently skip if not configured
+  if (!ACCOUNT_SID || !AUTH_TOKEN || !FROM) {
+    console.error("[WhatsApp] TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_WHATSAPP_FROM not configured — WhatsApp sending disabled");
+    return;
+  }
 
   try {
     const res = await fetch(

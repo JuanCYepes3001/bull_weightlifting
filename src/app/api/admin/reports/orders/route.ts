@@ -25,13 +25,13 @@ const EXCEL_COLUMNS: Partial<ExcelJS.Column>[] = [
   { header: "Fecha",     key: "fecha",    width: 14 },
 ];
 
-async function buildExcelBuffer(rows: object[]): Promise<Buffer> {
+async function buildExcelBuffer(rows: object[]): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Órdenes");
   sheet.columns = EXCEL_COLUMNS;
   sheet.getRow(1).font = { bold: true };
   if (rows.length) sheet.addRows(rows);
-  return workbook.xlsx.writeBuffer() as Promise<Buffer>;
+  return workbook.xlsx.writeBuffer();
 }
 
 export async function GET(request: NextRequest) {

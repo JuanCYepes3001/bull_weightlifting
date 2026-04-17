@@ -7,16 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:link": "supabase link --project-ref xagdkfvnyniwyykfbrke",
+    "db:link": "supabase link --project-ref $SUPABASE_PROJECT_REF",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --project-id xagdkfvnyniwyykfbrke > src/types/database.ts"
+    "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/types/database.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
     "clsx": "^2.1.1",
+    "exceljs": "^4.4.0",
     "gsap": "^3.14.2",
     "lucide-react": "^1.7.0",
     "mercadopago": "^2.12.0",
@@ -25,7 +26,6 @@
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.72.1",
     "tailwind-merge": "^3.5.0",
-    "xlsx": "^0.18.5",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },

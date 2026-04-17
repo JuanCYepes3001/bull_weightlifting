@@ -5,7 +5,10 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.EMAIL_FROM ?? "BULL Weightlifting <noreply@bullweightlifting.com>";
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  if (!RESEND_API_KEY) return; // silently skip if not configured
+  if (!RESEND_API_KEY) {
+    console.error("[Email] RESEND_API_KEY not configured — email sending disabled");
+    return;
+  }
 
   try {
     const res = await fetch("https://api.resend.com/emails", {

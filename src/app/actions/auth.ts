@@ -142,9 +142,13 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
 
     // Use admin client to bypass RLS — user has no active session during email confirmation
     const adminClient = createAdminClient();
-    await adminClient
+    const { error: upsertError } = await adminClient
       .from("profiles")
       .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
+
+    if (upsertError) {
+      console.error("[registerAction] profile upsert failed:", upsertError.message, upsertError.code);
+    }
   }
 
   // If session exists, email confirmation is disabled — user is already logged in

@@ -1,40 +1,41 @@
-// WhatsApp notifications via Twilio REST API
-// Required env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM
+// WhatsApp notifications via Meta Cloud API (WhatsApp Business Platform)
+// Required env vars: WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID
 
-const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN;
-const FROM        = process.env.TWILIO_WHATSAPP_FROM;
+const ACCESS_TOKEN    = process.env.WHATSAPP_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const API_VERSION     = "v20.0";
 
 function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("57") && digits.length >= 12) return `whatsapp:+${digits}`;
-  return `whatsapp:+57${digits}`;
+  if (digits.startsWith("57") && digits.length >= 12) return digits;
+  return `57${digits}`;
 }
 
 export async function sendWhatsApp(to: string, body: string): Promise<void> {
-  if (!ACCOUNT_SID || !AUTH_TOKEN || !FROM) {
-    console.error("[WhatsApp] TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_WHATSAPP_FROM not configured — WhatsApp sending disabled");
+  if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) {
+    console.error("[WhatsApp] WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID not configured — WhatsApp sending disabled");
     return;
   }
 
   try {
     const res = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`,
+      `https://graph.facebook.com/${API_VERSION}/${PHONE_NUMBER_ID}/messages`,
       {
         method: "POST",
         headers: {
-          Authorization: `Basic ${Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          From: FROM,
-          To:   formatPhone(to),
-          Body: body,
-        }).toString(),
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formatPhone(to),
+          type: "text",
+          text: { body },
+        }),
       }
     );
     if (!res.ok) {
-      console.error("[WhatsApp] Twilio error", res.status, await res.text());
+      console.error("[WhatsApp] Meta API error", res.status, await res.text());
     }
   } catch (err) {
     console.error("[WhatsApp] Network error sending notification:", err);
@@ -52,13 +53,13 @@ export function buildOrderConfirmationMessage(params: {
   const shortId = orderId.slice(0, 8).toUpperCase();
 
   const PAY_LABELS: Record<string, string> = {
-    nequi:        "Nequi",
-    daviplata:    "Daviplata",
-    contraentrega:"Contra entrega (pago en efectivo al recibir)",
-    paypal:       "PayPal",
-    dollar_app:   "Dollar App",
-    global66:     "Global 66",
-    simulado:     "Pago simulado",
+    nequi:         "Nequi",
+    daviplata:     "Daviplata",
+    contraentrega: "Contra entrega (pago en efectivo al recibir)",
+    paypal:        "PayPal",
+    dollar_app:    "Dollar App",
+    global66:      "Global 66",
+    simulado:      "Pago simulado",
   };
 
   const lines = items

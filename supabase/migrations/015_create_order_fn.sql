@@ -28,7 +28,7 @@ BEGIN
     user_id, status, total, shipping_address,
     payment_id, payment_status, notes
   ) VALUES (
-    p_user_id, p_status, p_total, p_shipping_address,
+    p_user_id, p_status::order_status, p_total, p_shipping_address,
     p_payment_id, p_payment_status, p_notes
   )
   RETURNING id INTO v_order_id;

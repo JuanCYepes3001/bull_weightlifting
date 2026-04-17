@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { sendWhatsApp, buildOrderConfirmationMessage } from "@/lib/whatsapp";
@@ -122,21 +123,23 @@ async function insertOrder(
 
   const order = { id: orderId as string };
 
-  // Non-blocking notifications
-  void sendWhatsApp(
-    shipping.phone,
-    buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping })
-  );
-  if (user && "email" in user && user.email) {
-    void sendOrderConfirmationEmail({
-      to: user.email,
-      orderId: order.id,
-      items,
-      total,
-      paymentMethod,
-      shipping,
-    });
-  }
+  // Non-blocking notifications — after() ensures these run after the response/redirect
+  after(async () => {
+    await sendWhatsApp(
+      shipping.phone,
+      buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping })
+    );
+    if (user && "email" in user && user.email) {
+      await sendOrderConfirmationEmail({
+        to: user.email,
+        orderId: order.id,
+        items,
+        total,
+        paymentMethod,
+        shipping,
+      });
+    }
+  });
 
   return { orderId: order.id };
 }

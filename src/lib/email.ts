@@ -24,6 +24,15 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 }
 
+function esc(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const COP = (n: number) => "$" + n.toLocaleString("es-CO", { maximumFractionDigits: 0 });
 
 const PAY_LABELS: Record<string, string> = {
@@ -136,8 +145,8 @@ export async function sendOrderConfirmationEmail(params: {
     .map(
       (i) => `
       <div class="product-row">
-        <span class="product-name">${i.productName}</span>
-        <span style="color:#666"> · ${i.size} / ${i.color} · ×${i.quantity}</span>
+        <span class="product-name">${esc(i.productName)}</span>
+        <span style="color:#666"> · ${esc(i.size)} / ${esc(i.color)} · ×${i.quantity}</span>
         <span style="float:right;color:#fff">${COP(i.price * i.quantity)}</span>
       </div>`
     )
@@ -153,9 +162,9 @@ export async function sendOrderConfirmationEmail(params: {
       <div class="label">Número de orden</div>
       <div class="value">#${shortId}</div>
       <div class="label">Destinatario</div>
-      <div class="value">${shipping.full_name}</div>
+      <div class="value">${esc(shipping.full_name)}</div>
       <div class="label">Dirección</div>
-      <div class="value">${shipping.address}, ${shipping.city}, ${shipping.state}</div>
+      <div class="value">${esc(shipping.address)}, ${esc(shipping.city)}, ${esc(shipping.state)}</div>
       <div class="label">Método de pago</div>
       <div class="value">${payLabel}</div>
     </div>

@@ -10,7 +10,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // Prevent open redirect: only allow relative paths (rejects //evil.com, https://evil.com)
+      const safePath = /^\/(?!\/)/.test(next) ? next : "/";
+      return NextResponse.redirect(`${origin}${safePath}`);
     }
   }
 

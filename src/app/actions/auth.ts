@@ -1,8 +1,32 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
+
+// ── Simple in-memory rate limiter ────────────────────────────────────────────
+// Works for single-instance / local deployments.
+// For Vercel / multi-instance production, replace with @upstash/ratelimit + Redis.
+const _rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = _rateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    _rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (entry.count >= max) return true;
+  entry.count++;
+  return false;
+}
+
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 type AuthResult = {
   error?: string;
@@ -10,6 +34,11 @@ type AuthResult = {
 };
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
+  const ip = await getClientIp();
+  if (isRateLimited(`login:${ip}`, 10, 15 * 60 * 1000)) {
+    return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
+  }
+
   const raw = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -126,6 +155,11 @@ export async function logoutAction(): Promise<void> {
 export async function requestPasswordResetAction(formData: FormData): Promise<AuthResult> {
   const email = (formData.get("email") as string)?.trim();
   if (!email) return { error: "Email requerido" };
+
+  // Rate limit by email: max 3 reset emails per 15 minutes
+  if (isRateLimited(`reset:${email.toLowerCase()}`, 3, 15 * 60 * 1000)) {
+    return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
+  }
 
   const supabase = await createClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

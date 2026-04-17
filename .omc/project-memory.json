@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1776143783921,
-  "projectRoot": "c:\\Users\\User\\Documents\\GitHub\\bull_weightlifting",
+  "lastScanned": 1776368188725,
+  "projectRoot": "C:\\Users\\User\\Documents\\GitHub\\bull_weightlifting",
   "techStack": {
     "languages": [
       {
@@ -82,33 +82,34 @@
     "conceptos": {
       "path": "conceptos",
       "purpose": null,
-      "fileCount": 7,
-      "lastAccessed": 1776143783897,
+      "fileCount": 10,
+      "lastAccessed": 1776368188698,
       "keyFiles": [
         "cookie-httponly-estado-transitorio.md",
-        "pagos-verificacion-manual.md",
-        "patron-antisync-refs.md",
-        "paypal-redirect-flow.md",
-        "server-action-redirect.md"
+        "middleware-vs-layout-auth.md",
+        "nullable-guard-jsx.md",
+        "operacion-atomica-sql.md",
+        "pagos-verificacion-manual.md"
       ]
     },
     "diario": {
       "path": "diario",
       "purpose": null,
-      "fileCount": 4,
-      "lastAccessed": 1776143783897,
+      "fileCount": 6,
+      "lastAccessed": 1776368188698,
       "keyFiles": [
         "2026-04-11.md",
         "2026-04-12.md",
         "2026-04-13.md",
-        "pendiente-configuracion.md"
+        "2026-04-14.md",
+        "2026-04-14b.md"
       ]
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 6,
-      "lastAccessed": 1776143783904,
+      "lastAccessed": 1776368188706,
       "keyFiles": [
         "backlog.json",
         "MVP.md",
@@ -121,7 +122,7 @@
       "path": "proyectos",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776143783905,
+      "lastAccessed": 1776368188707,
       "keyFiles": [
         "bull-weightlifting.md"
       ]
@@ -130,7 +131,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 5,
-      "lastAccessed": 1776143783905,
+      "lastAccessed": 1776368188707,
       "keyFiles": [
         "file.svg",
         "globe.svg",
@@ -143,7 +144,7 @@
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 1,
-      "lastAccessed": 1776143783905,
+      "lastAccessed": 1776368188708,
       "keyFiles": [
         "migrate.mjs"
       ]
@@ -152,7 +153,7 @@
       "path": "src",
       "purpose": "Source code",
       "fileCount": 1,
-      "lastAccessed": 1776143783906,
+      "lastAccessed": 1776368188708,
       "keyFiles": [
         "proxy.ts"
       ]
@@ -161,7 +162,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1776143783906,
+      "lastAccessed": 1776368188708,
       "keyFiles": [
         "config.toml"
       ]
@@ -170,7 +171,7 @@
       "path": "src\\app",
       "purpose": "Application code",
       "fileCount": 5,
-      "lastAccessed": 1776143783908,
+      "lastAccessed": 1776368188710,
       "keyFiles": [
         "favicon.ico",
         "globals.css",
@@ -181,7 +182,7 @@
       "path": "src\\components",
       "purpose": "UI components",
       "fileCount": 1,
-      "lastAccessed": 1776143783909,
+      "lastAccessed": 1776368188711,
       "keyFiles": [
         "CartSyncProvider.tsx"
       ]
@@ -190,7 +191,7 @@
       "path": "src\\lib",
       "purpose": "Library code",
       "fileCount": 5,
-      "lastAccessed": 1776143783909,
+      "lastAccessed": 1776368188711,
       "keyFiles": [
         "auth.ts",
         "email.ts",
@@ -201,7 +202,7 @@
       "path": "src\\types",
       "purpose": "Type definitions",
       "fileCount": 3,
-      "lastAccessed": 1776143783910,
+      "lastAccessed": 1776368188711,
       "keyFiles": [
         "database.ts",
         "index.ts",
@@ -212,7 +213,7 @@
       "path": "src\\utils",
       "purpose": "Utility functions",
       "fileCount": 1,
-      "lastAccessed": 1776143783910,
+      "lastAccessed": 1776368188712,
       "keyFiles": [
         "cn.ts"
       ]
@@ -220,8 +221,8 @@
     "supabase\\migrations": {
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
-      "fileCount": 13,
-      "lastAccessed": 1776143783910,
+      "fileCount": 15,
+      "lastAccessed": 1776368188713,
       "keyFiles": [
         "001_initial_schema.sql",
         "002_functions_triggers.sql",
@@ -231,27 +232,33 @@
   },
   "hotPaths": [
     {
+      "path": "STATE.md",
+      "accessCount": 33,
+      "lastAccessed": 1776386357845,
+      "type": "file"
+    },
+    {
       "path": "src\\components\\home\\CategoriesSection.tsx",
       "accessCount": 30,
       "lastAccessed": 1776129694343,
       "type": "file"
     },
     {
-      "path": "STATE.md",
-      "accessCount": 20,
-      "lastAccessed": 1776192062746,
-      "type": "file"
+      "path": "",
+      "accessCount": 25,
+      "lastAccessed": 1776369768673,
+      "type": "directory"
     },
     {
       "path": "src\\app\\actions\\checkout.ts",
-      "accessCount": 11,
-      "lastAccessed": 1776190778658,
+      "accessCount": 22,
+      "lastAccessed": 1776386202128,
       "type": "file"
     },
     {
-      "path": "",
-      "accessCount": 9,
-      "lastAccessed": 1776061303811,
+      "path": "src",
+      "accessCount": 21,
+      "lastAccessed": 1776368774266,
       "type": "directory"
     },
     {
@@ -267,6 +274,12 @@
       "type": "file"
     },
     {
+      "path": "src\\app\\actions\\auth.ts",
+      "accessCount": 7,
+      "lastAccessed": 1776369328015,
+      "type": "file"
+    },
+    {
       "path": "src\\lib\\queries\\admin.ts",
       "accessCount": 6,
       "lastAccessed": 1776188787320,
@@ -276,6 +289,12 @@
       "path": "src\\types\\database.ts",
       "accessCount": 6,
       "lastAccessed": 1776190458955,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\paypal.ts",
+      "accessCount": 6,
+      "lastAccessed": 1776386186752,
       "type": "file"
     },
     {
@@ -294,6 +313,12 @@
       "path": "src\\app\\(auth)\\register\\RegisterForm.tsx",
       "accessCount": 5,
       "lastAccessed": 1776120114562,
+      "type": "file"
+    },
+    {
+      "path": "proyectos\\bull-weightlifting.md",
+      "accessCount": 5,
+      "lastAccessed": 1776369821785,
       "type": "file"
     },
     {
@@ -321,27 +346,21 @@
       "type": "file"
     },
     {
-      "path": "proyectos\\bull-weightlifting.md",
-      "accessCount": 3,
-      "lastAccessed": 1776190252621,
-      "type": "file"
-    },
-    {
       "path": "src\\components\\shop\\CartItemRow.tsx",
       "accessCount": 3,
       "lastAccessed": 1776191043510,
       "type": "file"
     },
     {
-      "path": "src",
-      "accessCount": 3,
-      "lastAccessed": 1776191078022,
-      "type": "directory"
-    },
-    {
       "path": "src\\lib\\queries\\categories.ts",
       "accessCount": 3,
       "lastAccessed": 1776191106960,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\actions\\products.ts",
+      "accessCount": 3,
+      "lastAccessed": 1776368403695,
       "type": "file"
     },
     {
@@ -381,12 +400,6 @@
       "type": "file"
     },
     {
-      "path": "src\\app\\actions\\products.ts",
-      "accessCount": 2,
-      "lastAccessed": 1776120099333,
-      "type": "file"
-    },
-    {
       "path": "src\\app\\page.tsx",
       "accessCount": 2,
       "lastAccessed": 1776120107974,
@@ -417,21 +430,9 @@
       "type": "file"
     },
     {
-      "path": "src\\lib\\paypal.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776057961887,
-      "type": "file"
-    },
-    {
       "path": "src\\app\\(shop)\\checkout\\paypal-return\\page.tsx",
       "accessCount": 1,
       "lastAccessed": 1776058065955,
-      "type": "file"
-    },
-    {
-      "path": "src\\app\\actions\\auth.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776058507509,
       "type": "file"
     },
     {

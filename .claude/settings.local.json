@@ -27,7 +27,12 @@
       "mcp__plugin_oh-my-claudecode_t__state_clear",
       "Bash(npx supabase:*)",
       "Bash(echo \"EXIT:$?\")",
-      "mcp__plugin_context-mode_context-mode__ctx_stats"
+      "mcp__plugin_context-mode_context-mode__ctx_stats",
+      "Bash(git:*)",
+      "Bash(npm audit:*)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(node:*)",
+      "Bash(echo \"done:$?\")"
     ]
   },
   "disabledMcpjsonServers": [

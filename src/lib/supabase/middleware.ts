@@ -48,8 +48,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAdmin) {
-    const { data: role } = await supabase.rpc("get_user_role");
-    if (role !== "admin") {
+    const { data: role, error: roleError } = await supabase.rpc("get_user_role");
+    if (roleError) {
+      console.error("[Middleware] Admin role check failed:", roleError.message);
+    }
+    if (roleError || role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

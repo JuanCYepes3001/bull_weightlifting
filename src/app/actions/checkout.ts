@@ -40,6 +40,13 @@ const MANUAL_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"])
 
 /* ─── Shared: create DB order ──────────────────────────── */
 
+// Resolved product type from the joined query
+type VariantWithPrice = {
+  id: string;
+  stock: number;
+  products: { price: number; is_on_sale: boolean; sale_price: number | null } | null;
+};
+
 async function insertOrder(
   items: CheckoutItem[],
   shipping: ShippingAddress,
@@ -53,25 +60,37 @@ async function insertOrder(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Debes iniciar sesión para completar la compra" };
 
-  // Verify stock
+  // Fetch stock AND canonical prices from DB — client-supplied prices are never trusted
   const variantIds = items.map((i) => i.variantId);
   const { data: variants, error: stockError } = await supabase
     .from("product_variants")
-    .select("id, stock")
+    .select("id, stock, products(price, is_on_sale, sale_price)")
     .in("id", variantIds);
 
   if (stockError || !variants) return { error: "Error al verificar disponibilidad" };
 
+  // Build server-side price map from DB values
+  const priceMap = new Map<string, number>();
+  for (const v of variants as VariantWithPrice[]) {
+    if (v.products) {
+      const p = v.products;
+      priceMap.set(v.id, p.is_on_sale && p.sale_price != null ? p.sale_price : p.price);
+    }
+  }
+
   for (const item of items) {
-    const v = variants.find((v) => v.id === item.variantId);
+    const v = (variants as VariantWithPrice[]).find((v) => v.id === item.variantId);
     if (!v) return { error: `Variante no encontrada para ${item.productName}` };
     if (v.stock < item.quantity)
       return {
         error: `Sin stock suficiente para ${item.productName} (${item.size} / ${item.color})`,
       };
+    if (!priceMap.has(item.variantId))
+      return { error: `Precio no disponible para ${item.productName}` };
   }
 
-  const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  // Total computed exclusively from DB prices — client-supplied item.price is ignored
+  const total = items.reduce((s, i) => s + (priceMap.get(i.variantId) ?? 0) * i.quantity, 0);
 
   // Single transactional RPC: inserts order + order_items + decrements stock
   // atomically. Any failure (network, insufficient stock, constraint) rolls back
@@ -88,7 +107,7 @@ async function insertOrder(
     p_items: items.map((i) => ({
       variant_id: i.variantId,
       quantity: i.quantity,
-      unit_price: i.price,
+      unit_price: priceMap.get(i.variantId) ?? 0,  // DB price, not client price
     })),
   });
 
@@ -165,7 +184,25 @@ export async function createPayPalOrderAction(
     return { error: "PayPal no está configurado en este servidor." };
   }
 
-  const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  // Re-fetch canonical prices from DB — client-supplied prices are never trusted
+  const supabase = await createClient();
+  const variantIds = items.map((i) => i.variantId);
+  const { data: pricingVariants, error: priceError } = await supabase
+    .from("product_variants")
+    .select("id, products(price, is_on_sale, sale_price)")
+    .in("id", variantIds);
+
+  if (priceError || !pricingVariants) return { error: "Error al verificar precios." };
+
+  const paypalPriceMap = new Map<string, number>();
+  for (const v of pricingVariants as VariantWithPrice[]) {
+    if (v.products) {
+      const p = v.products;
+      paypalPriceMap.set(v.id, p.is_on_sale && p.sale_price != null ? p.sale_price : p.price);
+    }
+  }
+
+  const total = items.reduce((s, i) => s + (paypalPriceMap.get(i.variantId) ?? 0) * i.quantity, 0);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   try {
@@ -176,11 +213,13 @@ export async function createPayPalOrderAction(
       `${siteUrl}/checkout`
     );
 
-    // Store pending checkout in a short-lived cookie
+    // Store pending checkout in a short-lived cookie (totalUSD used to verify captured amount)
+    const rate = Number(process.env.COP_TO_USD_RATE ?? 4200);
+    const totalUSD = (total / rate).toFixed(2);
     const jar = await cookies();
     jar.set(
       "paypal_pending",
-      JSON.stringify({ items, shipping, paypalOrderId }),
+      JSON.stringify({ items, shipping, paypalOrderId, totalUSD }),
       { maxAge: 60 * 15, httpOnly: true, sameSite: "lax", path: "/" }
     );
 
@@ -199,7 +238,7 @@ export async function finalizePayPalOrderAction(
   const raw = jar.get("paypal_pending")?.value;
   if (!raw) return { error: "Sesión de pago expirada. Intenta de nuevo desde el carrito." };
 
-  let pending: { items: CheckoutItem[]; shipping: ShippingAddress; paypalOrderId: string };
+  let pending: { items: CheckoutItem[]; shipping: ShippingAddress; paypalOrderId: string; totalUSD: string };
   try {
     pending = JSON.parse(raw);
   } catch {
@@ -211,9 +250,13 @@ export async function finalizePayPalOrderAction(
   }
 
   try {
-    const { status, captureId } = await capturePayPalOrder(paypalOrderId);
+    const { status, captureId, capturedAmount } = await capturePayPalOrder(paypalOrderId);
     if (status !== "COMPLETED") {
       return { error: `Pago no completado (estado: ${status}). Intenta de nuevo.` };
+    }
+    if (Math.abs(parseFloat(capturedAmount) - parseFloat(pending.totalUSD)) > 0.02) {
+      console.error(`[PayPal] Amount mismatch: captured=${capturedAmount} expected=${pending.totalUSD}`);
+      return { error: "El monto capturado no coincide con el total. Contacta soporte." };
     }
 
     const result = await insertOrder(

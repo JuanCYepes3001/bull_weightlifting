@@ -1,21 +1,21 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-04-14b
+updated: 2026-04-16
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-14b  
-> Ver historial completo en [[diario/2026-04-14b]]
+> Última actualización: 2026-04-16  
+> Ver historial completo en [[diario/2026-04-16]]
 
 ---
 
 ## Fase actual
 
-**Fase 3 — Features completas, pendiente de configuración y producción**
+**Fase 3 — Features completas + hardening de seguridad en curso**
 
-El grueso del desarrollo está terminado. El proyecto corre localmente y en red local. El siguiente paso es configurar las cuentas externas (Vercel, PayPal) y hacer el deploy inicial.
+El grueso del desarrollo está terminado. Se realizó una auditoría de seguridad completa (Cyber Neo, Risk Score 100/100) y se aplicaron los 3 fixes de mayor prioridad. Quedan 9 hallazgos de seguridad pendientes antes de considera el proyecto production-ready. El deploy sigue bloqueado por cuentas externas.
 
 ---
 
@@ -53,6 +53,17 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | Notificaciones WhatsApp | ✅ Completo |
 | PayPal API | ✅ Código listo — falta configurar credenciales |
 | Deploy / producción | ⏳ Pendiente (sin cuenta Vercel aún) |
+
+---
+
+## Tareas completadas (sesión 2026-04-16 — auditoría seguridad + fixes críticos)
+
+- [x] Auditoría de seguridad completa con Cyber Neo — 5 fases paralelas (SCA, SAST, secrets, config, supply chain)
+- [x] **[CN-001]** Precio controlado por cliente — `insertOrder` y `createPayPalOrderAction` ahora obtienen precios desde DB; `item.price` del cliente ignorado completamente (`checkout.ts`)
+- [x] **[CN-003]** Rate limiting en auth — `loginAction` (10 req/15 min/IP) y `requestPasswordResetAction` (3 req/15 min/email) (`auth.ts`)
+- [x] **[CN-002]** Security headers — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy en `next.config.ts`
+- [x] Reporte completo guardado en `~/Desktop/cyber-neo-report-bull-weightlifting-2026-04-16.md`
+- [x] Nota de sesión en [[diario/2026-04-16]]
 
 ---
 
@@ -117,7 +128,25 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 - [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto `decrement_stock` RPC no existe
 - [ ] **Ejecutar migración 015** en Supabase Dashboard → SQL Editor (`supabase/migrations/015_create_order_fn.sql`) — sin esto el checkout falla completamente
 
-### Auditoría
+### Seguridad — hallazgos pendientes de la auditoría 2026-04-16
+
+**Alta prioridad (hacer antes del deploy)**
+- [x] **[CN-006/007]** Migrado `xlsx` → `exceljs` — `orders/route.ts` reescrito, `serverExternalPackages` limpio. **Falta ejecutar: `npm uninstall xlsx && npm install exceljs`**
+- [ ] **[CN-008]** `npm audit fix` — parchea vulnerabilidad DoS en `next@16.2.2`. **Ejecutar manualmente en rama separada con testing**
+- [x] **[CN-004]** Open redirect en auth callback — `src/app/api/auth/callback/route.ts` — `safePath` con regex `^\/(?!\/)` antes del redirect
+- [x] **[CN-005]** Monto capturado de PayPal verificado contra `totalUSD` del cookie (tolerancia ±$0.02) — `paypal.ts` + `checkout.ts`
+
+**Media prioridad**
+- [x] **[CN-009]** HTML escapado en email templates — `esc()` helper en `email.ts`, aplicado a `productName`, `size`, `color`, `full_name`, `address`, `city`, `state`
+- [x] **[CN-010]** Error del RPC en middleware manejado — `middleware.ts:51` ahora loguea y falla cerrado si `get_user_role` falla
+- [ ] **[CN-011]** Configurar CI/CD — `.github/workflows/security.yml` + `.github/dependabot.yml`
+- [ ] **[CN-012]** Crear `.env.example` con todas las variables requeridas
+- [ ] **[CN-013]** Reemplazar `listUsers()` por query directo en `src/app/actions/users.ts:72`
+
+**Baja prioridad / Info**
+- [ ] CN-014 a CN-022 — ver reporte `~/Desktop/cyber-neo-report-bull-weightlifting-2026-04-16.md`
+
+### Auditoría de bugs
 - ✅ Completada — 14/14 bugs resueltos (ver [[diario/2026-04-14b]])
 
 ### Bloqueadas (esperando cuentas externas)
@@ -155,6 +184,10 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | `VALID_PAYMENT_METHODS` Set en checkout | Boundary de entrada — cualquier string arbitrario se rechaza antes de tocar la DB |
 | `console.error` en libs de notificación, no en el caller | El error pertenece a la lib; el flujo de checkout no debe bifurcarse por fallos de notificación |
 | `toOrderStatus()` helper en lugar de cast directo | Centraliza la validación del enum; si los valores cambian, se actualiza en un solo lugar |
+| Ignorar `item.price` del cliente completamente (no validar desviación) | Más simple y más seguro que validar tolerancia; si el precio cambió el frontend debe refrescarse igual |
+| Rate limiter in-memory en lugar de nueva dependencia | Evita cambios al package.json; efectivo para single-instance. Para Vercel multi-instancia reemplazar con @upstash/ratelimit + Redis |
+| Mantener `unsafe-inline` en CSP por ahora | Eliminarlo requiere nonce-based CSP, cambio más invasivo. Se documenta en comentario en el código |
+| No aplicar `npm audit fix` en esta sesión | Cambio de versión de Next.js puede introducir breaking changes; mejor hacerlo en rama separada con testing |
 
 ---
 
@@ -168,6 +201,8 @@ El grueso del desarrollo está terminado. El proyecto corre localmente y en red 
 | IP de red en Supabase Redirect URLs | OAuth y links de verificación pueden fallar desde otros dispositivos | Agregar en Supabase Dashboard |
 | Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe en Supabase | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
 | Migración 015 no ejecutada en DB | `checkout.ts` llama `create_order` RPC que aún no existe en Supabase | Ejecutar `015_create_order_fn.sql` en SQL Editor |
+| `xlsx` con CVEs sin patch | Scanner de seguridad bloqueará el deploy en cualquier CI que tenga `npm audit` | Migrar a `exceljs` (CN-006/007) |
+| Rate limiter in-memory no escala en Vercel | En producción serverless los limits se resetean por instancia | Reemplazar con @upstash/ratelimit antes de lanzar en Vercel |
 
 ---
 

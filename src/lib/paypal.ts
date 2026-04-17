@@ -83,6 +83,7 @@ export async function createPayPalOrder(
 export async function capturePayPalOrder(paypalOrderId: string): Promise<{
   status: string;
   captureId: string;
+  capturedAmount: string;
 }> {
   const token = await getAccessToken();
 
@@ -108,5 +109,6 @@ export async function capturePayPalOrder(paypalOrderId: string): Promise<{
   return {
     status: data.status as string,
     captureId: capture?.id ?? "",
+    capturedAmount: (capture?.amount?.value as string) ?? "0",
   };
 }

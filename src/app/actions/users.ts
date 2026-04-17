@@ -49,7 +49,8 @@ export async function createAdminUserAction(
   if (createError) {
     if (createError.message.includes("already registered"))
       return { error: "Ya existe un usuario con ese correo" };
-    return { error: "Error al crear el usuario: " + createError.message };
+    console.error("[Users] createUser error:", createError.message);
+    return { error: "Error al crear el usuario. Intenta de nuevo." };
   }
 
   // Profile may be created via trigger — update role and name
@@ -70,10 +71,11 @@ export async function assignAdminRoleByEmailAction(
   await requireAdmin();
 
   const adminSupabase = createAdminClient();
+  // perPage:1000 avoids the default 50-user pagination limit that would silently miss users
   const {
     data: { users },
     error: listError,
-  } = await adminSupabase.auth.admin.listUsers();
+  } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
   if (listError) return { error: "Error al buscar usuarios" };
 
   const found = users.find(

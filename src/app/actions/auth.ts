@@ -90,7 +90,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/api/auth/callback`,
+      emailRedirectTo: `${process.env.SITE_URL ?? "http://localhost:3000"}/api/auth/callback`,
       data: {
         name: fullName,
         first_name: parsed.data.firstName,
@@ -162,7 +162,7 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Au
   }
 
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/api/auth/callback?next=/reset-password`,

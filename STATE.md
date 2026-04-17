@@ -139,12 +139,20 @@ El grueso del desarrollo está terminado. Se realizó una auditoría de segurida
 **Media prioridad**
 - [x] **[CN-009]** HTML escapado en email templates — `esc()` helper en `email.ts`, aplicado a `productName`, `size`, `color`, `full_name`, `address`, `city`, `state`
 - [x] **[CN-010]** Error del RPC en middleware manejado — `middleware.ts:51` ahora loguea y falla cerrado si `get_user_role` falla
-- [ ] **[CN-011]** Configurar CI/CD — `.github/workflows/security.yml` + `.github/dependabot.yml`
-- [ ] **[CN-012]** Crear `.env.example` con todas las variables requeridas
-- [ ] **[CN-013]** Reemplazar `listUsers()` por query directo en `src/app/actions/users.ts:72`
+- [x] **[CN-011]** CI/CD configurado — `.github/workflows/security.yml` (npm audit en push/PR) + `.github/dependabot.yml` (semanal)
+- [x] **[CN-012]** `.env.example` creado con todas las variables; `email.ts` y `whatsapp.ts` ahora loguean error si faltan keys
+- [x] **[CN-013]** `listUsers({ perPage: 1000 })` — evita el límite silencioso de 50 usuarios por defecto
 
 **Baja prioridad / Info**
-- [ ] CN-014 a CN-022 — ver reporte `~/Desktop/cyber-neo-report-bull-weightlifting-2026-04-16.md`
+- [x] **[CN-014]** Error interno de Supabase ya no se expone al cliente — `users.ts:52` loguea + mensaje genérico
+- [x] **[CN-015]** `NEXT_PUBLIC_SITE_URL` → `SITE_URL` (server-only) en `auth.ts` + `checkout.ts` + `.env.example`
+- [x] **[CN-016]** CI ya usa `npm ci`; `.npmrc` creado con `audit=true`
+- [x] **[CN-017]** `.npmrc` creado — `registry`, `audit=true`, `fund=false`
+- [x] **[CN-018]** `package.json` scripts usan `$SUPABASE_PROJECT_REF` en lugar de ID hardcodeado
+- [x] **[CN-019]** Fallback sandbox Twilio eliminado — `TWILIO_WHATSAPP_FROM` es requerido o loguea error
+- [x] **[CN-020]** `.gitignore` incluye `*.key` y `*.p12`
+- [x] **[CN-021]** `next.config.ts` hostname acotado a `xagdkfvnyniwyykfbrke.supabase.co`
+- [x] **[CN-022]** Ya resuelto con CN-011 (dependabot.yml)
 
 ### Auditoría de bugs
 - ✅ Completada — 14/14 bugs resueltos (ver [[diario/2026-04-14b]])

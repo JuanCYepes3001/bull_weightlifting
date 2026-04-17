@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1776368188725,
+  "lastScanned": 1776456631808,
   "projectRoot": "C:\\Users\\User\\Documents\\GitHub\\bull_weightlifting",
   "techStack": {
     "languages": [
@@ -51,10 +51,10 @@
       "build": "next build",
       "start": "next start",
       "lint": "eslint",
-      "db:link": "supabase link --project-ref xagdkfvnyniwyykfbrke",
+      "db:link": "supabase link --project-ref $SUPABASE_PROJECT_REF",
       "db:push": "supabase db push",
       "db:reset": "supabase db reset",
-      "db:types": "supabase gen types typescript --project-id xagdkfvnyniwyykfbrke > src/types/database.ts"
+      "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/types/database.ts"
     }
   },
   "conventions": {
@@ -82,21 +82,21 @@
     "conceptos": {
       "path": "conceptos",
       "purpose": null,
-      "fileCount": 10,
-      "lastAccessed": 1776368188698,
+      "fileCount": 18,
+      "lastAccessed": 1776456631785,
       "keyFiles": [
         "cookie-httponly-estado-transitorio.md",
+        "http-security-headers.md",
         "middleware-vs-layout-auth.md",
-        "nullable-guard-jsx.md",
-        "operacion-atomica-sql.md",
-        "pagos-verificacion-manual.md"
+        "npm-audit-sca.md",
+        "nullable-guard-jsx.md"
       ]
     },
     "diario": {
       "path": "diario",
       "purpose": null,
-      "fileCount": 6,
-      "lastAccessed": 1776368188698,
+      "fileCount": 8,
+      "lastAccessed": 1776456631785,
       "keyFiles": [
         "2026-04-11.md",
         "2026-04-12.md",
@@ -109,7 +109,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 6,
-      "lastAccessed": 1776368188706,
+      "lastAccessed": 1776456631791,
       "keyFiles": [
         "backlog.json",
         "MVP.md",
@@ -122,7 +122,7 @@
       "path": "proyectos",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776368188707,
+      "lastAccessed": 1776456631792,
       "keyFiles": [
         "bull-weightlifting.md"
       ]
@@ -131,7 +131,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 5,
-      "lastAccessed": 1776368188707,
+      "lastAccessed": 1776456631792,
       "keyFiles": [
         "file.svg",
         "globe.svg",
@@ -140,11 +140,20 @@
         "window.svg"
       ]
     },
+    "referencias": {
+      "path": "referencias",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776456631792,
+      "keyFiles": [
+        "guia-deploy-keys.md"
+      ]
+    },
     "scripts": {
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 1,
-      "lastAccessed": 1776368188708,
+      "lastAccessed": 1776456631792,
       "keyFiles": [
         "migrate.mjs"
       ]
@@ -153,7 +162,7 @@
       "path": "src",
       "purpose": "Source code",
       "fileCount": 1,
-      "lastAccessed": 1776368188708,
+      "lastAccessed": 1776456631793,
       "keyFiles": [
         "proxy.ts"
       ]
@@ -162,7 +171,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1776368188708,
+      "lastAccessed": 1776456631793,
       "keyFiles": [
         "config.toml"
       ]
@@ -171,7 +180,7 @@
       "path": "src\\app",
       "purpose": "Application code",
       "fileCount": 5,
-      "lastAccessed": 1776368188710,
+      "lastAccessed": 1776456631795,
       "keyFiles": [
         "favicon.ico",
         "globals.css",
@@ -182,7 +191,7 @@
       "path": "src\\components",
       "purpose": "UI components",
       "fileCount": 1,
-      "lastAccessed": 1776368188711,
+      "lastAccessed": 1776456631795,
       "keyFiles": [
         "CartSyncProvider.tsx"
       ]
@@ -191,7 +200,7 @@
       "path": "src\\lib",
       "purpose": "Library code",
       "fileCount": 5,
-      "lastAccessed": 1776368188711,
+      "lastAccessed": 1776456631795,
       "keyFiles": [
         "auth.ts",
         "email.ts",
@@ -202,7 +211,7 @@
       "path": "src\\types",
       "purpose": "Type definitions",
       "fileCount": 3,
-      "lastAccessed": 1776368188711,
+      "lastAccessed": 1776456631796,
       "keyFiles": [
         "database.ts",
         "index.ts",
@@ -213,7 +222,7 @@
       "path": "src\\utils",
       "purpose": "Utility functions",
       "fileCount": 1,
-      "lastAccessed": 1776368188712,
+      "lastAccessed": 1776456631796,
       "keyFiles": [
         "cn.ts"
       ]
@@ -222,7 +231,7 @@
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
       "fileCount": 15,
-      "lastAccessed": 1776368188713,
+      "lastAccessed": 1776456631796,
       "keyFiles": [
         "001_initial_schema.sql",
         "002_functions_triggers.sql",
@@ -263,8 +272,14 @@
     },
     {
       "path": "src\\app\\actions\\auth.ts",
-      "accessCount": 14,
-      "lastAccessed": 1776444108590,
+      "accessCount": 18,
+      "lastAccessed": 1776456516239,
+      "type": "file"
+    },
+    {
+      "path": "src\\app\\(auth)\\register\\RegisterForm.tsx",
+      "accessCount": 13,
+      "lastAccessed": 1776456929747,
       "type": "file"
     },
     {
@@ -298,27 +313,27 @@
       "type": "file"
     },
     {
+      "path": "src\\app\\(auth)\\login\\LoginForm.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1776456842167,
+      "type": "file"
+    },
+    {
       "path": "src\\app\\(shop)\\checkout\\page.tsx",
       "accessCount": 5,
       "lastAccessed": 1776058135862,
       "type": "file"
     },
     {
-      "path": "src\\app\\(auth)\\login\\LoginForm.tsx",
-      "accessCount": 5,
-      "lastAccessed": 1776120114098,
-      "type": "file"
-    },
-    {
-      "path": "src\\app\\(auth)\\register\\RegisterForm.tsx",
-      "accessCount": 5,
-      "lastAccessed": 1776120114562,
-      "type": "file"
-    },
-    {
       "path": "proyectos\\bull-weightlifting.md",
       "accessCount": 5,
       "lastAccessed": 1776369821785,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\layout\\Navbar.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1776456485181,
       "type": "file"
     },
     {
@@ -364,6 +379,12 @@
       "type": "file"
     },
     {
+      "path": "src\\components\\ui\\BullMark.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1776456425890,
+      "type": "file"
+    },
+    {
       "path": "src\\app\\(shop)\\checkout\\success\\page.tsx",
       "accessCount": 2,
       "lastAccessed": 1776058102968,
@@ -385,18 +406,6 @@
       "path": "src\\components\\ui\\BullLogo.tsx",
       "accessCount": 2,
       "lastAccessed": 1776119674777,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\ui\\BullMark.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1776119804522,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\layout\\Navbar.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1776120067239,
       "type": "file"
     },
     {

@@ -83,6 +83,9 @@ export function AddressForm({ value, onChange }: AddressFormProps) {
         ).map((c) => ({ value: c, label: c }))
       : [];
 
+  const hasStateData = stateOptions.length > 0;
+  const hasCityData = cityOptions.length > 0;
+
   const handleCountryChange = (country: string) => {
     onChange({ ...value, country, state: "", city: "", zip_code: "" });
   };
@@ -103,33 +106,46 @@ export function AddressForm({ value, onChange }: AddressFormProps) {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SelectField
-          label={countryData?.stateLabel ?? "Departamento / Estado"}
-          value={value.state}
-          onChange={handleStateChange}
-          options={stateOptions}
-          placeholder={
-            stateOptions.length > 0
-              ? `Selecciona ${countryData?.stateLabel?.toLowerCase() ?? "departamento"}`
-              : "Selecciona un país primero"
-          }
-          required
-          disabled={stateOptions.length === 0}
-        />
+        {hasStateData ? (
+          <SelectField
+            label={countryData?.stateLabel ?? "Departamento / Estado"}
+            value={value.state}
+            onChange={handleStateChange}
+            options={stateOptions}
+            placeholder={`Selecciona ${countryData?.stateLabel?.toLowerCase() ?? "departamento"}`}
+            required
+          />
+        ) : (
+          <Input
+            label={countryData?.stateLabel ?? "Estado / Provincia"}
+            placeholder="Ej: California"
+            value={value.state}
+            onChange={(e) => handleStateChange(e.target.value)}
+            required
+            disabled={!value.country}
+          />
+        )}
 
-        <SelectField
-          label={countryData?.cityLabel ?? "Ciudad"}
-          value={value.city}
-          onChange={(city) => onChange({ ...value, city })}
-          options={cityOptions}
-          placeholder={
-            value.state
-              ? "Selecciona ciudad"
-              : `Selecciona ${countryData?.stateLabel?.toLowerCase() ?? "departamento"} primero`
-          }
-          required
-          disabled={!value.state || cityOptions.length === 0}
-        />
+        {hasCityData ? (
+          <SelectField
+            label={countryData?.cityLabel ?? "Ciudad"}
+            value={value.city}
+            onChange={(city) => onChange({ ...value, city })}
+            options={cityOptions}
+            placeholder="Selecciona ciudad"
+            required
+            disabled={!value.state}
+          />
+        ) : (
+          <Input
+            label={countryData?.cityLabel ?? "Ciudad"}
+            placeholder="Ej: Los Angeles"
+            value={value.city}
+            onChange={(e) => onChange({ ...value, city: e.target.value })}
+            required
+            disabled={!value.state && !value.country}
+          />
+        )}
       </div>
 
       <Input

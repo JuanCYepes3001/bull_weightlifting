@@ -5,18 +5,34 @@ import { AddressForm } from "@/components/profile/AddressForm";
 import { AddressCard } from "@/components/profile/AddressCard";
 import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { Button } from "@/components/ui/Button";
+import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import Link from "next/link";
 import type { Address } from "@/types";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const { user, profile } = await requireAuth();
   const addresses: Address[] = (profile?.addresses as Address[]) ?? [];
+  const { welcome } = await searchParams;
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-8 py-12 space-y-14">
+
+      {/* Welcome banner for new Google users */}
+      {welcome === "1" && (
+        <div className="border border-crimson/40 bg-crimson/10 px-5 py-4 space-y-1">
+          <p className="font-heading text-sm tracking-widest uppercase text-crimson">¡Bienvenido!</p>
+          <p className="font-body text-sm text-white/70">
+            Tu cuenta de Google fue vinculada correctamente. Completa tu dirección de envío y teléfono para poder realizar pedidos.
+          </p>
+        </div>
+      )}
 
       {/* Header */}
       <div>
@@ -93,12 +109,24 @@ export default async function AccountPage() {
       </section>
 
       {/* Cerrar sesión */}
-      <section className="border-t border-white/5 pt-8">
+      <section className="border-t border-white/5 pt-8 space-y-6">
         <form action={logoutAction}>
-          <Button type="submit" variant="danger" size="sm">
+          <Button type="submit" variant="ghost" size="sm">
             Cerrar sesión
           </Button>
         </form>
+      </section>
+
+      {/* Eliminar cuenta */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-4">
+          <h2 className="text-white/50 text-xl">ZONA DE PELIGRO</h2>
+          <div className="flex-1 h-px bg-white/5" />
+        </div>
+        <p className="font-body text-sm text-white/30">
+          Eliminar tu cuenta es una acción permanente e irreversible.
+        </p>
+        <DeleteAccountButton />
       </section>
     </div>
   );

@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
 // ── Rate limiters (Upstash Redis — works across Vercel multi-instance) ───────
@@ -116,9 +117,12 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
   const city    = formData.get("city")    as string | null;
   const street  = formData.get("address") as string | null;
   const zipCode = formData.get("zip_code") as string | null;
+  const phone   = formData.get("phone") as string | null;
 
   if (signUpData.user) {
     const updates: Record<string, unknown> = { name: fullName };
+
+    if (phone?.trim()) updates.phone = phone.trim();
 
     if (country && state && city && street) {
       updates.addresses = [
@@ -136,8 +140,9 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
       ];
     }
 
-    // Upsert handles the race condition where the trigger hasn't created the row yet
-    await supabase
+    // Use admin client to bypass RLS — user has no active session during email confirmation
+    const adminClient = createAdminClient();
+    await adminClient
       .from("profiles")
       .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
   }
@@ -191,6 +196,19 @@ export async function resetPasswordAction(formData: FormData): Promise<AuthResul
 
   if (error) return { error: "Error al actualizar la contraseña. Intenta de nuevo." };
   redirect("/profile/account");
+}
+
+export async function deleteAccountAction(): Promise<AuthResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesión inválida" };
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.auth.admin.deleteUser(user.id);
+  if (error) return { error: "Error al eliminar la cuenta. Intenta de nuevo." };
+
+  await supabase.auth.signOut();
+  redirect("/");
 }
 
 export async function changePasswordAction(formData: FormData): Promise<AuthResult> {

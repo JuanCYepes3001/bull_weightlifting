@@ -32,6 +32,11 @@ export const metadata: Metadata = {
   description:
     "Ropa deportiva de alto rendimiento. Diseñada para quienes no se detienen.",
   keywords: ["ropa deportiva", "weightlifting", "gym", "bull", "entrenamiento"],
+  icons: {
+    icon: "/images/bull-logo.png",
+    shortcut: "/images/bull-logo.png",
+    apple: "/images/bull-logo.png",
+  },
   openGraph: {
     title: "Bull Weightlifting",
     description: "El que para, pierde.",

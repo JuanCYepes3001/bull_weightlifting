@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError]   = useState<string | null>(null);
+  const [verificationSent, setVerificationSent] = useState(false);
   const [addrValue, setAddrValue]       = useState<AddressValue>(EMPTY_ADDRESS);
 
   const {
@@ -62,8 +63,31 @@ export function RegisterForm() {
     formData.append("zip_code", addrValue.zip_code);
 
     const result = await registerAction(formData);
-    if (result?.error) setServerError(result.error);
+    if (result?.error) {
+      setServerError(result.error);
+    } else if (result?.verificationSent) {
+      setVerificationSent(true);
+    }
+    // No error and no verificationSent = registerAction called redirect() internally
   };
+
+  if (verificationSent) {
+    return (
+      <div className="border border-crimson/40 bg-crimson/10 px-6 py-10 text-center space-y-4">
+        <p className="font-heading text-lg tracking-widest text-crimson uppercase">¡Cuenta creada!</p>
+        <p className="font-body text-sm text-white/70 leading-relaxed">
+          Te enviamos un correo de verificación. Revisa tu bandeja de entrada (y la carpeta de
+          spam) y haz clic en el enlace para activar tu cuenta antes de iniciar sesión.
+        </p>
+        <Link
+          href="/login"
+          className="inline-block mt-2 font-body text-sm text-white hover:text-crimson transition-colors underline underline-offset-4"
+        >
+          Ir al inicio de sesión
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -104,24 +128,30 @@ export function RegisterForm() {
 
       {/* Contraseña */}
       <div className="space-y-2">
+        <label className="text-xs font-heading tracking-widest uppercase text-white/60">
+          Contraseña
+        </label>
         <div className="relative">
-          <Input
-            label="Contraseña"
+          <input
             type={showPassword ? "text" : "password"}
             placeholder="Mínimo 8 caracteres"
             autoComplete="new-password"
-            error={errors.password?.message}
-            className="pr-12"
+            className={`h-11 w-full bg-white/5 border pl-4 pr-12 text-sm text-white placeholder:text-white/30 rounded-none transition-colors focus:outline-none focus:border-crimson focus:bg-white/8 ${errors.password ? "border-red-500/60" : "border-white/10"}`}
             {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-[38px] text-white/30 hover:text-white/60 transition-colors"
+            className="absolute right-3 inset-y-0 flex items-center z-10 text-white/30 hover:text-white/60 transition-colors"
+            tabIndex={-1}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
+        {errors.password && (
+          <p className="text-xs text-red-400 font-body">{errors.password.message}</p>
+        )}
 
         {passwordStrength && (
           <div className="space-y-1">

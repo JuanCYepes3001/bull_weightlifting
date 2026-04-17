@@ -3,6 +3,7 @@ import { logoutAction } from "@/app/actions/auth";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { AddressForm } from "@/components/profile/AddressForm";
 import { AddressCard } from "@/components/profile/AddressCard";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import type { Address } from "@/types";
@@ -77,6 +78,18 @@ export default async function AccountPage() {
         >
           Ver historial de pedidos →
         </Link>
+      </section>
+
+      {/* Cambiar contraseña */}
+      <section className="space-y-5">
+        <div className="flex items-center gap-4">
+          <h2 className="text-white text-xl">CONTRASEÑA</h2>
+          <div className="flex-1 h-px bg-white/5" />
+        </div>
+        <p className="font-body text-sm text-white/30">
+          Actualiza tu contraseña. Necesitarás ingresar la contraseña actual para confirmar.
+        </p>
+        <ChangePasswordForm />
       </section>
 
       {/* Cerrar sesión */}

@@ -1,5 +1,6 @@
-import { getAdminProducts, getLowStockProducts } from "@/lib/queries/admin";
+import { getAdminProducts, getLowStockProducts, getAdminCategories } from "@/lib/queries/admin";
 import { AdminProductsTable } from "./AdminProductsTable";
+import { AdminProductFilters } from "./AdminProductFilters";
 import { CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -8,13 +9,14 @@ export const metadata: Metadata = { title: "Productos | Admin" };
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; search?: string; category?: string; status?: string }>;
 }) {
-  const { saved } = await searchParams;
+  const { saved, search, category, status } = await searchParams;
 
-  const [products, lowStock] = await Promise.all([
-    getAdminProducts().catch(() => []),
+  const [products, lowStock, categories] = await Promise.all([
+    getAdminProducts({ search, category, status }).catch(() => []),
     getLowStockProducts(10).catch(() => []),
+    getAdminCategories().catch(() => []),
   ]);
 
   const lowStockProductIds = new Set(lowStock.map((v) => v.productId));
@@ -36,6 +38,14 @@ export default async function AdminProductsPage({
           </p>
         </div>
       )}
+
+      <AdminProductFilters
+        categories={categories as any}
+        search={search}
+        categoryId={category}
+        status={status}
+        total={products.length}
+      />
 
       <AdminProductsTable products={products as any} lowStockIds={lowStockProductIds} />
     </div>

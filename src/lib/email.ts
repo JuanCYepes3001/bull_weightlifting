@@ -8,7 +8,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   if (!RESEND_API_KEY) return; // silently skip if not configured
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
@@ -16,9 +16,21 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       },
       body: JSON.stringify({ from: FROM, to, subject, html }),
     });
-  } catch {
-    // Non-blocking — never fail the order flow
+    if (!res.ok) {
+      console.error("[Email] Resend error", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("[Email] Network error sending notification:", err);
   }
+}
+
+function esc(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const COP = (n: number) => "$" + n.toLocaleString("es-CO", { maximumFractionDigits: 0 });
@@ -66,6 +78,56 @@ function baseLayout(content: string): string {
   </html>`;
 }
 
+/**
+ * Branded verification email HTML.
+ * Pass `confirmationUrl` directly when sending via Resend/custom SMTP.
+ * For the Supabase Dashboard template, replace `${confirmationUrl}` with `{{ .ConfirmationURL }}`.
+ */
+export function getVerificationEmailHtml(confirmationUrl: string): string {
+  return baseLayout(`
+    <div style="text-align:center;padding:8px 0 24px">
+      <div style="display:inline-block;width:48px;height:2px;background:#dc2626;margin-bottom:20px"></div>
+      <h1 style="margin:0;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;color:#dc2626;font-weight:900">
+        Verifica tu cuenta
+      </h1>
+    </div>
+
+    <div class="card" style="text-align:center;padding:32px 24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.6;margin:0 0 8px">
+        Bienvenido a <strong style="color:#fff">BULL Weightlifting</strong>.
+      </p>
+      <p style="font-size:13px;color:#666;line-height:1.6;margin:0 0 32px">
+        Haz clic en el botón para activar tu cuenta y comenzar a entrenar sin parar.
+      </p>
+
+      <a href="${confirmationUrl}"
+         style="display:inline-block;background:#dc2626;color:#fff;text-decoration:none;
+                font-size:12px;font-weight:900;letter-spacing:0.25em;text-transform:uppercase;
+                padding:14px 36px;margin-bottom:24px">
+        Verificar mi cuenta
+      </a>
+
+      <p style="font-size:11px;color:#444;margin:0">
+        O copia y pega este enlace en tu navegador:<br/>
+        <a href="${confirmationUrl}" style="color:#dc2626;word-break:break-all;font-size:11px">
+          ${confirmationUrl}
+        </a>
+      </p>
+    </div>
+
+    <p style="font-size:11px;color:#333;text-align:center;margin-top:16px;line-height:1.6">
+      Si no creaste esta cuenta, ignora este mensaje.<br/>
+      Este enlace expira en 24 horas.
+    </p>
+
+    <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid #1a1a1a">
+      <p style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#333;margin:0">
+        El que para, pierde
+      </p>
+    </div>
+  `);
+}
+
 export async function sendOrderConfirmationEmail(params: {
   to: string;
   orderId: string;
@@ -83,8 +145,8 @@ export async function sendOrderConfirmationEmail(params: {
     .map(
       (i) => `
       <div class="product-row">
-        <span class="product-name">${i.productName}</span>
-        <span style="color:#666"> · ${i.size} / ${i.color} · ×${i.quantity}</span>
+        <span class="product-name">${esc(i.productName)}</span>
+        <span style="color:#666"> · ${esc(i.size)} / ${esc(i.color)} · ×${i.quantity}</span>
         <span style="float:right;color:#fff">${COP(i.price * i.quantity)}</span>
       </div>`
     )
@@ -100,9 +162,9 @@ export async function sendOrderConfirmationEmail(params: {
       <div class="label">Número de orden</div>
       <div class="value">#${shortId}</div>
       <div class="label">Destinatario</div>
-      <div class="value">${shipping.full_name}</div>
+      <div class="value">${esc(shipping.full_name)}</div>
       <div class="label">Dirección</div>
-      <div class="value">${shipping.address}, ${shipping.city}, ${shipping.state}</div>
+      <div class="value">${esc(shipping.address)}, ${esc(shipping.city)}, ${esc(shipping.state)}</div>
       <div class="label">Método de pago</div>
       <div class="value">${payLabel}</div>
     </div>

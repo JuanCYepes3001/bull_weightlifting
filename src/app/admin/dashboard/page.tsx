@@ -1,4 +1,4 @@
-import { getAdminStats, getLowStockProducts, getRecentActivity } from "@/lib/queries/admin";
+import { getAdminStats, getLowStockProducts, getRecentActivity, getDailyStats, getTopProducts, getOrderCompletionStats } from "@/lib/queries/admin";
 import {
   ShoppingCart,
   DollarSign,
@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import ReportDownloader from "./ReportDownloader";
+import { SalesChart } from "./SalesChart";
+import { TopProductsWidget } from "./TopProductsWidget";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dashboard | Admin" };
@@ -30,7 +32,9 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "—";
+  const diff = Date.now() - date.getTime();
   const min  = Math.floor(diff / 60000);
   const hr   = Math.floor(min / 60);
   const day  = Math.floor(hr / 24);
@@ -44,7 +48,7 @@ const COP = (n: number) =>
   "$" + n.toLocaleString("es-CO", { maximumFractionDigits: 0 });
 
 export default async function AdminDashboardPage() {
-  const [stats, lowStock, activity] = await Promise.all([
+  const [stats, lowStock, activity, daily7, daily30, topProducts, completion] = await Promise.all([
     getAdminStats().catch(() => ({
       totalOrders: 0, totalRevenue: 0,
       monthlyOrders: 0, monthlyRevenue: 0,
@@ -53,6 +57,10 @@ export default async function AdminDashboardPage() {
     })),
     getLowStockProducts(10).catch(() => []),
     getRecentActivity(15).catch(() => []),
+    getDailyStats(7).catch(() => []),
+    getDailyStats(30).catch(() => []),
+    getTopProducts(5).catch(() => []),
+    getOrderCompletionStats().catch(() => ({ total: 0, delivered: 0, cancelled: 0, completionRate: 0 })),
   ]);
 
   const now    = new Date();
@@ -217,6 +225,12 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Sales trend chart */}
+      <SalesChart data7={daily7} data30={daily30} />
+
+      {/* Top products + completion rate */}
+      <TopProductsWidget products={topProducts} completion={completion} />
 
       {/* Report downloader */}
       <ReportDownloader />

@@ -78,8 +78,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {genders.map(({ value, label }) => {
                 const href =
                   value === "all"
-                    ? "/products"
-                    : `/products?gender=${value}`;
+                    ? category ? `/products?category=${category}` : "/products"
+                    : `/products?gender=${value}${category ? `&category=${category}` : ""}`;
                 return (
                   <li key={value}>
                     <Link

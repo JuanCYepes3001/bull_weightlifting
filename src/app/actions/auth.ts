@@ -1,14 +1,44 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
+// ── Simple in-memory rate limiter ────────────────────────────────────────────
+// Works for single-instance / local deployments.
+// For Vercel / multi-instance production, replace with @upstash/ratelimit + Redis.
+const _rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = _rateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    _rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (entry.count >= max) return true;
+  entry.count++;
+  return false;
+}
+
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 type AuthResult = {
   error?: string;
+  verificationSent?: boolean;
 };
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
+  const ip = await getClientIp();
+  if (isRateLimited(`login:${ip}`, 10, 15 * 60 * 1000)) {
+    return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
+  }
+
   const raw = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -28,6 +58,9 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
   if (error) {
     if (error.code === "invalid_credentials") {
       return { error: "Email o contraseña incorrectos" };
+    }
+    if (error.code === "email_not_confirmed") {
+      return { error: "Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada." };
     }
     return { error: "Error al iniciar sesión. Intenta de nuevo." };
   }
@@ -57,6 +90,7 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/api/auth/callback`,
       data: {
         name: fullName,
         first_name: parsed.data.firstName,
@@ -104,11 +138,77 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
       .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
   }
 
-  redirect("/");
+  // If session exists, email confirmation is disabled — user is already logged in
+  if (signUpData.session) {
+    redirect("/");
+  }
+  // Email confirmation required — notify user to check their inbox
+  return { verificationSent: true };
 }
 
 export async function logoutAction(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+export async function requestPasswordResetAction(formData: FormData): Promise<AuthResult> {
+  const email = (formData.get("email") as string)?.trim();
+  if (!email) return { error: "Email requerido" };
+
+  // Rate limit by email: max 3 reset emails per 15 minutes
+  if (isRateLimited(`reset:${email.toLowerCase()}`, 3, 15 * 60 * 1000)) {
+    return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
+  }
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/api/auth/callback?next=/reset-password`,
+  });
+
+  if (error) return { error: "Error al enviar el correo. Intenta de nuevo." };
+  return {};
+}
+
+export async function resetPasswordAction(formData: FormData): Promise<AuthResult> {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!password || password.length < 8)
+    return { error: "La contraseña debe tener al menos 8 caracteres" };
+  if (password !== confirmPassword)
+    return { error: "Las contraseñas no coinciden" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { error: "Error al actualizar la contraseña. Intenta de nuevo." };
+  redirect("/profile/account");
+}
+
+export async function changePasswordAction(formData: FormData): Promise<AuthResult> {
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!newPassword || newPassword.length < 8)
+    return { error: "La nueva contraseña debe tener al menos 8 caracteres" };
+  if (newPassword !== confirmPassword)
+    return { error: "Las contraseñas no coinciden" };
+
+  const supabase = await createClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user?.email) return { error: "Sesión inválida" };
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (signInError) return { error: "Contraseña actual incorrecta" };
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: "Error al actualizar la contraseña" };
+  return {};
 }

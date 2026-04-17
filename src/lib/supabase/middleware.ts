@@ -48,7 +48,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAdmin) {
-    // Role check happens in admin layout via server component
+    const { data: role, error: roleError } = await supabase.rpc("get_user_role");
+    if (roleError) {
+      console.error("[Middleware] Admin role check failed:", roleError.message);
+    }
+    if (roleError || role !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   if (user && isAuth) {

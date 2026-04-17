@@ -98,10 +98,10 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {isSaleActive ? (
+        {isSaleActive && product.sale_price != null ? (
           <div className="flex items-baseline gap-2 mt-1">
             <p className="font-bebas text-lg tracking-wider text-crimson">
-              ${product.sale_price?.toLocaleString("es-CO")}
+              ${product.sale_price.toLocaleString("es-CO")}
             </p>
             <p className="font-bebas text-xs tracking-wider text-white/30 line-through">
               ${product.price.toLocaleString("es-CO")}

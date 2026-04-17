@@ -24,7 +24,7 @@ async function logActivity(
       entity_type: "product",
       entity_id: entityId ?? null,
       entity_name: entityName,
-      details: details ?? null,
+      details: (details ?? null) as import("@/types/database").Json | null,
     });
   } catch {
     // Non-critical — don't fail the main action if logging fails
@@ -409,7 +409,7 @@ export async function bulkCreateProductsAction(
 /* ─── Category actions ─────────────────────────────────── */
 
 export async function createCategoryAction(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const { profile: adminProfile } = await requireAdmin();
 
   const name   = (formData.get("name") as string)?.trim();
   const gender = formData.get("gender") as string;
@@ -437,9 +437,15 @@ export async function createCategoryAction(formData: FormData): Promise<ActionRe
     return { error: "Error al crear la categoría" };
   }
 
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "category_created", name);
+
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/products");
   revalidatePath("/admin/products/new");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/categories");
+  revalidatePath("/products");
+  revalidatePath("/");
   return { success: true };
 }
 

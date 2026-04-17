@@ -1,25 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { logoutAction } from "@/app/actions/auth";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  ChevronRight,
-  Home,
-  Tag,
-  Archive,
-} from "lucide-react";
-
-const adminNav = [
-  { label: "Dashboard",   href: "/admin/dashboard",  icon: LayoutDashboard },
-  { label: "Productos",   href: "/admin/products",   icon: Package },
-  { label: "Inventario",  href: "/admin/inventory",  icon: Archive },
-  { label: "Ofertas",     href: "/admin/offers",     icon: Tag },
-  { label: "Órdenes",     href: "/admin/orders",     icon: ShoppingCart },
-  { label: "Usuarios",    href: "/admin/users",      icon: Users },
-];
+import { ChevronRight, Home } from "lucide-react";
+import { adminNav } from "./admin-nav";
 
 export default async function AdminLayout({
   children,
@@ -29,9 +12,9 @@ export default async function AdminLayout({
   const { profile } = await requireAdmin();
 
   return (
-    <div className="min-h-screen flex bg-[#0D0D0D]">
+    <div className="h-screen overflow-hidden flex bg-[#0D0D0D]">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 border-r border-white/5 flex flex-col">
+      <aside className="w-56 flex-shrink-0 border-r border-white/5 flex flex-col h-screen overflow-y-auto sticky top-0">
         {/* Brand */}
         <Link href="/" className="h-16 flex items-center px-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors">
           <div className="group">

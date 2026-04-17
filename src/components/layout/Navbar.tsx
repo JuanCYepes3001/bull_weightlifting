@@ -54,7 +54,7 @@ export function Navbar() {
     gsap.fromTo(
       navRef.current,
       { y: -60, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.7, ease: "power3.out", delay: 1.2 }
+      { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", delay: 0.1 }
     );
   }, []);
 
@@ -97,10 +97,10 @@ export function Navbar() {
   }, [searchOpen]);
 
   const navLinks = [
-    { label: "Inicio",     href: "/" },
-    { label: "Categorías", href: "/products#categories" },
-    { label: "Colección",  href: "/products" },
-    { label: "Ofertas",    href: "/products?on_sale=true", isOferta: true },
+    { label: "Inicio",         href: "/" },
+    { label: "Colección",      href: "/products" },
+    { label: "Personalización",href: "/personalizacion" },
+    { label: "Ofertas",        href: "/products?on_sale=true", isOferta: true },
   ];
 
   return (
@@ -197,7 +197,7 @@ export function Navbar() {
               <Link href="/profile/account" className="font-body text-xs tracking-widest uppercase text-white/50 hover:text-white transition-colors">
                 {profile?.name?.split(" ")[0] ?? "Mi cuenta"}
               </Link>
-              <form action={logoutAction}>
+              <form action={logoutAction} className="inline">
                 <button type="submit" className="font-body text-xs tracking-widest uppercase text-white/30 hover:text-white/70 transition-colors">
                   Salir
                 </button>

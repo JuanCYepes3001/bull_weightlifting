@@ -14,6 +14,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action: string;
+          admin_id: string | null;
+          admin_name: string;
+          created_at: string;
+          details: Json | null;
+          entity_id: string | null;
+          entity_name: string | null;
+          entity_type: string;
+          id: string;
+        };
+        Insert: {
+          action: string;
+          admin_id?: string | null;
+          admin_name?: string;
+          created_at?: string;
+          details?: Json | null;
+          entity_id?: string | null;
+          entity_name?: string | null;
+          entity_type?: string;
+          id?: string;
+        };
+        Update: {
+          action?: string;
+          admin_id?: string | null;
+          admin_name?: string;
+          created_at?: string;
+          details?: Json | null;
+          entity_id?: string | null;
+          entity_name?: string | null;
+          entity_type?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -384,6 +420,23 @@ export type Database = {
       get_product_detail: {
         Args: { p_slug: string };
         Returns: Json;
+      };
+      decrement_stock: {
+        Args: { p_variant_id: string; p_qty: number };
+        Returns: void;
+      };
+      create_order: {
+        Args: {
+          p_user_id: string;
+          p_status: string;
+          p_total: number;
+          p_shipping_address: Json;
+          p_payment_id: string;
+          p_payment_status: string;
+          p_notes: string | null;
+          p_items: Json; // Array<{ variant_id: string; quantity: number; unit_price: number }>
+        };
+        Returns: string; // order UUID
       };
     };
     Enums: {

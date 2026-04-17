@@ -106,27 +106,31 @@ export default async function UserOrderDetailPage({
           <p className="font-body text-[9px] tracking-[0.3em] uppercase text-white/25 mb-4">
             Estado del pedido
           </p>
-          <div className="flex items-center gap-0">
+          {/* Dots + lines */}
+          <div className="flex items-center">
             {STATUS_STEPS.map((step, i) => {
               const done = i <= activeStepIdx;
               const isLast = i === STATUS_STEPS.length - 1;
               return (
-                <div key={step} className="flex items-center flex-1 last:flex-none">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div
-                      className={`w-3 h-3 rounded-full border-2 transition-colors ${
-                        done
-                          ? "bg-crimson border-crimson"
-                          : "bg-transparent border-white/20"
-                      }`}
-                    />
-                    <span className={`font-body text-[8px] tracking-wider uppercase whitespace-nowrap ${done ? "text-white/60" : "text-white/20"}`}>
-                      {STATUS_LABEL[step]}
-                    </span>
-                  </div>
+                <div key={step} className={`flex items-center ${!isLast ? "flex-1" : ""}`}>
+                  <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 transition-colors ${done ? "bg-crimson border-crimson" : "bg-transparent border-white/20"}`} />
                   {!isLast && (
-                    <div className={`flex-1 h-px mx-1 mb-4 ${i < activeStepIdx ? "bg-crimson/60" : "bg-white/10"}`} />
+                    <div className={`flex-1 h-px ${i < activeStepIdx ? "bg-crimson/60" : "bg-white/10"}`} />
                   )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Labels */}
+          <div className="flex mt-2">
+            {STATUS_STEPS.map((step, i) => {
+              const done = i <= activeStepIdx;
+              const isLast = i === STATUS_STEPS.length - 1;
+              return (
+                <div key={step} className={`flex ${!isLast ? "flex-1" : ""} ${i === 0 ? "justify-start" : i === STATUS_STEPS.length - 1 ? "justify-end" : "justify-center"}`}>
+                  <span className={`font-body text-[8px] tracking-wider uppercase whitespace-nowrap ${done ? "text-white/60" : "text-white/20"}`}>
+                    {STATUS_LABEL[step]}
+                  </span>
                 </div>
               );
             })}

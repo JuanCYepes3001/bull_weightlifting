@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerUser } from "@/lib/auth";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 const STATUS_ES: Record<string, string> = {
   pending:    "Pendiente",
@@ -16,8 +16,25 @@ function escapeCSV(s: string) {
   return `"${String(s).replace(/"/g, '""')}"`;
 }
 
+const EXCEL_COLUMNS: Partial<ExcelJS.Column>[] = [
+  { header: "ID",        key: "id",       width: 38 },
+  { header: "Cliente",   key: "cliente",  width: 24 },
+  { header: "Productos", key: "products", width: 50 },
+  { header: "Total COP", key: "total",    width: 14 },
+  { header: "Estado",    key: "estado",   width: 14 },
+  { header: "Fecha",     key: "fecha",    width: 14 },
+];
+
+async function buildExcelBuffer(rows: object[]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Órdenes");
+  sheet.columns = EXCEL_COLUMNS;
+  sheet.getRow(1).font = { bold: true };
+  if (rows.length) sheet.addRows(rows);
+  return workbook.xlsx.writeBuffer() as Promise<Buffer>;
+}
+
 export async function GET(request: NextRequest) {
-  // Auth — cannot use redirect() in API routes
   const { profile } = await getServerUser();
   if (!profile || profile.role !== "admin") {
     return new NextResponse("No autorizado", { status: 401 });
@@ -57,20 +74,14 @@ export async function GET(request: NextRequest) {
       ? String(year)
       : `${year}-${String(month).padStart(2, "0")}`;
 
-  // Shared header row
   const HEADERS = ["ID", "Cliente", "Productos", "Total COP", "Estado", "Fecha"];
 
-  // ── Empty report ──────────────────────────────────────
   if (!orders?.length) {
     if (format === "excel") {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([HEADERS]);
-      XLSX.utils.book_append_sheet(wb, ws, "Órdenes");
-      const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+      const buf = await buildExcelBuffer([]);
       return new NextResponse(buf, {
         headers: {
-          "Content-Type":
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "Content-Disposition": `attachment; filename="ordenes-${periodStr}.xlsx"`,
         },
       });
@@ -83,17 +94,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // ── Batch-fetch related data ──────────────────────────
   const orderIds = orders.map((o) => o.id);
   const userIds  = [...new Set(orders.map((o) => o.user_id))];
 
   const [itemsRes, profilesRes] = await Promise.all([
     supabase
       .from("order_items")
-      .select(
-        `order_id, quantity,
-         variant:product_variants(product:products(name))`
-      )
+      .select(`order_id, quantity, variant:product_variants(product:products(name))`)
       .in("order_id", orderIds),
     supabase
       .from("profiles")
@@ -112,74 +119,34 @@ export async function GET(request: NextRequest) {
     itemsByOrder.get(item.order_id)!.push({ name, qty: item.quantity });
   }
 
-  // ── Build rows ────────────────────────────────────────
   const dataRows = orders.map((order) => {
     const items    = itemsByOrder.get(order.id) ?? [];
     const products = items.length
       ? items.map((i) => `${i.name} x${i.qty}`).join("; ")
       : "—";
     const fecha = new Date(order.created_at).toLocaleDateString("es-CO", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+      day: "2-digit", month: "2-digit", year: "numeric",
     });
     return {
-      id:       order.id,
-      cliente:  profileMap.get(order.user_id) ?? "—",
+      id:      order.id,
+      cliente: profileMap.get(order.user_id) ?? "—",
       products,
-      total:    Math.round(order.total),
-      estado:   STATUS_ES[order.status] ?? order.status,
+      total:   Math.round(order.total),
+      estado:  STATUS_ES[order.status] ?? order.status,
       fecha,
     };
   });
 
-  // ── Excel (.xlsx) ─────────────────────────────────────
   if (format === "excel") {
-    const sheetData = [
-      HEADERS,
-      ...dataRows.map((r) => [
-        r.id,
-        r.cliente,
-        r.products,
-        r.total,
-        r.estado,
-        r.fecha,
-      ]),
-    ];
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(sheetData);
-
-    // Column widths
-    ws["!cols"] = [
-      { wch: 38 }, // ID
-      { wch: 24 }, // Cliente
-      { wch: 50 }, // Productos
-      { wch: 14 }, // Total
-      { wch: 14 }, // Estado
-      { wch: 14 }, // Fecha
-    ];
-
-    // Bold header row
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: col })];
-      if (cell) cell.s = { font: { bold: true } };
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, "Órdenes");
-    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
+    const buf = await buildExcelBuffer(dataRows);
     return new NextResponse(buf, {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="ordenes-${periodStr}.xlsx"`,
       },
     });
   }
 
-  // ── CSV ───────────────────────────────────────────────
   const rows = dataRows.map((r) =>
     [
       escapeCSV(r.id),

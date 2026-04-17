@@ -82,6 +82,12 @@ export function Navbar() {
     );
   }, [menuOpen]);
 
+  // Lock body scroll while mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -234,7 +240,7 @@ export function Navbar() {
       <CartDrawer />
 
       {menuOpen && (
-        <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5">
+        <div ref={mobileMenuRef} className="md:hidden bg-background/98 backdrop-blur-md border-t border-white/5 px-4 py-6 flex flex-col gap-5 overflow-y-auto max-h-[calc(100dvh-4rem)]">
           {/* Mobile search */}
           <form onSubmit={(e) => { handleSearch(e); setMenuOpen(false); }} className="flex items-center gap-2 border border-white/10 px-3 py-2">
             <Search size={14} className="text-white/30 flex-shrink-0" />

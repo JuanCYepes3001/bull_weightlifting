@@ -167,6 +167,12 @@ El grueso del desarrollo está terminado. Se realizó una auditoría de segurida
 - [ ] Pegar template HTML en Supabase Dashboard → Auth → Email Templates → Confirm signup
 - [ ] Añadir IP de red a Supabase → Auth → URL Configuration → Redirect URLs (para pruebas cross-device)
 
+### Próxima sesión — post-deploy
+- [ ] **Notificación WhatsApp al admin** — cuando llega un nuevo pedido, enviar mensaje al número de la empresa con resumen del pedido
+- [ ] **Integrar imágenes faltantes** — revisar con la dueña qué imágenes faltan y subirlas al bucket de Supabase
+- [ ] **Pruebas funcionales completas** — emails de verificación de registro, emails de confirmación de pedido, WhatsApp al cliente
+- [ ] **Reunión con la dueña** — recopilar feedback y definir próximas features
+
 ### Features futuras (backlog)
 - [ ] Tasa de conversión real (requiere tracking de sesiones/visits)
 - [ ] Top productos por ingresos (ya está en el widget, agregar toggle)

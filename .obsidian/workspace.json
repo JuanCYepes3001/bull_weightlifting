@@ -11,10 +11,17 @@
             "id": "9fe98539dc1962a4",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "Nueva pestaña"
+              "type": "canvas",
+              "state": {
+                "file": "Sin título.canvas",
+                "viewState": {
+                  "x": 0,
+                  "y": 0,
+                  "zoom": 0
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Sin título"
             }
           }
         ]
@@ -178,6 +185,7 @@
   },
   "active": "9fe98539dc1962a4",
   "lastOpenFiles": [
+    "Sin título.canvas",
     "src/app/admin/dashboard/SalesChart.tsx",
     "src/components/shop/TrusasCustomizer.tsx",
     "src/components/CartSyncProvider.tsx",
@@ -187,7 +195,6 @@
     "src/app/(auth)/reset-password",
     "src/app/(auth)/forgot-password/page.tsx",
     "src/app/(auth)/forgot-password",
-    "src/app/api/auth/callback/route.ts",
-    "src/app/api/auth/callback"
+    "src/app/api/auth/callback/route.ts"
   ]
 }

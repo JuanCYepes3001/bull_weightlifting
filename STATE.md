@@ -1,21 +1,21 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-04-16
+updated: 2026-04-17
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-16 (tarde)
-> Ver historial completo en [[diario/2026-04-16]] y [[diario/2026-04-16b]]
+> Última actualización: 2026-04-17
+> Ver historial completo en [[diario/2026-04-17]] | anteriores: [[diario/2026-04-16b]] [[diario/2026-04-16]]
 
 ---
 
 ## Fase actual
 
-**Fase 3 — Features completas + hardening de seguridad en curso**
+**Fase 4 — Producción activa + estabilización post-deploy**
 
-El grueso del desarrollo está terminado. Se realizó una auditoría de seguridad completa (Cyber Neo, Risk Score 100/100) y se aplicaron los 3 fixes de mayor prioridad. Quedan 9 hallazgos de seguridad pendientes antes de considera el proyecto production-ready. El deploy sigue bloqueado por cuentas externas.
+El app está desplegada en Vercel. Se resolvieron los primeros 6 bugs post-deploy. Se habilitó Google OAuth en el registro y login. Se expandió la lista de países a 195 (cobertura global). Quedan pendientes configuraciones manuales en Supabase Dashboard para que el correo de verificación y Google OAuth funcionen correctamente en producción.
 
 ---
 
@@ -53,6 +53,20 @@ El grueso del desarrollo está terminado. Se realizó una auditoría de segurida
 | Notificaciones WhatsApp | ✅ Completo |
 | PayPal API | ✅ Código listo — falta configurar credenciales |
 | Deploy / producción | ⏳ Pendiente (sin cuenta Vercel aún) |
+
+---
+
+## Tareas completadas (sesión 2026-04-17 — Google OAuth, registro, países, bugs post-deploy)
+
+- [x] 6 bugs post-deploy resueltos: navbar móvil, dirección no guardada, teléfono faltante, eliminar cuenta, favicon, ruta test eliminada
+- [x] `DeleteAccountButton` componente + sección "Zona de Peligro" en `/profile/account`
+- [x] Google OAuth: botón "Registrarse con Google" en `RegisterForm.tsx`
+- [x] `callback/route.ts` sincroniza nombre de Google al perfil + redirige nuevos usuarios a completar datos (`?welcome=1`)
+- [x] Banner de bienvenida en `/profile/account` para nuevos usuarios OAuth
+- [x] Lista de países expandida a 195, ordenados alfabéticamente en español (`locationData.ts`)
+- [x] `registerAction`: error logging en upsert de perfil para diagnóstico en producción
+- [x] Migración `016_fix_handle_new_user.sql`: trigger lee `full_name` (Google) y `name` (email); `ON CONFLICT DO UPDATE`
+- [x] Diagnóstico completo: correo de verificación apunta a localhost por `SITE_URL` no configurado en Vercel
 
 ---
 
@@ -124,7 +138,14 @@ El grueso del desarrollo está terminado. Se realizó una auditoría de segurida
 
 ## Tareas pendientes
 
-### Urgente — antes del deploy
+### Urgente — configuración Supabase Dashboard (bloquea registro y OAuth)
+- [ ] **Ejecutar migración 016** en SQL Editor: `supabase/migrations/016_fix_handle_new_user.sql`
+- [ ] **Auth → URL Configuration → Site URL** = `https://bull-weightlifting.vercel.app`
+- [ ] **Auth → URL Configuration → Redirect URLs** += `https://bull-weightlifting.vercel.app/api/auth/callback`
+- [ ] **Auth → Providers → Google** → habilitar + pegar Client ID y Client Secret de Google Cloud Console
+- [ ] **Vercel → Env Vars** → `SITE_URL=https://bull-weightlifting.vercel.app` → Redeploy
+
+### Urgente — migraciones pendientes de sesiones anteriores
 - [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto `decrement_stock` RPC no existe
 - [ ] **Ejecutar migración 015** en Supabase Dashboard → SQL Editor (`supabase/migrations/015_create_order_fn.sql`) — sin esto el checkout falla completamente
 
@@ -209,14 +230,14 @@ El grueso del desarrollo está terminado. Se realizó una auditoría de segurida
 
 | Bloqueo | Impacto | Solución |
 |---|---|---|
-| Sin cuenta Vercel | No se puede hacer deploy a producción | Crear cuenta en vercel.com |
+| `SITE_URL` no configurado en Vercel | Correo de verificación apunta a localhost; links rotos | Agregar `SITE_URL=https://bull-weightlifting.vercel.app` en Vercel |
+| Supabase Site URL apunta a localhost | Email de verificación tiene link incorrecto | Auth → URL Configuration → Site URL en Dashboard |
+| Google OAuth no habilitado en Supabase | Botón "Registrarse con Google" no funciona | Auth → Providers → Google → habilitar + credenciales |
+| Migración 016 no ejecutada en DB | Trigger sigue leyendo solo `name` (falla con Google OAuth) | Ejecutar `016_fix_handle_new_user.sql` en SQL Editor |
+| Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
+| Migración 015 no ejecutada en DB | `checkout.ts` llama `create_order` RPC que aún no existe | Ejecutar `015_create_order_fn.sql` en SQL Editor |
 | Sin credenciales PayPal | El flujo PayPal cae al error "no configurado" | Crear app en developer.paypal.com |
-| `RESEND_API_KEY` no configurada en prod | Emails no se envían en producción | Agregar a Vercel env vars |
-| IP de red en Supabase Redirect URLs | OAuth y links de verificación pueden fallar desde otros dispositivos | Agregar en Supabase Dashboard |
-| Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe en Supabase | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
-| Migración 015 no ejecutada en DB | `checkout.ts` llama `create_order` RPC que aún no existe en Supabase | Ejecutar `015_create_order_fn.sql` en SQL Editor |
-| `xlsx` con CVEs sin patch | Scanner de seguridad bloqueará el deploy en cualquier CI que tenga `npm audit` | Migrar a `exceljs` (CN-006/007) |
-| Rate limiter in-memory no escala en Vercel | En producción serverless los limits se resetean por instancia | Reemplazar con @upstash/ratelimit antes de lanzar en Vercel |
+| `RESEND_API_KEY` no configurada en prod | Emails transaccionales no se envían | Agregar a Vercel env vars |
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd \\\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\\\" && git add src/app/actions/checkout.ts src/app/actions/auth.ts src/app/actions/users.ts src/app/api/admin/reports/orders/route...",
-  "error": "Exit code 1\nThe following paths are ignored by one of your .gitignore files:\n.env.example\nhint: Use -f if you really want to add them.\nhint: Disable this message with \"git config set advice.addIgnoredFile false\"",
-  "timestamp": "2026-04-17T01:18:14.298Z",
+  "tool_input_preview": "{\"command\":\"Get-ChildItem -Path \\\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\\\" -Recurse -Filter \\\"page.tsx\\\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName\"}",
+  "error": "Exit code 127\n/usr/bin/bash: line 1: Get-ChildItem: command not found\n/usr/bin/bash: line 1: Select-Object: command not found",
+  "timestamp": "2026-05-03T17:58:23.837Z",
   "retry_count": 1
 }

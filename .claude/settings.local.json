@@ -32,7 +32,9 @@
       "Bash(npm audit:*)",
       "Bash(echo \"exit:$?\")",
       "Bash(node:*)",
-      "Bash(echo \"done:$?\")"
+      "Bash(echo \"done:$?\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\" -Recurse -Filter \"page.tsx\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   },
   "disabledMcpjsonServers": [

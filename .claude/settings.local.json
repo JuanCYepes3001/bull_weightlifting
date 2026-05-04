@@ -34,7 +34,8 @@
       "Bash(node:*)",
       "Bash(echo \"done:$?\")",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\" -Recurse -Filter \"page.tsx\" -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file"
     ]
   },
   "disabledMcpjsonServers": [

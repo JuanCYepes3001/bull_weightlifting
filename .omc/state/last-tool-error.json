@@ -1,7 +1,7 @@
 {
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"Get-ChildItem -Path \\\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\\\" -Recurse -Filter \\\"page.tsx\\\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName\"}",
-  "error": "Exit code 127\n/usr/bin/bash: line 1: Get-ChildItem: command not found\n/usr/bin/bash: line 1: Select-Object: command not found",
-  "timestamp": "2026-05-03T17:58:23.837Z",
+  "tool_name": "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+  "tool_input_preview": "{\"path\":\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\bull_weightlifting\\\\src\\\\components\\\\home\\\\CategoriesSection.tsx\",\"language\":\"typescript\",\"code\":\"\\nconst fs = require('fs');\\nconst content = FILE_CONTENT...",
+  "error": "⚠️ context-mode v1.0.75 outdated → v1.0.108 available. Upgrade: /ctx-upgrade\n\nRuntime error: No TypeScript runtime available. Install one of: bun (recommended), tsx (npm i -g tsx), or ts-node.",
+  "timestamp": "2026-05-04T18:55:21.370Z",
   "retry_count": 1
 }

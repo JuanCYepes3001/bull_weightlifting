@@ -7,9 +7,10 @@ import { cn } from "@/utils/cn";
 interface VariantSelectorProps {
   variants: ProductVariant[];
   onSelect: (variant: ProductVariant | null) => void;
+  onColorSelect?: (color: string) => void;
 }
 
-export function VariantSelector({ variants, onSelect }: VariantSelectorProps) {
+export function VariantSelector({ variants, onSelect, onColorSelect }: VariantSelectorProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
@@ -27,6 +28,7 @@ export function VariantSelector({ variants, onSelect }: VariantSelectorProps) {
     setSelectedColor(color);
     setSelectedSize(null);
     onSelect(null);
+    onColorSelect?.(color);
   };
 
   const handleSizeSelect = (variant: ProductVariant) => {

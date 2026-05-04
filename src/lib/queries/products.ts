@@ -69,6 +69,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     )
     .eq("slug", slug)
     .eq("is_active", true)
+    .order("position", { referencedTable: "product_images", ascending: true })
     .single();
 
   if (error) return null;

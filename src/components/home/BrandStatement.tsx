@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { BrandStatementCarousel } from "./BrandStatementCarousel";
 
 export async function BrandStatement() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: files } = await supabase.storage.from("athletes").list("", {
     limit: 20,

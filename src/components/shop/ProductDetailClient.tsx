@@ -22,6 +22,36 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const images = product.images ?? [];
   const variants = product.variants ?? [];
 
+  // Unique colors in the order they appear in variants (mirrors image insertion order)
+  const uniqueColors = [...new Set(variants.map((v) => v.color))];
+
+  const imageIndexForColor = (color: string): number => {
+    // Primary: match by img.color field (populated by import script)
+    const byField = images.findIndex(
+      (img) => img.color?.toLowerCase() === color.toLowerCase()
+    );
+    if (byField >= 0) return byField;
+
+    // Fallback: use positional match (Nth unique color → Nth image)
+    const colorIdx = uniqueColors.findIndex(
+      (c) => c.toLowerCase() === color.toLowerCase()
+    );
+    return colorIdx >= 0 && colorIdx < images.length ? colorIdx : -1;
+  };
+
+  const handleColorSelect = (color: string) => {
+    const idx = imageIndexForColor(color);
+    if (idx >= 0) setActiveImage(idx);
+  };
+
+  const handleVariantSelect = (variant: ProductVariant | null) => {
+    setSelectedVariant(variant);
+    if (variant?.color) {
+      const idx = imageIndexForColor(variant.color);
+      if (idx >= 0) setActiveImage(idx);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
       {/* Galería */}
@@ -110,7 +140,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         {/* Selector de variantes */}
         {variants.length > 0 ? (
-          <VariantSelector variants={variants} onSelect={setSelectedVariant} />
+          <VariantSelector variants={variants} onSelect={handleVariantSelect} onColorSelect={handleColorSelect} />
         ) : (
           <p className="font-body text-sm text-white/30">Sin variantes disponibles.</p>
         )}

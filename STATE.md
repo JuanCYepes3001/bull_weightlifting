@@ -1,21 +1,21 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-04-17
+updated: 2026-05-04
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-04-17
-> Ver historial completo en [[diario/2026-04-17]] | anteriores: [[diario/2026-04-16b]] [[diario/2026-04-16]]
+> Última actualización: 2026-05-04
+> Ver historial completo en [[diario/2026-05-04]] | anteriores: [[diario/2026-05-03]] [[diario/2026-04-17]]
 
 ---
 
 ## Fase actual
 
-**Fase 4 — Producción activa + estabilización post-deploy**
+**Fase 4 — Producción activa + inventario real cargado**
 
-El app está desplegada en Vercel. Se resolvieron los primeros 6 bugs post-deploy. Se habilitó Google OAuth en el registro y login. Se expandió la lista de países a 195 (cobertura global). Quedan pendientes configuraciones manuales en Supabase Dashboard para que el correo de verificación y Google OAuth funcionen correctamente en producción.
+El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario real cargado (14 productos, ~32 colores, ~180 variantes). Swap de imagen por color funcional en el detalle de producto. Categorías con imágenes automáticas en la homepage. Admin: eliminar categorías habilitado. Trusas marcadas como "Personalizable" sin badge de stock.
 
 ---
 
@@ -53,6 +53,36 @@ El app está desplegada en Vercel. Se resolvieron los primeros 6 bugs post-deplo
 | Notificaciones WhatsApp | ✅ Completo |
 | PayPal API | ✅ Código listo — falta configurar credenciales |
 | Deploy / producción | ⏳ Pendiente (sin cuenta Vercel aún) |
+
+---
+
+## Tareas completadas (sesión 2026-05-04 — inventario v3 + swap imagen + admin mejoras)
+
+- [x] `import-inventory.mjs` v3: estructura Excel real (`DESCRIPTION`=material, `COLOR_HEX`=color, `CATEGORY_GENDER`=género directo)
+- [x] `getCategoryKey` soporta CamelCase (`CamisaClasicaLogos` → `CAMISA`)
+- [x] SQL CLEANUP fix: `DELETE FROM order_items` antes de variantes (`NOT NULL` constraint)
+- [x] `getCategories` — fallback automático de imagen de producto por categoría (no requiere migración)
+- [x] `deleteCategoryAction` — eliminar categorías en admin con guard de productos asignados
+- [x] `CategoryManager.tsx` — botón de papelera por categoría con confirmación
+- [x] `ProductCard.tsx` — trusas muestran "Personalizable" en lugar de "Agotado"
+- [x] `VariantSelector.tsx` — nuevo prop `onColorSelect` para notificar cambio de color sin esperar talla
+- [x] `ProductDetailClient.tsx` — swap de imagen al seleccionar color: primero por `img.color`, fallback posicional
+- [x] `getProductBySlug` — ordena `product_images` por `position ASC`
+- [x] `ProductImage` type — `color?: string | null` agregado
+
+---
+
+## Tareas completadas (sesión 2026-05-03 — carrusel atletas + inventario real)
+
+- [x] `BrandStatement.tsx` reescrito como server component — lista bucket `athletes` con `createAdminClient()`
+- [x] `BrandStatementCarousel.tsx` — nuevo carrusel GSAP: 5 slides, layout alternado, transición fade secuencial (sin solapamiento de texto), dots + flechas de navegación, auto-avance 6s
+- [x] Imágenes como columna lateral (no background), `min-h-[62vh]` + `py-14` garantiza altura uniforme entre todas las fotos
+- [x] `scripts/import-inventory.mjs` — script Node.js ESM que parsea Excel (ITEM/DESCRIPTION/tallas/precio) y genera SQL
+- [x] Fix FK: `category_id` usa subquery `(SELECT id FROM categories WHERE slug = '...')` en lugar de UUID hardcodeado
+- [x] v2 del script: agrupa por ITEM → 1 producto por tipo de prenda, colores son variantes
+- [x] SKU jerárquico: `{cat}_{producto}_{color}_{talla}` → ej. `01_01_01_M`
+- [x] Migración `017_product_image_color.sql`: columna `color` en `product_images` para swap de imagen por color en frontend
+- [x] 4 colores nuevos en script: LILA, PALO_DE_ROSA, FUCSIA, TERRACOTA
 
 ---
 
@@ -138,16 +168,21 @@ El app está desplegada en Vercel. Se resolvieron los primeros 6 bugs post-deplo
 
 ## Tareas pendientes
 
+### Inventario — verificación de swap por color
+- [ ] **Confirmar que `product_images.color` está poblado** — consultar en Supabase: `SELECT id, url, color, position FROM product_images WHERE product_id = '<id>' ORDER BY position`. Si `color` es null, el fallback posicional se activa (funciona si el orden de imágenes coincide con el de variantes)
+- [ ] **Opcional: repoblar columna `color` en product_images** vía SQL: `UPDATE product_images pi SET color = (SELECT pv.color FROM product_variants pv WHERE pv.product_id = pi.product_id ORDER BY pv.id LIMIT 1 OFFSET pi.position)` — solo si el fallback posicional no funciona bien
+
 ### Urgente — configuración Supabase Dashboard (bloquea registro y OAuth)
-- [ ] **Ejecutar migración 016** en SQL Editor: `supabase/migrations/016_fix_handle_new_user.sql`
 - [ ] **Auth → URL Configuration → Site URL** = `https://bull-weightlifting.vercel.app`
 - [ ] **Auth → URL Configuration → Redirect URLs** += `https://bull-weightlifting.vercel.app/api/auth/callback`
 - [ ] **Auth → Providers → Google** → habilitar + pegar Client ID y Client Secret de Google Cloud Console
 - [ ] **Vercel → Env Vars** → `SITE_URL=https://bull-weightlifting.vercel.app` → Redeploy
 
-### Urgente — migraciones pendientes de sesiones anteriores
-- [ ] **Ejecutar migración 014** en Supabase Dashboard → SQL Editor (`supabase/migrations/014_decrement_stock_fn.sql`) — sin esto `decrement_stock` RPC no existe
-- [ ] **Ejecutar migración 015** en Supabase Dashboard → SQL Editor (`supabase/migrations/015_create_order_fn.sql`) — sin esto el checkout falla completamente
+### Migraciones — ✅ todas ejecutadas
+- [x] Migración 014 ejecutada (`decrement_stock` RPC)
+- [x] Migración 015 ejecutada (`create_order` RPC)
+- [x] Migración 016 ejecutada (trigger Google OAuth)
+- [x] Migración 017 ejecutada (columna `color` en `product_images`)
 
 ### Seguridad — hallazgos pendientes de la auditoría 2026-04-16
 
@@ -230,10 +265,13 @@ El app está desplegada en Vercel. Se resolvieron los primeros 6 bugs post-deplo
 
 | Bloqueo | Impacto | Solución |
 |---|---|---|
+| Migración 017 no ejecutada | Columna `color` en `product_images` no existe → import fallará | Ejecutar `017_product_image_color.sql` en SQL Editor |
+| Fotos en bucket `products` sin nombre correcto | Las URLs generadas no coinciden con archivos → imágenes no se muestran | Renombrar archivos a `"ITEM COLOR.jpg"` |
+| Bucket `products` posiblemente privado | `next/image` devuelve 403 al intentar cargar imágenes | Supabase → Storage → products → Make Public |
 | `SITE_URL` no configurado en Vercel | Correo de verificación apunta a localhost; links rotos | Agregar `SITE_URL=https://bull-weightlifting.vercel.app` en Vercel |
 | Supabase Site URL apunta a localhost | Email de verificación tiene link incorrecto | Auth → URL Configuration → Site URL en Dashboard |
 | Google OAuth no habilitado en Supabase | Botón "Registrarse con Google" no funciona | Auth → Providers → Google → habilitar + credenciales |
-| Migración 016 no ejecutada en DB | Trigger sigue leyendo solo `name` (falla con Google OAuth) | Ejecutar `016_fix_handle_new_user.sql` en SQL Editor |
+| Migración 016 no ejecutada en DB | Trigger falla con Google OAuth | Ejecutar `016_fix_handle_new_user.sql` en SQL Editor |
 | Migración 014 no ejecutada en DB | `checkout.ts` llama `decrement_stock` RPC que aún no existe | Ejecutar `014_decrement_stock_fn.sql` en SQL Editor |
 | Migración 015 no ejecutada en DB | `checkout.ts` llama `create_order` RPC que aún no existe | Ejecutar `015_create_order_fn.sql` en SQL Editor |
 | Sin credenciales PayPal | El flujo PayPal cae al error "no configurado" | Crear app en developer.paypal.com |

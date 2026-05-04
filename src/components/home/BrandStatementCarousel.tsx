@@ -59,22 +59,19 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
 
     const textEls = Array.from(nextEl.querySelectorAll("[data-t]"));
     gsap.set(textEls, { y: 24, opacity: 0 });
-    gsap.set(nextEl, { opacity: 0, zIndex: 2 });
-    gsap.set(prevEl, { zIndex: 1 });
 
     const tl = gsap.timeline({
-      onComplete: () => {
-        gsap.set(prevEl, { opacity: 0, zIndex: 0 });
-        gsap.set(nextEl, { zIndex: 1 });
-        animatingRef.current = false;
-      },
+      onComplete: () => { animatingRef.current = false; },
     });
 
-    tl.to(nextEl, { opacity: 1, duration: 0.9, ease: "power2.inOut" });
+    tl.to(prevEl, { opacity: 0, duration: 0.35, ease: "power2.in" });
+    tl.set(prevEl, { zIndex: 0 });
+    tl.set(nextEl, { opacity: 0, zIndex: 1 });
+    tl.to(nextEl, { opacity: 1, duration: 0.55, ease: "power2.out" }, "+=0.05");
     tl.to(
       textEls,
-      { y: 0, opacity: 1, duration: 0.6, stagger: 0.12, ease: "power3.out" },
-      "-=0.45"
+      { y: 0, opacity: 1, duration: 0.55, stagger: 0.12, ease: "power3.out" },
+      "-=0.3"
     );
   }, []);
 
@@ -103,9 +100,7 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
     }
 
     resetTimer();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [resetTimer]);
 
   const handleNav = (next: number) => {
@@ -114,67 +109,100 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
   };
 
   return (
-    <section className="relative min-h-[80vh] overflow-hidden bg-[#111111]">
-      <div className="absolute top-0 inset-x-0 h-px bg-crimson z-20" />
+    <section className="relative bg-[#111111] overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-px bg-crimson z-10" />
 
-      {SLIDES.map((slide, i) => {
-        const img = getImage(i);
-        return (
-          <div
-            key={i}
-            ref={(el) => { slideEls.current[i] = el; }}
-            className="absolute inset-0"
-            style={{ opacity: 0, zIndex: 0 }}
-          >
-            {img && (
-              <Image
-                src={img}
-                alt={`Atleta ${i + 1}`}
-                fill
-                className="object-cover object-center"
-                priority={i === 0}
-                sizes="100vw"
-              />
-            )}
+      {/*
+        min-h-[62vh] on every slide guarantees identical section height across all slides.
+        The image column fills that height minus py-12 padding → all images are exactly
+        the same pixel height regardless of their intrinsic dimensions.
+      */}
+      <div className="grid">
+        {SLIDES.map((slide, i) => {
+          const img = getImage(i);
+          const imageLeft = i % 2 === 1;
 
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+          return (
+            <div
+              key={i}
+              ref={(el) => { slideEls.current[i] = el; }}
+              className="col-start-1 row-start-1 flex min-h-[62vh]"
+              style={{ opacity: 0, zIndex: 0 }}
+            >
+              {/* ── Text column ── */}
+              <div
+                className={`flex-1 flex items-center px-8 md:px-14 lg:px-20 py-16 ${
+                  imageLeft ? "order-2" : "order-1"
+                }`}
+              >
+                <div className={`w-full ${imageLeft ? "text-right" : "text-left"}`}>
+                  <p
+                    data-t
+                    className="font-anantason text-[10px] tracking-[0.6em] text-crimson uppercase mb-10"
+                  >
+                    MANIFIESTO
+                  </p>
 
-            <div className="relative z-10 h-full flex items-center px-4 md:px-8 lg:px-16">
-              <div className="max-w-4xl w-full py-32">
-                <p
-                  data-t
-                  className="font-anantason text-[10px] tracking-[0.6em] text-crimson uppercase mb-10"
-                >
-                  MANIFIESTO
-                </p>
-                <div className="space-y-2 overflow-hidden">
-                  {slide.lines.map((line, j) => (
-                    <p
-                      key={j}
-                      data-t
-                      className="font-heading text-4xl md:text-6xl lg:text-7xl leading-tight text-white uppercase"
-                    >
-                      {line}
-                    </p>
-                  ))}
+                  <div className="space-y-1 overflow-hidden">
+                    {slide.lines.map((line, j) => (
+                      <p
+                        key={j}
+                        data-t
+                        className="font-heading text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight text-white uppercase"
+                      >
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+
+                  <p
+                    data-t
+                    className={`font-body text-sm text-white/50 leading-relaxed mt-10 max-w-xs ${
+                      imageLeft ? "ml-auto" : "mr-auto"
+                    }`}
+                  >
+                    {slide.sub}
+                  </p>
                 </div>
-                <p
-                  data-t
-                  className="font-body text-sm text-white/50 leading-relaxed max-w-md mt-10"
-                >
-                  {slide.sub}
-                </p>
+              </div>
+
+              {/* ── Image column ── */}
+              <div
+                className={`hidden md:flex flex-col flex-shrink-0 w-[42%] lg:w-[44%] py-10 md:py-14 ${
+                  imageLeft ? "order-1" : "order-2"
+                }`}
+              >
+                {img ? (
+                  /* flex-1 fills the height set by py-10/14 padding above */
+                  <div className="relative flex-1 overflow-hidden">
+                    <Image
+                      src={img}
+                      alt={`Atleta ${i + 1}`}
+                      fill
+                      className="object-cover object-top"
+                      priority={i === 0}
+                      sizes="44vw"
+                    />
+                    {/* Soft edge fade toward the text column */}
+                    <div
+                      className={`absolute inset-y-0 w-20 ${
+                        imageLeft
+                          ? "right-0 bg-gradient-to-r from-transparent to-[#111111]"
+                          : "left-0 bg-gradient-to-l from-transparent to-[#111111]"
+                      }`}
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      {/* Prev */}
+      {/* Prev arrow */}
       <button
         onClick={() => handleNav((activeRef.current - 1 + SLIDES.length) % SLIDES.length)}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
         aria-label="Anterior"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -182,10 +210,10 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
         </svg>
       </button>
 
-      {/* Next */}
+      {/* Next arrow */}
       <button
         onClick={() => handleNav((activeRef.current + 1) % SLIDES.length)}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 w-10 h-10 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
         aria-label="Siguiente"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -193,8 +221,8 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
         </svg>
       </button>
 
-      {/* Dots */}
-      <div className="absolute bottom-8 left-4 md:left-16 z-30 flex items-center gap-3">
+      {/* Navigation dots */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
         {SLIDES.map((_, i) => (
           <button
             key={i}
@@ -209,7 +237,7 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
         ))}
       </div>
 
-      <div className="absolute bottom-0 inset-x-0 h-px bg-crimson z-20" />
+      <div className="absolute bottom-0 inset-x-0 h-px bg-crimson z-10" />
     </section>
   );
 }

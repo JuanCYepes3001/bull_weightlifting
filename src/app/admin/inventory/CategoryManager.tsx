@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, Tag } from "lucide-react";
-import { createCategoryAction } from "@/app/actions/products";
+import { Plus, X, Tag, Trash2 } from "lucide-react";
+import { createCategoryAction, deleteCategoryAction } from "@/app/actions/products";
 
 interface Category {
   id: string;
@@ -28,6 +28,23 @@ export default function CategoryManager({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDelete = (id: string, name: string) => {
+    if (!confirm(`¿Eliminar la categoría "${name}"? Esta acción no se puede deshacer.`)) return;
+    setDeleteError(null);
+    startTransition(async () => {
+      const res = await deleteCategoryAction(id);
+      if (res.error) {
+        setDeleteError(res.error);
+      } else {
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+      }
+      setDeletingId(null);
+    });
+    setDeletingId(id);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +143,11 @@ export default function CategoryManager({
         </form>
       )}
 
+      {/* Delete error */}
+      {deleteError && (
+        <p className="font-body text-xs text-red-400">{deleteError}</p>
+      )}
+
       {/* Category list */}
       <div className="flex flex-wrap gap-2">
         {categories.length === 0 ? (
@@ -134,7 +156,7 @@ export default function CategoryManager({
           categories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center gap-2 px-3 py-1.5 border border-white/5 bg-white/[0.02]"
+              className="flex items-center gap-2 px-3 py-1.5 border border-white/5 bg-white/[0.02] group"
             >
               <span className="font-horizon text-[10px] tracking-widest text-white/70">
                 {cat.name}
@@ -142,6 +164,15 @@ export default function CategoryManager({
               <span className="font-body text-[8px] tracking-widest uppercase text-white/25">
                 {GENDER_LABELS[cat.gender] ?? cat.gender}
               </span>
+              <button
+                type="button"
+                onClick={() => handleDelete(cat.id, cat.name)}
+                disabled={deletingId === cat.id}
+                className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-white/20 hover:text-red-400 disabled:opacity-30"
+                title="Eliminar categoría"
+              >
+                <Trash2 size={11} />
+              </button>
             </div>
           ))
         )}

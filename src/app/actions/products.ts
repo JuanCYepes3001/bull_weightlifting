@@ -449,6 +449,32 @@ export async function createCategoryAction(formData: FormData): Promise<ActionRe
   return { success: true };
 }
 
+export async function deleteCategoryAction(id: string): Promise<ActionResult> {
+  const { profile: adminProfile } = await requireAdmin();
+  const supabase = await createClient();
+
+  // Prevent deleting a category that still has products
+  const { count } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("category_id", id);
+
+  if ((count ?? 0) > 0)
+    return { error: `No se puede eliminar: tiene ${count} producto(s) asignado(s)` };
+
+  const { data: cat } = await supabase.from("categories").select("name").eq("id", id).single();
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) return { error: "Error al eliminar la categoría" };
+
+  await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "category_deleted", cat?.name ?? id);
+
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/products/new");
+  revalidatePath("/");
+  return { success: true };
+}
+
 /* ─── Inventory actions ────────────────────────────────── */
 
 export async function updateVariantStockAction(

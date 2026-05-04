@@ -9,6 +9,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images?.[0]?.url ?? null;
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
+  const isCustomizable = product.category?.slug === "trusas";
   const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
   
   const now = new Date();
@@ -44,10 +45,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {!hasStock && (
+          {!hasStock && !isCustomizable && (
             <div className="bg-background/80 px-2 py-0.5">
               <span className="font-body text-[10px] tracking-widest uppercase text-white/40">
                 Agotado
+              </span>
+            </div>
+          )}
+          {isCustomizable && (
+            <div className="bg-background/80 px-2 py-0.5">
+              <span className="font-body text-[10px] tracking-widest uppercase text-crimson/70">
+                Personalizable
               </span>
             </div>
           )}

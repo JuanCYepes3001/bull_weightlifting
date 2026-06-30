@@ -1,16 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types";
+import { getProductImageUrl } from "@/lib/storage";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const mainImage = product.images?.[0]?.url ?? null;
+  const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
+  const firstColor = colors[0];
+  // Build URL from storage naming convention: "{Product Name} {COLOR}.jpeg"
+  // Falls back to DB image if no color variants exist
+  const mainImage = firstColor
+    ? getProductImageUrl(product.name, firstColor)
+    : (product.images?.[0]?.url ?? null);
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
   const isCustomizable = product.category?.slug === "trusas";
-  const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
   
   const now = new Date();
   const isSaleActive = product.is_on_sale && 

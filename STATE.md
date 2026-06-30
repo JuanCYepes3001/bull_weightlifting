@@ -13,9 +13,9 @@ proyecto: "[[proyectos/bull-weightlifting]]"
 
 ## Fase actual
 
-**Fase 4 — Producción activa + inventario real cargado**
+**Fase 4 — Producción activa + polish funcional**
 
-El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario real cargado (14 productos, ~32 colores, ~180 variantes). Swap de imagen por color funcional en el detalle de producto. Categorías con imágenes automáticas en la homepage. Admin: eliminar categorías habilitado. Trusas marcadas como "Personalizable" sin badge de stock.
+El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario real cargado (14 productos, ~32 colores, ~180 variantes). Imágenes resueltas por convención de nombre desde Supabase Storage (`{Producto} {COLOR}.jpeg`). Swap de imagen al seleccionar color. Trusas: personalización vía WhatsApp (botón verde). Tracking de pedidos por email en todos los estados. Forgot password: arreglado (Redis condicional).
 
 ---
 

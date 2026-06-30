@@ -8,23 +8,23 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 
-// ── Rate limiters (Upstash Redis — works across Vercel multi-instance) ───────
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// ── Rate limiters (Upstash Redis) ────────────────────────────────────────────
+// Optional: only active when UPSTASH_REDIS_REST_URL + TOKEN are configured.
+// Without them the limiters are skipped (no crash, but no rate limiting).
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-const loginLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "15 m"),
-  prefix: "rl:login",
-});
+const redis = UPSTASH_URL && UPSTASH_TOKEN
+  ? new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN })
+  : null;
 
-const resetLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(3, "15 m"),
-  prefix: "rl:reset",
-});
+const loginLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, "15 m"), prefix: "rl:login" })
+  : null;
+
+const resetLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "15 m"), prefix: "rl:reset" })
+  : null;
 
 async function getClientIp(): Promise<string> {
   const h = await headers();
@@ -39,9 +39,9 @@ type AuthResult = {
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
   const ip = await getClientIp();
-  const { success: loginOk } = await loginLimiter.limit(`login:${ip}`);
-  if (!loginOk) {
-    return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
+  if (loginLimiter) {
+    const { success: loginOk } = await loginLimiter.limit(`login:${ip}`);
+    if (!loginOk) return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
   }
 
   const raw = {
@@ -170,9 +170,9 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Au
   if (!email) return { error: "Email requerido" };
 
   // Rate limit by email: max 3 reset emails per 15 minutes
-  const { success: resetOk } = await resetLimiter.limit(`reset:${email.toLowerCase()}`);
-  if (!resetOk) {
-    return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
+  if (resetLimiter) {
+    const { success: resetOk } = await resetLimiter.limit(`reset:${email.toLowerCase()}`);
+    if (!resetOk) return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
   }
 
   const supabase = await createClient();

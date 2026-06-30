@@ -245,3 +245,79 @@ export async function sendDeliveredEmail(params: {
 
   await sendEmail(to, `✅ Pedido #${shortId} entregado — BULL Weightlifting`, html);
 }
+
+export async function sendProcessingEmail(params: {
+  to: string;
+  orderId: string;
+}): Promise<void> {
+  const { to, orderId } = params;
+  const shortId = orderId.slice(0, 8).toUpperCase();
+
+  const html = baseLayout(`
+    <div class="badge" style="background:#7c3aed">⚙️ En preparación</div>
+    <div class="card">
+      <div class="label">Orden</div>
+      <div class="value">#${shortId}</div>
+      <div class="label">Estado</div>
+      <div class="value">Estamos preparando tu pedido</div>
+    </div>
+    <p style="font-size:13px;color:#555;margin-top:16px">
+      Tu pedido está siendo procesado. Te notificaremos cuando esté en camino. 💪
+    </p>
+  `);
+
+  await sendEmail(to, `⚙️ Tu pedido #${shortId} está en preparación — BULL Weightlifting`, html);
+}
+
+export async function sendCancelledEmail(params: {
+  to: string;
+  orderId: string;
+  total: number;
+}): Promise<void> {
+  const { to, orderId, total } = params;
+  const shortId = orderId.slice(0, 8).toUpperCase();
+
+  const html = baseLayout(`
+    <div class="badge" style="background:#991b1b">✗ Cancelado</div>
+    <div class="card">
+      <div class="label">Orden</div>
+      <div class="value">#${shortId}</div>
+      <div class="label">Total</div>
+      <div class="value">${COP(total)} COP</div>
+      <div class="label">Estado</div>
+      <div class="value">Tu pedido fue cancelado</div>
+    </div>
+    <p style="font-size:13px;color:#555;margin-top:16px">
+      Si esto fue un error o tienes preguntas, <a href="mailto:soporte@bullweightlifting.com">contáctanos</a>.
+    </p>
+  `);
+
+  await sendEmail(to, `Tu pedido #${shortId} fue cancelado — BULL Weightlifting`, html);
+}
+
+export async function sendRefundedEmail(params: {
+  to: string;
+  orderId: string;
+  total: number;
+}): Promise<void> {
+  const { to, orderId, total } = params;
+  const shortId = orderId.slice(0, 8).toUpperCase();
+
+  const html = baseLayout(`
+    <div class="badge" style="background:#0e7490">↩ Reembolso</div>
+    <div class="card">
+      <div class="label">Orden</div>
+      <div class="value">#${shortId}</div>
+      <div class="label">Monto reembolsado</div>
+      <div class="value">${COP(total)} COP</div>
+      <div class="label">Estado</div>
+      <div class="value">Reembolso procesado</div>
+    </div>
+    <p style="font-size:13px;color:#555;margin-top:16px">
+      El reembolso puede tardar 3–7 días hábiles dependiendo de tu método de pago.<br/>
+      ¿Tienes dudas? <a href="mailto:soporte@bullweightlifting.com">contáctanos</a>.
+    </p>
+  `);
+
+  await sendEmail(to, `↩ Reembolso procesado para pedido #${shortId} — BULL Weightlifting`, html);
+}

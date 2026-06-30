@@ -8,7 +8,7 @@ import { AddToCartButton } from "./AddToCartButton";
 import { SaleTimer } from "./SaleTimer";
 import { SizeGuide } from "./SizeGuide";
 import { TrusasCustomizer } from "./TrusasCustomizer";
-import type { CartCustomization } from "@/store/cartStore";
+import { getProductImageUrl } from "@/lib/storage";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -16,41 +16,37 @@ interface ProductDetailClientProps {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
-  const [activeImage, setActiveImage] = useState(0);
-  const [customization, setCustomization] = useState<CartCustomization>({});
   const isTrusas = product.category?.slug === "trusas";
   const images = product.images ?? [];
   const variants = product.variants ?? [];
 
-  // Unique colors in the order they appear in variants (mirrors image insertion order)
   const uniqueColors = [...new Set(variants.map((v) => v.color))];
 
-  const imageIndexForColor = (color: string): number => {
-    // Primary: match by img.color field (populated by import script)
-    const byField = images.findIndex(
-      (img) => img.color?.toLowerCase() === color.toLowerCase()
-    );
-    if (byField >= 0) return byField;
+  // Derive initial image URL from first color or first DB image
+  const initialUrl = uniqueColors.length > 0
+    ? getProductImageUrl(product.name, uniqueColors[0])
+    : (images[0]?.url ?? null);
 
-    // Fallback: use positional match (Nth unique color → Nth image)
-    const colorIdx = uniqueColors.findIndex(
-      (c) => c.toLowerCase() === color.toLowerCase()
-    );
-    return colorIdx >= 0 && colorIdx < images.length ? colorIdx : -1;
-  };
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(initialUrl);
+  const [activeColor, setActiveColor] = useState<string | null>(uniqueColors[0] ?? null);
 
   const handleColorSelect = (color: string) => {
-    const idx = imageIndexForColor(color);
-    if (idx >= 0) setActiveImage(idx);
+    setActiveColor(color);
+    setActiveImageUrl(getProductImageUrl(product.name, color));
   };
 
   const handleVariantSelect = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
     if (variant?.color) {
-      const idx = imageIndexForColor(variant.color);
-      if (idx >= 0) setActiveImage(idx);
+      setActiveColor(variant.color);
+      setActiveImageUrl(getProductImageUrl(product.name, variant.color));
     }
   };
+
+  // Thumbnails: one per unique color
+  const thumbnails = uniqueColors.length > 0
+    ? uniqueColors.map((color) => ({ color, url: getProductImageUrl(product.name, color) }))
+    : images.map((img) => ({ color: img.color ?? "", url: img.url }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
@@ -58,10 +54,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <div className="space-y-3">
         {/* Imagen principal */}
         <div className="relative aspect-[4/5] bg-[#111] overflow-hidden border border-white/5">
-          {images[activeImage]?.url ? (
+          {activeImageUrl ? (
             <Image
-              src={images[activeImage].url}
-              alt={images[activeImage].alt ?? product.name}
+              src={activeImageUrl}
+              alt={product.name}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
@@ -75,18 +71,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           )}
         </div>
 
-        {/* Thumbnails */}
-        {images.length > 1 && (
+        {/* Thumbnails por color */}
+        {thumbnails.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
-            {images.map((img, i) => (
+            {thumbnails.map(({ color, url }) => (
               <button
-                key={img.id}
-                onClick={() => setActiveImage(i)}
+                key={color}
+                onClick={() => handleColorSelect(color)}
+                title={color}
                 className={`relative shrink-0 w-16 h-20 bg-[#111] border transition-colors overflow-hidden ${
-                  activeImage === i ? "border-crimson" : "border-white/5 hover:border-white/20"
+                  activeColor === color ? "border-crimson" : "border-white/5 hover:border-white/20"
                 }`}
               >
-                <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
+                <Image src={url} alt={color} fill sizes="64px" className="object-cover" />
               </button>
             ))}
           </div>
@@ -146,15 +143,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         )}
 
         {/* Personalización (solo trusas) */}
-        {isTrusas && (
-          <TrusasCustomizer value={customization} onChange={setCustomization} />
-        )}
+        {isTrusas && <TrusasCustomizer />}
 
         {/* Botón agregar */}
         <AddToCartButton
           product={product}
           selectedVariant={selectedVariant}
-          customization={isTrusas ? customization : undefined}
         />
 
         {/* Descripción */}

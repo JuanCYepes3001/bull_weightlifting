@@ -21,7 +21,7 @@ CREATE TYPE order_status AS ENUM (
 -- Extends auth.users — one row per registered user
 -- ============================================================
 CREATE TABLE profiles (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name        TEXT,
   phone       TEXT,
@@ -39,7 +39,7 @@ CREATE INDEX idx_profiles_user_id ON profiles(user_id);
 -- CATEGORIES
 -- ============================================================
 CREATE TABLE categories (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   slug        TEXT NOT NULL UNIQUE,
   gender      gender_type NOT NULL,
@@ -56,7 +56,7 @@ CREATE INDEX idx_categories_slug   ON categories(slug);
 -- PRODUCTS
 -- ============================================================
 CREATE TABLE products (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name         TEXT NOT NULL,
   slug         TEXT NOT NULL UNIQUE,
   description  TEXT,
@@ -81,7 +81,7 @@ CREATE INDEX idx_products_search ON products USING GIN (
 -- Each combination of size + color per product
 -- ============================================================
 CREATE TABLE product_variants (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   size        TEXT NOT NULL,
   color       TEXT NOT NULL,
@@ -100,7 +100,7 @@ CREATE INDEX idx_product_variants_stock      ON product_variants(stock);
 -- PRODUCT IMAGES
 -- ============================================================
 CREATE TABLE product_images (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   url         TEXT NOT NULL,
   alt         TEXT,
@@ -116,7 +116,7 @@ CREATE INDEX idx_product_images_product_id ON product_images(product_id);
 -- Supports both authenticated users and guest sessions
 -- ============================================================
 CREATE TABLE carts (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   session_id  TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -134,7 +134,7 @@ CREATE INDEX idx_carts_session_id ON carts(session_id);
 -- CART ITEMS
 -- ============================================================
 CREATE TABLE cart_items (
-  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   cart_id              UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
   product_variant_id   UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
   quantity             INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
@@ -151,7 +151,7 @@ CREATE INDEX idx_cart_items_product_variant_id ON cart_items(product_variant_id)
 -- ORDERS
 -- ============================================================
 CREATE TABLE orders (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
   status            order_status NOT NULL DEFAULT 'pending',
   total             NUMERIC(12, 2) NOT NULL CHECK (total >= 0),
@@ -171,7 +171,7 @@ CREATE INDEX idx_orders_status  ON orders(status);
 -- ORDER ITEMS
 -- ============================================================
 CREATE TABLE order_items (
-  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id             UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_variant_id   UUID NOT NULL REFERENCES product_variants(id) ON DELETE RESTRICT,
   quantity             INT NOT NULL CHECK (quantity > 0),

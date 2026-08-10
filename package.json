@@ -9,7 +9,6 @@
     "lint": "eslint",
     "db:link": "supabase link --project-ref $SUPABASE_PROJECT_REF",
     "db:push": "supabase db push",
-    "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/types/database.ts"
   },
   "dependencies": {

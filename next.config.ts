@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { checkLegalDocuments } from "./scripts/check-legal-docs.cjs";
 
 // Content-Security-Policy
 // Note: 'unsafe-inline' is required for Next.js App Router (React hydration inline scripts).
@@ -55,4 +57,20 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Guard: en producción, los documentos legales deben estar "vigente".
+// Se restringe a la fase de build (no a `next start` / runtime del server)
+// chequeando `phase`, que Next.js pasa siempre a esta función — así el
+// guard nunca puede tumbar la app ya desplegada, solo el build.
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_PRODUCTION_BUILD) {
+    const { ok, errors } = checkLegalDocuments();
+    if (!ok) {
+      console.error("✗ Guard de documentos legales falló — build abortado:\n");
+      errors.forEach((e) => console.error(`  - ${e}`));
+      throw new Error(
+        "Documentos legales no aprobados para producción. Ver detalle arriba."
+      );
+    }
+  }
+  return nextConfig;
+}

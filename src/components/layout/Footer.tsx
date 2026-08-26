@@ -9,6 +9,13 @@ const shopLinks = [
   { label: "Unisex", href: "/products?gender=unisex" },
 ];
 
+const legalLinks = [
+  { label: "Términos", href: "/legal/terminos" },
+  { label: "Privacidad", href: "/legal/privacidad" },
+  { label: "Envíos", href: "/legal/envios" },
+  { label: "Devoluciones", href: "/legal/devoluciones" },
+];
+
 const socialLinks = [
   { label: "Instagram", handle: "@bullweightlifting", href: "https://instagram.com/bullweightlifting" },
   { label: "TikTok", handle: "@bullweightlifting", href: "https://tiktok.com/@bullweightlifting" },
@@ -99,10 +106,21 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-16 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="mt-16 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="font-body text-xs text-white/20">
             © {new Date().getFullYear()} Bull Weightlifting. Todos los derechos reservados.
           </p>
+          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-body text-xs text-white/20 hover:text-white transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
           <p className="font-body text-xs text-white/20">Colombia</p>
         </div>
       </div>

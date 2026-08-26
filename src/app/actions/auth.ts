@@ -7,6 +7,7 @@ import { Redis } from "@upstash/redis";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
+import { resolveRequiredLegalDocuments, recordLegalAcceptances } from "@/lib/legal/acceptance";
 
 // ── Rate limiters (Upstash Redis) ────────────────────────────────────────────
 // Optional: only active when UPSTASH_REDIS_REST_URL + TOKEN are configured.
@@ -81,6 +82,12 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
+    // Validación real, del lado del servidor: si el checkbox no vino
+    // marcado (o el campo directamente no vino, ej. por manipulación del
+    // DOM), formData.get() devuelve null/"false" y esto queda en false —
+    // registerSchema lo rechaza igual que cualquier otro campo inválido.
+    acceptTerms: formData.get("acceptTerms") === "true",
+    acceptPrivacy: formData.get("acceptPrivacy") === "true",
   };
 
   const parsed = registerSchema.safeParse(raw);
@@ -89,6 +96,23 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
   }
 
   const fullName = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
+
+  // Resolver los document_id de los documentos legales ANTES de crear la
+  // cuenta: si el .md no existe o falla el sync a legal_documents, se
+  // aborta acá sin crear el usuario — nunca queda una cuenta sin la
+  // posibilidad de registrar evidencia de aceptación.
+  const adminClient = createAdminClient();
+  const requiredDocs = await resolveRequiredLegalDocuments(adminClient);
+
+  if (!requiredDocs) {
+    console.error(
+      "[LEGAL_DOCUMENT_SYNC_FAILED] No se pudieron resolver los documentos legales para el registro"
+    );
+    return { error: "No pudimos procesar tu registro. Intenta de nuevo en unos minutos." };
+  }
+
+  const ipAddress = await getClientIp();
+  const userAgent = (await headers()).get("user-agent");
 
   const supabase = await createClient();
   const { data: signUpData, error } = await supabase.auth.signUp({
@@ -140,8 +164,8 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
       ];
     }
 
-    // Use admin client to bypass RLS — user has no active session during email confirmation
-    const adminClient = createAdminClient();
+    // adminClient (creado más arriba) bypassa RLS — el usuario no tiene
+    // sesión activa todavía durante la confirmación de email
     const { error: upsertError } = await adminClient
       .from("profiles")
       .upsert({ user_id: signUpData.user.id, ...updates }, { onConflict: "user_id" });
@@ -149,6 +173,19 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     if (upsertError) {
       console.error("[registerAction] profile upsert failed:", upsertError.message, upsertError.code);
     }
+
+    // Registro de evidencia de aceptación legal. Nunca revierte la cuenta
+    // ni bloquea el registro si falla — ver src/lib/legal/acceptance.ts
+    // para la política de reintentos y el razonamiento (un rollback acá
+    // sería destructivo en el camino crítico del registro; la red de
+    // seguridad real es la auditoría en scripts/audit-legal-acceptances.sql).
+    await recordLegalAcceptances(adminClient, {
+      userId: signUpData.user.id,
+      email: parsed.data.email,
+      ipAddress,
+      userAgent,
+      documents: requiredDocs,
+    });
   }
 
   // If session exists, email confirmation is disabled — user is already logged in

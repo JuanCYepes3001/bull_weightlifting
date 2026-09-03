@@ -9,4 +9,14 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - name: npm audit (with retry)
+        run: |
+          for attempt in 1 2 3; do
+            if npm audit --audit-level=high; then
+              exit 0
+            fi
+            echo "npm audit attempt $attempt failed, retrying in 15s..."
+            sleep 15
+          done
+          echo "npm audit failed after 3 attempts"
+          exit 1

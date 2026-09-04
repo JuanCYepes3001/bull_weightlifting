@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { Product, ProductVariant } from "@/types";
 import { VariantSelector } from "./VariantSelector";
 import { AddToCartButton } from "./AddToCartButton";
 import { SaleTimer } from "./SaleTimer";
 import { SizeGuide } from "./SizeGuide";
 import { TrusasCustomizer } from "./TrusasCustomizer";
-import { getProductImageUrl } from "@/lib/storage";
+import { ProductImage } from "./ProductImage";
+import { getProductImageCandidates } from "@/lib/storage";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -22,31 +22,31 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   const uniqueColors = [...new Set(variants.map((v) => v.color))];
 
-  // Derive initial image URL from first color or first DB image
-  const initialUrl = uniqueColors.length > 0
-    ? getProductImageUrl(product.name, uniqueColors[0])
-    : (images[0]?.url ?? null);
-
-  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(initialUrl);
   const [activeColor, setActiveColor] = useState<string | null>(uniqueColors[0] ?? null);
+
+  // Candidates for the currently active color/image — every extension is tried
+  // in order, falling back to a placeholder if none of them load.
+  const activeCandidates = activeColor
+    ? getProductImageCandidates(product.name, activeColor)
+    : images[0]?.url
+    ? [images[0].url]
+    : [];
 
   const handleColorSelect = (color: string) => {
     setActiveColor(color);
-    setActiveImageUrl(getProductImageUrl(product.name, color));
   };
 
   const handleVariantSelect = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
     if (variant?.color) {
       setActiveColor(variant.color);
-      setActiveImageUrl(getProductImageUrl(product.name, variant.color));
     }
   };
 
   // Thumbnails: one per unique color
   const thumbnails = uniqueColors.length > 0
-    ? uniqueColors.map((color) => ({ color, url: getProductImageUrl(product.name, color) }))
-    : images.map((img) => ({ color: img.color ?? "", url: img.url }));
+    ? uniqueColors.map((color) => ({ color, candidates: getProductImageCandidates(product.name, color) }))
+    : images.map((img) => ({ color: img.color ?? "", candidates: [img.url] }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
@@ -54,27 +54,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <div className="space-y-3">
         {/* Imagen principal */}
         <div className="relative aspect-[4/5] bg-[#111] overflow-hidden border border-white/5">
-          {activeImageUrl ? (
-            <Image
-              src={activeImageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="font-heading text-crimson/15 text-8xl tracking-widest select-none" aria-hidden>
-                BULL
-              </span>
-            </div>
-          )}
+          <ProductImage
+            candidates={activeCandidates}
+            alt={product.name}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover"
+            placeholderTextClassName="font-heading text-crimson/15 text-8xl tracking-widest select-none"
+          />
         </div>
 
         {/* Thumbnails por color */}
         {thumbnails.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
-            {thumbnails.map(({ color, url }) => (
+            {thumbnails.map(({ color, candidates }) => (
               <button
                 key={color}
                 onClick={() => handleColorSelect(color)}
@@ -83,7 +75,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   activeColor === color ? "border-crimson" : "border-white/5 hover:border-white/20"
                 }`}
               >
-                <Image src={url} alt={color} fill sizes="64px" className="object-cover" />
+                <ProductImage candidates={candidates} alt={color} sizes="64px" className="object-cover" />
               </button>
             ))}
           </div>

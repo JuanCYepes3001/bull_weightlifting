@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { getCategories } from "@/lib/queries/categories";
+import { SafeImage } from "@/components/ui/SafeImage";
 import type { Gender } from "@/types";
 
 interface CategoriesPageProps {
@@ -93,12 +93,13 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
                     className="group relative aspect-[3/4] overflow-hidden border border-white/5 hover:border-crimson/40 transition-colors"
                   >
                     {cat.image_url ? (
-                      <Image
+                      <SafeImage
                         src={cat.image_url}
                         alt={cat.name}
                         fill
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        fallback={<div className={`absolute inset-0 bg-gradient-to-b ${gradient}`} />}
                       />
                     ) : (
                       <div className={`absolute inset-0 bg-gradient-to-b ${gradient}`} />

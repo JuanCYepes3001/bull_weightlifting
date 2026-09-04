@@ -30,10 +30,13 @@ export interface ShippingAddress {
 
 export type CheckoutResult = { error: string } | { orderId: string };
 
-// All accepted payment methods — any other value is rejected before hitting the DB
+// All accepted payment methods — any other value is rejected before hitting the DB.
+// "simulado" creates an "approved" order without charging anything, so it's
+// excluded outside development — otherwise anyone could drain real stock
+// without paying.
 const VALID_PAYMENT_METHODS = new Set([
-  "nequi", "daviplata", "dollar_app", "global66",
-  "contraentrega", "simulado",
+  "nequi", "daviplata", "dollar_app", "global66", "contraentrega",
+  ...(process.env.NODE_ENV === "production" ? [] : ["simulado"]),
 ]);
 
 // Payment methods that require manual verification before fulfillment

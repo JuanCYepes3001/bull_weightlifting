@@ -22,6 +22,7 @@ export async function getProducts(
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
+    .order("position", { referencedTable: "product_images", ascending: true })
     .range(offset, offset + limit - 1);
 
   if (filters.category_id) query = query.eq("category_id", filters.category_id);
@@ -106,7 +107,8 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
     .select(`*, category:categories(*), variants:product_variants(*), images:product_images(*)`)
     .eq("category_id", cat.id)
     .eq("is_active", true)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("position", { referencedTable: "product_images", ascending: true });
 
   if (error) throw error;
   return (data as Product[]) ?? [];
@@ -125,6 +127,7 @@ export async function getRelatedProducts(
     .eq("category_id", categoryId)
     .eq("is_active", true)
     .neq("id", excludeId)
+    .order("position", { referencedTable: "product_images", ascending: true })
     .limit(limit);
 
   if (error) throw error;

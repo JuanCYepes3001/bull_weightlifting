@@ -10,12 +10,14 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
   const firstColor = colors[0];
-  // Try every extension for the storage naming convention "{Product Name} {COLOR}.<ext>";
-  // falls back to the DB image if no color variants exist, or to a placeholder if nothing loads.
-  const imageCandidates = firstColor
+  // Prefer the explicit catalog image set in the DB (e.g. a dedicated shot like
+  // "LicraMujer.jpeg" that isn't tied to any one color), falling back to the
+  // storage naming convention "{Product Name} {COLOR}.<ext>", then a placeholder.
+  const explicitImage = product.images?.[0]?.url;
+  const imageCandidates = explicitImage
+    ? [explicitImage, ...(firstColor ? getProductImageCandidates(product.name, firstColor) : [])]
+    : firstColor
     ? getProductImageCandidates(product.name, firstColor)
-    : product.images?.[0]?.url
-    ? [product.images[0].url]
     : [];
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
   const isCustomizable = product.category?.slug === "trusas";

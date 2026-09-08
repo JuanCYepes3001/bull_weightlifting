@@ -21,15 +21,20 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const variants = product.variants ?? [];
 
   const uniqueColors = [...new Set(variants.map((v) => v.color))];
+  // 2+ colors: gallery switches via the naming convention "{name} {COLOR}.<ext>".
+  // 0-1 colors: nothing meaningful to switch by color, so the gallery instead
+  // pages through the product's stored images directly (e.g. front/back shots).
+  const hasColorGallery = uniqueColors.length > 1;
 
   const [activeColor, setActiveColor] = useState<string | null>(uniqueColors[0] ?? null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Candidates for the currently active color/image — every extension is tried
-  // in order, falling back to a placeholder if none of them load.
-  const activeCandidates = activeColor
+  // Candidates for the currently active image — every extension is tried
+  // in order (color mode), falling back to a placeholder if none load.
+  const activeCandidates = hasColorGallery && activeColor
     ? getProductImageCandidates(product.name, activeColor)
-    : images[0]?.url
-    ? [images[0].url]
+    : images.length > 0
+    ? [images[Math.min(activeImageIndex, images.length - 1)].url]
     : [];
 
   const handleColorSelect = (color: string) => {
@@ -43,10 +48,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     }
   };
 
-  // Thumbnails: one per unique color
-  const thumbnails = uniqueColors.length > 0
-    ? uniqueColors.map((color) => ({ color, candidates: getProductImageCandidates(product.name, color) }))
-    : images.map((img) => ({ color: img.color ?? "", candidates: [img.url] }));
+  // Thumbnails: one per color when the gallery is color-driven, otherwise one
+  // per stored image (e.g. front/back for single-color products).
+  const thumbnails = hasColorGallery
+    ? uniqueColors.map((color) => ({
+        key: color,
+        label: color,
+        isActive: activeColor === color,
+        candidates: getProductImageCandidates(product.name, color),
+        onClick: () => handleColorSelect(color),
+      }))
+    : images.map((img, i) => ({
+        key: img.id,
+        label: img.alt ?? `Vista ${i + 1}`,
+        isActive: activeImageIndex === i,
+        candidates: [img.url],
+        onClick: () => setActiveImageIndex(i),
+      }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
@@ -63,19 +81,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           />
         </div>
 
-        {/* Thumbnails por color */}
+        {/* Thumbnails */}
         {thumbnails.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
-            {thumbnails.map(({ color, candidates }) => (
+            {thumbnails.map(({ key, label, isActive, candidates, onClick }) => (
               <button
-                key={color}
-                onClick={() => handleColorSelect(color)}
-                title={color}
+                key={key}
+                onClick={onClick}
+                title={label}
                 className={`relative shrink-0 w-16 h-20 bg-[#111] border transition-colors overflow-hidden ${
-                  activeColor === color ? "border-crimson" : "border-white/5 hover:border-white/20"
+                  isActive ? "border-crimson" : "border-white/5 hover:border-white/20"
                 }`}
               >
-                <ProductImage candidates={candidates} alt={color} sizes="64px" className="object-cover" />
+                <ProductImage candidates={candidates} alt={label} sizes="64px" className="object-cover" />
               </button>
             ))}
           </div>

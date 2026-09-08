@@ -26,13 +26,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   // pages through the product's stored images directly (e.g. front/back shots).
   const hasColorGallery = uniqueColors.length > 1;
 
+  // When an image row is tagged with its color, use that exact URL first —
+  // skips the multi-extension guessing (and its failed requests) entirely.
+  const imageByColor = new Map(
+    images.filter((img) => img.color).map((img) => [img.color as string, img.url])
+  );
+  const candidatesForColor = (color: string) => {
+    const tagged = imageByColor.get(color);
+    const guesses = getProductImageCandidates(product.name, color);
+    return tagged ? [tagged, ...guesses] : guesses;
+  };
+
   const [activeColor, setActiveColor] = useState<string | null>(uniqueColors[0] ?? null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Candidates for the currently active image — every extension is tried
   // in order (color mode), falling back to a placeholder if none load.
   const activeCandidates = hasColorGallery && activeColor
-    ? getProductImageCandidates(product.name, activeColor)
+    ? candidatesForColor(activeColor)
     : images.length > 0
     ? [images[Math.min(activeImageIndex, images.length - 1)].url]
     : [];
@@ -55,7 +66,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         key: color,
         label: color,
         isActive: activeColor === color,
-        candidates: getProductImageCandidates(product.name, color),
+        candidates: candidatesForColor(color),
         onClick: () => handleColorSelect(color),
       }))
     : images.map((img, i) => ({
@@ -76,7 +87,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             candidates={activeCandidates}
             alt={product.name}
             sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
+            className="object-contain"
             placeholderTextClassName="font-heading text-crimson/15 text-8xl tracking-widest select-none"
           />
         </div>
@@ -93,7 +104,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   isActive ? "border-crimson" : "border-white/5 hover:border-white/20"
                 }`}
               >
-                <ProductImage candidates={candidates} alt={label} sizes="64px" className="object-cover" />
+                <ProductImage candidates={candidates} alt={label} sizes="64px" className="object-contain" />
               </button>
             ))}
           </div>

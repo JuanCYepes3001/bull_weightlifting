@@ -284,7 +284,7 @@ export default function CheckoutPage() {
                 <div key={item.variantId} className="flex gap-3">
                   <div className="w-12 h-14 bg-[#222] flex-shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                      <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-contain" />
                     ) : (
                       <div className="w-full h-full bg-[#2a2a2a]" />
                     )}

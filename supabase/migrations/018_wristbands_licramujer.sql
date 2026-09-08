@@ -7,9 +7,10 @@
 -- "{product.name} {variant.color}.<ext>" — see src/lib/storage.ts —
 -- so the DB text has to match the storage filenames byte-for-byte).
 --
--- NOTE: the storage object renames (wristbands *.png -> Wristbands *.png)
--- were performed out-of-band via the Supabase Storage API and are not
--- repeated here; this file only covers table data.
+-- NOTE: the storage object renames/recompressions (wristbands *.png ->
+-- Wristbands *.jpeg — also shrunk from ~1.7MB to ~150KB, they were huge
+-- uncompressed PNGs) were performed out-of-band via the Supabase Storage
+-- API and are not repeated here; this file only covers table data.
 -- ============================================================
 
 -- ─── 1. Fix "Writsbandss"/"writsbands" typo ──────────────────
@@ -31,7 +32,7 @@ WHERE product_id = (SELECT id FROM products WHERE slug = 'wristbands');
 INSERT INTO product_images (product_id, url, alt, color, position)
 SELECT
   (SELECT id FROM products WHERE slug = 'wristbands'),
-  'https://xagdkfvnyniwyykfbrke.supabase.co/storage/v1/object/public/products/Wristbands%20' || color || '.png',
+  'https://xagdkfvnyniwyykfbrke.supabase.co/storage/v1/object/public/products/Wristbands%20' || color || '.jpeg',
   'Wristbands ' || color,
   color,
   pos

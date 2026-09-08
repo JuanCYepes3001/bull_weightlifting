@@ -156,7 +156,7 @@ export default async function UserOrderDetailPage({
                       src={imgUrl}
                       alt={product?.name ?? ""}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       sizes="56px"
                     />
                   </div>

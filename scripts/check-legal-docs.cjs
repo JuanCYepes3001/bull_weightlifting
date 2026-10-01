@@ -2,6 +2,7 @@
 // Guard de build: en producción, los 4 documentos legales deben existir
 // y estar en status "vigente" (aprobados por la dueña), o el build falla.
 // También ejecutable a mano: node scripts/check-legal-docs.cjs
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS script, loaded via require() by design */
 const { readdirSync, readFileSync } = require("fs");
 const { join } = require("path");
 
@@ -12,10 +13,12 @@ const VALID_STATUSES = ["borrador", "vigente", "archivado"];
 const REQUIRED_SLUGS = ["terminos", "privacidad", "envios", "devoluciones"];
 
 function parseFrontmatter(raw) {
-  const match = raw.match(/^---\n([\s\S]*?)\n---/);
+  // Tolerante a CRLF: en Windows con core.autocrlf=true el checkout
+  // convierte los \n del repo a \r\n, lo que rompía este match.
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return {};
   const data = {};
-  for (const line of match[1].split("\n")) {
+  for (const line of match[1].split(/\r?\n/)) {
     const idx = line.indexOf(":");
     if (idx === -1) continue;
     const key = line.slice(0, idx).trim();

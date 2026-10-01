@@ -243,21 +243,21 @@ export default async function AdminDashboardPage() {
             Acciones rápidas
           </h2>
           <div className="flex flex-col gap-2">
-            <a href="/admin/products/new"  className="font-body text-xs tracking-widest uppercase px-4 py-2.5 bg-crimson hover:bg-crimson-light text-white transition-colors text-center">
+            <Link href="/admin/products/new"  className="font-body text-xs tracking-widest uppercase px-4 py-2.5 bg-crimson hover:bg-crimson-light text-white transition-colors text-center">
               + Nuevo producto
-            </a>
-            <a href="/admin/products/bulk" className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
+            </Link>
+            <Link href="/admin/products/bulk" className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
               Carga masiva
-            </a>
-            <a href="/admin/inventory"     className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
+            </Link>
+            <Link href="/admin/inventory"     className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
               Gestionar inventario
-            </a>
-            <a href="/admin/offers"        className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
+            </Link>
+            <Link href="/admin/offers"        className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
               Gestionar ofertas
-            </a>
-            <a href="/admin/orders"        className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
+            </Link>
+            <Link href="/admin/orders"        className="font-body text-xs tracking-widest uppercase px-4 py-2.5 border border-white/10 hover:border-white/30 text-white/50 hover:text-white transition-colors text-center">
               Ver órdenes
-            </a>
+            </Link>
           </div>
         </div>
 

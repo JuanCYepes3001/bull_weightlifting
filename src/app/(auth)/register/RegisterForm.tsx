@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, MapPin } from "lucide-react";
 import { registerAction } from "@/app/actions/auth";
@@ -36,7 +36,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -46,9 +46,9 @@ export function RegisterForm() {
     },
   });
 
-  const password = watch("password", "");
-  const acceptTerms = watch("acceptTerms");
-  const acceptPrivacy = watch("acceptPrivacy");
+  const password = useWatch({ control, name: "password", defaultValue: "" });
+  const acceptTerms = useWatch({ control, name: "acceptTerms" });
+  const acceptPrivacy = useWatch({ control, name: "acceptPrivacy" });
   const canSubmit = acceptTerms && acceptPrivacy;
 
   const passwordStrength = (() => {

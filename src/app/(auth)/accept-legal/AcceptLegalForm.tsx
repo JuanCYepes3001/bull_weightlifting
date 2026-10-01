@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { acceptLegalAction } from "@/app/actions/legal";
 import { acceptLegalSchema, type AcceptLegalInput } from "@/lib/validations/legal";
@@ -18,7 +18,7 @@ export function AcceptLegalForm({ next }: AcceptLegalFormProps) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AcceptLegalInput>({
     resolver: zodResolver(acceptLegalSchema),
@@ -28,8 +28,8 @@ export function AcceptLegalForm({ next }: AcceptLegalFormProps) {
     },
   });
 
-  const acceptTerms = watch("acceptTerms");
-  const acceptPrivacy = watch("acceptPrivacy");
+  const acceptTerms = useWatch({ control, name: "acceptTerms" });
+  const acceptPrivacy = useWatch({ control, name: "acceptPrivacy" });
   const canSubmit = acceptTerms && acceptPrivacy;
 
   const onSubmit = async (data: AcceptLegalInput) => {

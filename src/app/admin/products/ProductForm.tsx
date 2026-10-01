@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, X, Check } from "lucide-react";
@@ -119,7 +119,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
@@ -143,11 +143,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     },
   });
 
-  const isOnSale = watch("is_on_sale");
-  const price = watch("price");
-  const discountPercent = watch("discount_percent");
-  const salePrice = watch("sale_price");
-  const nameValue = watch("name");
+  const isOnSale = useWatch({ control, name: "is_on_sale" });
+  const price = useWatch({ control, name: "price" });
+  const discountPercent = useWatch({ control, name: "discount_percent" });
+  const salePrice = useWatch({ control, name: "sale_price" });
+  const nameValue = useWatch({ control, name: "name" });
 
   // Auto-slug on create
   useEffect(() => {
@@ -162,50 +162,55 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     }
   }, [isOnSale, discountPercent, price, setValue, salePrice]);
 
-  // Load existing variants into matrix on edit
-  useEffect(() => {
-    if (!product?.variants?.length) return;
+  // Load existing variants into matrix on edit. Adjusted during render
+  // (React's recommended pattern) rather than via useEffect, since this only
+  // needs to run once per `product` identity.
+  const [prevProduct, setPrevProduct] = useState(product);
+  if (product !== prevProduct) {
+    setPrevProduct(product);
 
-    const predefinedColorNames = new Set(PREDEFINED_COLORS.map((c) => c.name));
-    const predefinedSizesSet = new Set(PREDEFINED_SIZES);
+    if (product?.variants?.length) {
+      const predefinedColorNames = new Set(PREDEFINED_COLORS.map((c) => c.name));
+      const predefinedSizesSet = new Set(PREDEFINED_SIZES);
 
-    const inGrid = product.variants.filter(
-      (v) => predefinedColorNames.has(v.color) && predefinedSizesSet.has(v.size)
-    );
-    const custom = product.variants.filter(
-      (v) => !predefinedColorNames.has(v.color) || !predefinedSizesSet.has(v.size)
-    );
+      const inGrid = product.variants.filter(
+        (v) => predefinedColorNames.has(v.color) && predefinedSizesSet.has(v.size)
+      );
+      const custom = product.variants.filter(
+        (v) => !predefinedColorNames.has(v.color) || !predefinedSizesSet.has(v.size)
+      );
 
-    const sizeSet = new Set<string>();
-    const colorMap = new Map<string, string>(); // name → hex
+      const sizeSet = new Set<string>();
+      const colorMap = new Map<string, string>(); // name → hex
 
-    inGrid.forEach((v) => {
-      sizeSet.add(v.size);
-      colorMap.set(v.color, v.color_hex ?? "#111111");
-    });
+      inGrid.forEach((v) => {
+        sizeSet.add(v.size);
+        colorMap.set(v.color, v.color_hex ?? "#111111");
+      });
 
-    setSelectedSizes(PREDEFINED_SIZES.filter((s) => sizeSet.has(s)));
-    setSelectedColors(
-      Array.from(colorMap.entries()).map(([name, hex]) => ({ name, hex }))
-    );
+      setSelectedSizes(PREDEFINED_SIZES.filter((s) => sizeSet.has(s)));
+      setSelectedColors(
+        Array.from(colorMap.entries()).map(([name, hex]) => ({ name, hex }))
+      );
 
-    const m: Record<string, Record<string, MatrixEntry>> = {};
-    inGrid.forEach((v) => {
-      if (!m[v.color]) m[v.color] = {};
-      m[v.color][v.size] = { stock: v.stock, sku: v.sku ?? "" };
-    });
-    setMatrix(m);
+      const m: Record<string, Record<string, MatrixEntry>> = {};
+      inGrid.forEach((v) => {
+        if (!m[v.color]) m[v.color] = {};
+        m[v.color][v.size] = { stock: v.stock, sku: v.sku ?? "" };
+      });
+      setMatrix(m);
 
-    setCustomVariants(
-      custom.map((v) => ({
-        size: v.size,
-        color: v.color,
-        color_hex: v.color_hex ?? "",
-        stock: v.stock,
-        sku: v.sku ?? "",
-      }))
-    );
-  }, [product]);
+      setCustomVariants(
+        custom.map((v) => ({
+          size: v.size,
+          color: v.color,
+          color_hex: v.color_hex ?? "",
+          stock: v.stock,
+          sku: v.sku ?? "",
+        }))
+      );
+    }
+  }
 
   /* ─── Helpers ────────────────────────────────────────── */
   const toggleSize = (size: string) => {

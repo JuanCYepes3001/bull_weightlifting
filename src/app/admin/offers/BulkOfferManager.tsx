@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Filter, Calendar, Percent, Check, AlertCircle } from "lucide-react";
+import { Search, Filter, Percent, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { bulkUpdateOffersAction } from "@/app/actions/products";
 import type { Category, Product } from "@/types";
 

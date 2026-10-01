@@ -496,6 +496,10 @@ export type Database = {
         Args: { p_variant_id: string; p_qty: number };
         Returns: void;
       };
+      expire_products_offers: {
+        Args: Record<never, never>;
+        Returns: void;
+      };
       create_order: {
         Args: {
           p_user_id: string;

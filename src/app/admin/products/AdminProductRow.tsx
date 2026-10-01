@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { deleteProductAction, toggleProductActiveAction } from "@/app/actions/products";
@@ -47,11 +48,15 @@ export function AdminProductRow({ product, asTableCells, hasLowStock }: AdminPro
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           {product.images?.[0]?.url ? (
-            <img
-              src={product.images[0].url}
-              alt={product.name}
-              className="w-9 h-11 object-cover flex-shrink-0 bg-white/5"
-            />
+            <div className="relative w-9 h-11 flex-shrink-0 bg-white/5">
+              <Image
+                src={product.images[0].url}
+                alt={product.name}
+                fill
+                sizes="36px"
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="w-9 h-11 bg-white/5 flex-shrink-0" />
           )}

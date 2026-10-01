@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
@@ -28,7 +29,6 @@ function stateName(countryCode: string, stateCode: string): string {
 export default function CheckoutPage() {
   const items      = useCartStore((s) => s.items);
   const total      = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
-  const clearCart  = useCartStore((s) => s.clearCart);
 
   const [paymentMethod, setPaymentMethod] = useState("contraentrega");
   const [serverError, setServerError]     = useState<string | null>(null);
@@ -278,9 +278,9 @@ export default function CheckoutPage() {
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {items.map((item) => (
                 <div key={item.variantId} className="flex gap-3">
-                  <div className="w-12 h-14 bg-[#222] flex-shrink-0 overflow-hidden">
+                  <div className="relative w-12 h-14 bg-[#222] flex-shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-contain" />
+                      <Image src={item.imageUrl} alt={item.productName} fill sizes="48px" className="object-contain" />
                     ) : (
                       <div className="w-full h-full bg-[#2a2a2a]" />
                     )}

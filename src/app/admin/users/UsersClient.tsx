@@ -415,9 +415,9 @@ export default function UsersClient({ users: initialUsers }: { users: AdminUser[
                       </p>
                       {(user.addresses ?? []).length > 0 && (
                         <p className="font-body text-[10px] text-white/25">
-                          {(user.addresses[0] as any)?.city ?? ""}
-                          {(user.addresses[0] as any)?.department
-                            ? `, ${(user.addresses[0] as any).department}`
+                          {user.addresses[0]?.city ?? ""}
+                          {user.addresses[0]?.department
+                            ? `, ${user.addresses[0].department}`
                             : ""}
                         </p>
                       )}

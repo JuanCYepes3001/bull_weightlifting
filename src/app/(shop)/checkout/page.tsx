@@ -19,7 +19,6 @@ const PAYMENT_METHODS = [
   { id: "paypal",        label: "PayPal",          icon: "🌐", note: "Pago internacional" },
   { id: "dollar_app",   label: "Dollar App",      icon: "💵", note: "Pago en dólares" },
   { id: "global66",     label: "Global 66",       icon: "🌍", note: "Transferencia internacional" },
-  { id: "simulado",      label: "Pago simulado ✓", icon: "🧪", note: null },
 ];
 
 function stateName(countryCode: string, stateCode: string): string {
@@ -31,7 +30,7 @@ export default function CheckoutPage() {
   const total      = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   const clearCart  = useCartStore((s) => s.clearCart);
 
-  const [paymentMethod, setPaymentMethod] = useState("simulado");
+  const [paymentMethod, setPaymentMethod] = useState("contraentrega");
   const [serverError, setServerError]     = useState<string | null>(null);
   const [isPending, startTransition]      = useTransition();
 
@@ -262,9 +261,6 @@ export default function CheckoutPage() {
                 </button>
               ))}
             </div>
-            <p className="font-body text-[10px] text-white/20 tracking-wide">
-              "Pago simulado" confirma la orden sin procesar ningún cobro real.
-            </p>
           </section>
 
           {serverError && (

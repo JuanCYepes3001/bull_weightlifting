@@ -513,6 +513,10 @@ export type Database = {
         };
         Returns: string; // order UUID
       };
+      apply_payment_result: {
+        Args: { p_payment_id: string; p_result: "approved" | "declined"; p_amount: number | null };
+        Returns: "approved" | "declined" | "amount_mismatch" | "noop" | "not_found";
+      };
     };
     Enums: {
       user_role: "user" | "admin";

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { createOrderAction, createPayPalOrderAction } from "@/app/actions/checkout";
+import { createOrderAction, createPayPalOrderAction, createWompiCheckoutAction } from "@/app/actions/checkout";
 import { getUserAddressesAction } from "@/app/actions/addresses";
 import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/AddressForm";
 import { Input } from "@/components/ui/Input";
@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/Button";
 import { STATES_BY_COUNTRY } from "@/lib/locationData";
 import type { Address } from "@/types";
 
+// Manual-transfer methods (nequi, daviplata, dollar_app, global66) are still
+// accepted by the server for old flows but no longer offered: Wompi covers
+// Nequi, PSE and cards with automatic confirmation.
 const PAYMENT_METHODS = [
-  { id: "nequi",         label: "Nequi",          icon: "📱", note: null },
-  { id: "daviplata",     label: "Daviplata",       icon: "💳", note: null },
-  { id: "contraentrega", label: "Contra entrega",  icon: "🚚", note: "Pago en efectivo al recibir" },
-  { id: "paypal",        label: "PayPal",          icon: "🌐", note: "Pago internacional" },
-  { id: "dollar_app",   label: "Dollar App",      icon: "💵", note: "Pago en dólares" },
-  { id: "global66",     label: "Global 66",       icon: "🌍", note: "Transferencia internacional" },
+  { id: "wompi",         label: "Tarjeta, PSE o Nequi", icon: "💳", note: "Pago seguro con Wompi" },
+  { id: "paypal",        label: "PayPal",               icon: "🌐", note: "Pago internacional (USD)" },
+  { id: "contraentrega", label: "Contra entrega",       icon: "🚚", note: "Pago en efectivo al recibir" },
 ];
 
 function stateName(countryCode: string, stateCode: string): string {
@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   const items      = useCartStore((s) => s.items);
   const total      = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
 
-  const [paymentMethod, setPaymentMethod] = useState("contraentrega");
+  const [paymentMethod, setPaymentMethod] = useState("wompi");
   const [serverError, setServerError]     = useState<string | null>(null);
   const [isPending, startTransition]      = useTransition();
 
@@ -110,6 +110,17 @@ export default function CheckoutPage() {
     };
 
     startTransition(async () => {
+      // Wompi: order is created server-side, then redirect to Wompi's checkout
+      if (paymentMethod === "wompi") {
+        const result = await createWompiCheckoutAction(checkoutItems, shippingData);
+        if ("error" in result) {
+          setServerError(result.error);
+        } else {
+          window.location.href = result.checkoutUrl;
+        }
+        return;
+      }
+
       // PayPal: redirect to PayPal approval page
       if (paymentMethod === "paypal") {
         const result = await createPayPalOrderAction(checkoutItems, shippingData);
@@ -329,7 +340,11 @@ export default function CheckoutPage() {
               loading={isPending}
               disabled={!isFormValid || isPending}
             >
-              {isPending ? "Procesando..." : "Confirmar pedido"}
+              {isPending
+                ? "Procesando..."
+                : paymentMethod === "contraentrega"
+                ? "Confirmar pedido"
+                : "Ir a pagar"}
             </Button>
 
             <Link

@@ -57,6 +57,7 @@ export function buildOrderConfirmationMessage(params: {
     daviplata:     "Daviplata",
     contraentrega: "Contra entrega (pago en efectivo al recibir)",
     paypal:        "PayPal",
+    wompi:         "Wompi (tarjeta / PSE / Nequi)",
     dollar_app:    "Dollar App",
     global66:      "Global 66",
     simulado:      "Pago simulado",

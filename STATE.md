@@ -1,12 +1,12 @@
 ---
 tags: [estado, bull-weightlifting, activo]
-updated: 2026-05-04
+updated: 2026-10-17
 proyecto: "[[proyectos/bull-weightlifting]]"
 ---
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-05-04
+> Última actualización: 2026-10-17
 > Ver historial completo en [[diario/2026-05-04]] | anteriores: [[diario/2026-05-03]] [[diario/2026-04-17]]
 
 ---
@@ -29,7 +29,7 @@ El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario 
 | Animaciones | GSAP + ScrollTrigger |
 | Email | Resend (fetch directo) |
 | Notificaciones | WhatsApp (fetch directo) |
-| Pagos | COD, Nequi, Daviplata, Dollar App, Global 66, PayPal (redirect API v2) |
+| Pagos | Wompi (tarjeta/PSE/Nequi, Web Checkout + webhook), PayPal (redirect API v2), COD |
 
 ---
 
@@ -51,7 +51,8 @@ El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario 
 | Panel admin — dashboard | ✅ Completo (stats, gráficos, top productos, tasa completación) |
 | Notificaciones email | ✅ Completo (código listo, falta RESEND_API_KEY en producción) |
 | Notificaciones WhatsApp | ✅ Completo |
-| PayPal API | ✅ Código listo — falta configurar credenciales |
+| PayPal API | ✅ Código listo — falta configurar credenciales live |
+| Wompi (tarjeta/PSE/Nequi) | ✅ Código listo (2026-10-17) — falta cuenta Wompi, llaves, migración 020, URL de eventos. Ver [[diario/2026-10-17]] |
 | Deploy / producción | ⏳ Pendiente (sin cuenta Vercel aún) |
 
 ---

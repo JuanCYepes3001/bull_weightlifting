@@ -3,12 +3,14 @@ slug: terminos
 version: 1
 title: "Términos y Condiciones"
 status: borrador
-updated: "2026-08-25"
+updated: "2026-10-01"
 ---
 
 ## 1. Identificación del comercializante
-[PENDIENTE: razón social, NIT, domicilio principal, datos de contacto
-(correo, teléfono) de Bull Weightlifting.]
+**BULL WEIGHTLIFTING**
+Titular: María Alejandra Cortes Camargo · Razón social / nombre comercial: Bull Weightlifting
+NIT: 109749227 · Domicilio: Bucaramanga, Santander, Colombia
+WhatsApp: 302 609 6353 · Correo: [PENDIENTE]
 
 ## 2. Objeto y ámbito de aplicación
 [PENDIENTE: descripción del objeto del sitio (venta de ropa deportiva) y

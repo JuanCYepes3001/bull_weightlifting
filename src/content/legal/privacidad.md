@@ -3,15 +3,17 @@ slug: privacidad
 version: 1
 title: "Política de Tratamiento de Datos Personales"
 status: borrador
-updated: "2026-08-25"
+updated: "2026-10-01"
 ---
 
 Elaborada conforme a la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás
 normas concordantes sobre protección de datos personales en Colombia.
 
 ## 1. Identificación del responsable del tratamiento
-[PENDIENTE: razón social, NIT, domicilio y datos de contacto del
-responsable del tratamiento de datos.]
+**BULL WEIGHTLIFTING**
+Responsable: María Alejandra Cortes Camargo, bajo el nombre comercial Bull Weightlifting
+NIT: 109749227 · Domicilio: Bucaramanga, Santander, Colombia
+WhatsApp: 302 609 6353 · Correo: [PENDIENTE]
 
 ## 2. Definiciones
 [PENDIENTE: dato personal, dato sensible, titular, tratamiento,

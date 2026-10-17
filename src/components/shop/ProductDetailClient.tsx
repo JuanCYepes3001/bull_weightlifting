@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { Product, ProductVariant } from "@/types";
 import { VariantSelector } from "./VariantSelector";
 import { AddToCartButton } from "./AddToCartButton";
 import { SaleTimer } from "./SaleTimer";
 import { SizeGuide } from "./SizeGuide";
 import { TrusasCustomizer } from "./TrusasCustomizer";
-import { getProductImageUrl } from "@/lib/storage";
+import { ProductImage } from "./ProductImage";
+import { getProductImageCandidates } from "@/lib/storage";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -21,32 +21,61 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const variants = product.variants ?? [];
 
   const uniqueColors = [...new Set(variants.map((v) => v.color))];
+  // 2+ colors: gallery switches via the naming convention "{name} {COLOR}.<ext>".
+  // 0-1 colors: nothing meaningful to switch by color, so the gallery instead
+  // pages through the product's stored images directly (e.g. front/back shots).
+  const hasColorGallery = uniqueColors.length > 1;
 
-  // Derive initial image URL from first color or first DB image
-  const initialUrl = uniqueColors.length > 0
-    ? getProductImageUrl(product.name, uniqueColors[0])
-    : (images[0]?.url ?? null);
+  // When an image row is tagged with its color, use that exact URL first —
+  // skips the multi-extension guessing (and its failed requests) entirely.
+  const imageByColor = new Map(
+    images.filter((img) => img.color).map((img) => [img.color as string, img.url])
+  );
+  const candidatesForColor = (color: string) => {
+    const tagged = imageByColor.get(color);
+    const guesses = getProductImageCandidates(product.name, color);
+    return tagged ? [tagged, ...guesses] : guesses;
+  };
 
-  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(initialUrl);
   const [activeColor, setActiveColor] = useState<string | null>(uniqueColors[0] ?? null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Candidates for the currently active image — every extension is tried
+  // in order (color mode), falling back to a placeholder if none load.
+  const activeCandidates = hasColorGallery && activeColor
+    ? candidatesForColor(activeColor)
+    : images.length > 0
+    ? [images[Math.min(activeImageIndex, images.length - 1)].url]
+    : [];
 
   const handleColorSelect = (color: string) => {
     setActiveColor(color);
-    setActiveImageUrl(getProductImageUrl(product.name, color));
   };
 
   const handleVariantSelect = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
     if (variant?.color) {
       setActiveColor(variant.color);
-      setActiveImageUrl(getProductImageUrl(product.name, variant.color));
     }
   };
 
-  // Thumbnails: one per unique color
-  const thumbnails = uniqueColors.length > 0
-    ? uniqueColors.map((color) => ({ color, url: getProductImageUrl(product.name, color) }))
-    : images.map((img) => ({ color: img.color ?? "", url: img.url }));
+  // Thumbnails: one per color when the gallery is color-driven, otherwise one
+  // per stored image (e.g. front/back for single-color products).
+  const thumbnails = hasColorGallery
+    ? uniqueColors.map((color) => ({
+        key: color,
+        label: color,
+        isActive: activeColor === color,
+        candidates: candidatesForColor(color),
+        onClick: () => handleColorSelect(color),
+      }))
+    : images.map((img, i) => ({
+        key: img.id,
+        label: img.alt ?? `Vista ${i + 1}`,
+        isActive: activeImageIndex === i,
+        candidates: [img.url],
+        onClick: () => setActiveImageIndex(i),
+      }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
@@ -54,36 +83,28 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <div className="space-y-3">
         {/* Imagen principal */}
         <div className="relative aspect-[4/5] bg-[#111] overflow-hidden border border-white/5">
-          {activeImageUrl ? (
-            <Image
-              src={activeImageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="font-heading text-crimson/15 text-8xl tracking-widest select-none" aria-hidden>
-                BULL
-              </span>
-            </div>
-          )}
+          <ProductImage
+            candidates={activeCandidates}
+            alt={product.name}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-contain"
+            placeholderTextClassName="font-heading text-crimson/15 text-8xl tracking-widest select-none"
+          />
         </div>
 
-        {/* Thumbnails por color */}
+        {/* Thumbnails */}
         {thumbnails.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
-            {thumbnails.map(({ color, url }) => (
+            {thumbnails.map(({ key, label, isActive, candidates, onClick }) => (
               <button
-                key={color}
-                onClick={() => handleColorSelect(color)}
-                title={color}
+                key={key}
+                onClick={onClick}
+                title={label}
                 className={`relative shrink-0 w-16 h-20 bg-[#111] border transition-colors overflow-hidden ${
-                  activeColor === color ? "border-crimson" : "border-white/5 hover:border-white/20"
+                  isActive ? "border-crimson" : "border-white/5 hover:border-white/20"
                 }`}
               >
-                <Image src={url} alt={color} fill sizes="64px" className="object-cover" />
+                <ProductImage candidates={candidates} alt={label} sizes="64px" className="object-contain" />
               </button>
             ))}
           </div>

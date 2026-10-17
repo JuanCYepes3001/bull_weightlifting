@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Product } from "@/types";
-import { getProductImageUrl } from "@/lib/storage";
+import { getProductImageCandidates } from "@/lib/storage";
+import { ProductImage } from "./ProductImage";
 
 interface ProductCardProps {
   product: Product;
@@ -10,11 +10,15 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const colors = [...new Set(product.variants?.map((v) => v.color) ?? [])];
   const firstColor = colors[0];
-  // Build URL from storage naming convention: "{Product Name} {COLOR}.jpeg"
-  // Falls back to DB image if no color variants exist
-  const mainImage = firstColor
-    ? getProductImageUrl(product.name, firstColor)
-    : (product.images?.[0]?.url ?? null);
+  // Prefer the explicit catalog image set in the DB (e.g. a dedicated shot like
+  // "LicraMujer.jpeg" that isn't tied to any one color), falling back to the
+  // storage naming convention "{Product Name} {COLOR}.<ext>", then a placeholder.
+  const explicitImage = product.images?.[0]?.url;
+  const imageCandidates = explicitImage
+    ? [explicitImage, ...(firstColor ? getProductImageCandidates(product.name, firstColor) : [])]
+    : firstColor
+    ? getProductImageCandidates(product.name, firstColor)
+    : [];
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
   const isCustomizable = product.category?.slug === "trusas";
   
@@ -30,24 +34,12 @@ export function ProductCard({ product }: ProductCardProps) {
     >
       {/* Imagen / placeholder */}
       <div className="relative aspect-[3/4] bg-[#111] overflow-hidden">
-        {mainImage ? (
-          <Image
-            src={mainImage}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-            <span
-              className="font-heading text-crimson/20 text-6xl tracking-widest select-none"
-              aria-hidden="true"
-            >
-              BULL
-            </span>
-          </div>
-        )}
+        <ProductImage
+          candidates={imageCandidates}
+          alt={product.name}
+          sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+          className="object-contain transition-transform duration-700 group-hover:scale-105"
+        />
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">

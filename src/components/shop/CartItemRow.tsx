@@ -20,7 +20,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
         className="relative shrink-0 w-20 h-24 bg-[#111] border border-white/5 overflow-hidden flex items-center justify-center"
       >
         {item.imageUrl ? (
-          <Image src={item.imageUrl} alt={item.productName} fill sizes="80px" className="object-cover" />
+          <Image src={item.imageUrl} alt={item.productName} fill sizes="80px" className="object-contain" />
         ) : (
           <span className="font-heading text-crimson/20 text-2xl" aria-hidden>B</span>
         )}

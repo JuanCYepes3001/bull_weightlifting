@@ -119,7 +119,7 @@ export function CartDrawer() {
                     <img
                       src={item.imageUrl}
                       alt={item.productName}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a]" />

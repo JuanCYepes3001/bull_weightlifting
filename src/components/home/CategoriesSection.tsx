@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Category } from "@/types";
@@ -199,13 +199,18 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                   draggable={false}
                 >
                   {cat.image_url ? (
-                    <Image
+                    <SafeImage
                       src={cat.image_url}
                       alt={cat.name ?? ""}
                       fill
                       sizes="288px"
                       className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-105"
                       draggable={false}
+                      fallback={
+                        <div className="absolute inset-0 flex items-center justify-center" style={{ color: palette.accent }}>
+                          {art}
+                        </div>
+                      }
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ color: palette.accent }}>

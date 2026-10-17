@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# oh-my-claudecode / Claude Code plugin local state (session logs, memory, tool state)
+.omc/

@@ -72,9 +72,13 @@ export function CartSyncProvider() {
       synced.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading, addItem, clearCart]);
+  }, [user?.id, loading, addItem, clearCart]);
 
   // ── Outbound sync on cart change ─────────────────────────
+  // Keyed on user?.id (a stable primitive), not the user object itself —
+  // Supabase's onAuthStateChange hands back a new object reference on
+  // every event (including no-op ones like TOKEN_REFRESHED), which would
+  // otherwise re-fire this effect and re-sync the cart on every tick.
   useEffect(() => {
     if (!user || loading || !synced.current) return;
     if (skipNextSync.current) {
@@ -83,11 +87,12 @@ export function CartSyncProvider() {
     }
     void syncToServer(items);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, user, loading]);
+  }, [items, user?.id, loading]);
 
   // ── Realtime: receive changes from other devices ─────────
   useEffect(() => {
     if (!user || loading) return;
+    const userId = user.id;
 
     const supabase = createClient();
     let cleanup: (() => void) | undefined;
@@ -96,7 +101,7 @@ export function CartSyncProvider() {
     supabase
       .from("carts")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle()
       .then(({ data: cart }) => {
         if (!mounted || !cart) return;
@@ -131,7 +136,8 @@ export function CartSyncProvider() {
       mounted = false;
       cleanup?.();
     };
-  }, [user, loading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, loading]);
 
   return null;
 }

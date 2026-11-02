@@ -10,6 +10,8 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
 import { buildWompiCheckoutUrl, isWompiConfigured } from "@/lib/wompi";
 import { expireStaleWompiOrders } from "@/lib/payments";
+import { normalizeWhatsAppNumber } from "@/lib/phone";
+import { isCustomizableProduct } from "@/lib/customization";
 
 export interface CheckoutItem {
   variantId: string;
@@ -45,13 +47,29 @@ const VALID_PAYMENT_METHODS = new Set([
 // Payment methods that require manual verification before fulfillment
 const MANUAL_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
 
+const INVALID_WHATSAPP_ERROR =
+  "Ingresa un número de WhatsApp válido (ej: 3001234567, o +1 5551234567 si es internacional).";
+
+// The WhatsApp number is mandatory for every order: confirmation, order
+// progress and trusa personalization are all handled through it. Stored
+// normalized (E.164) so lib/whatsapp.ts can send to international numbers.
+function withValidWhatsApp(shipping: ShippingAddress): ShippingAddress | null {
+  const phone = normalizeWhatsAppNumber(shipping.phone ?? "");
+  return phone ? { ...shipping, phone } : null;
+}
+
 /* ─── Shared: create DB order ──────────────────────────── */
 
 // Resolved product type from the joined query
 type VariantWithPrice = {
   id: string;
   stock: number;
-  products: { price: number; is_on_sale: boolean; sale_price: number | null } | null;
+  products: {
+    price: number;
+    is_on_sale: boolean;
+    sale_price: number | null;
+    slug?: string;
+  } | null;
 };
 
 async function insertOrder(
@@ -74,10 +92,14 @@ async function insertOrder(
   const variantIds = items.map((i) => i.variantId);
   const { data: variants, error: stockError } = await supabase
     .from("product_variants")
-    .select("id, stock, products(price, is_on_sale, sale_price)")
+    .select("id, stock, products(price, is_on_sale, sale_price, slug)")
     .in("id", variantIds);
 
   if (stockError || !variants) return { error: "Error al verificar disponibilidad" };
+
+  const needsCustomization = (variants as VariantWithPrice[]).some((v) =>
+    isCustomizableProduct(v.products?.slug)
+  );
 
   // Build server-side price map from DB values
   const priceMap = new Map<string, number>();
@@ -140,7 +162,7 @@ async function insertOrder(
   after(async () => {
     await sendWhatsApp(
       shipping.phone,
-      buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping })
+      buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping, needsCustomization })
     );
     if (user && "email" in user && user.email) {
       await sendOrderConfirmationEmail({
@@ -167,6 +189,8 @@ export async function createOrderAction(
   if (!items.length) return { error: "El carrito está vacío" };
   if (!VALID_PAYMENT_METHODS.has(paymentMethod))
     return { error: "Método de pago no válido." };
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
 
   const isManual = MANUAL_METHODS.has(paymentMethod);
   const paymentStatus = isManual
@@ -177,7 +201,7 @@ export async function createOrderAction(
 
   const result = await insertOrder(
     items,
-    shipping,
+    validShipping,
     paymentMethod,
     `${paymentMethod.toUpperCase()}-${Date.now()}`,
     paymentStatus
@@ -199,6 +223,9 @@ export async function createPayPalOrderAction(
   if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
     return { error: "PayPal no está configurado en este servidor." };
   }
+  // Validated before charging: a bad number must never surface after capture
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
 
   // Re-fetch canonical prices from DB — client-supplied prices are never trusted
   const supabase = await createClient();
@@ -235,7 +262,7 @@ export async function createPayPalOrderAction(
     const jar = await cookies();
     jar.set(
       "paypal_pending",
-      JSON.stringify({ items, shipping, paypalOrderId, totalUSD }),
+      JSON.stringify({ items, shipping: validShipping, paypalOrderId, totalUSD }),
       { maxAge: 60 * 15, httpOnly: true, sameSite: "lax", path: "/" }
     );
 
@@ -309,9 +336,11 @@ export async function createWompiCheckoutAction(
   if (!isWompiConfigured()) {
     return { error: "El pago con tarjeta / PSE no está configurado en este servidor." };
   }
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
 
   const reference = `WOMPI-${crypto.randomUUID()}`;
-  const result = await insertOrder(items, shipping, "wompi", reference, "wompi_pending", false);
+  const result = await insertOrder(items, validShipping, "wompi", reference, "wompi_pending", false);
   if ("error" in result) return result;
 
   // Housekeeping: release stock held by abandoned Wompi checkouts
@@ -331,8 +360,8 @@ export async function createWompiCheckoutAction(
     expiresAt: new Date(Date.now() + WOMPI_LINK_TTL_MS),
     customer: {
       email: result.email ?? undefined,
-      fullName: shipping.full_name,
-      phone: shipping.phone,
+      fullName: validShipping.full_name,
+      phone: validShipping.phone,
     },
   });
 

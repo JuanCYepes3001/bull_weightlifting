@@ -20,8 +20,11 @@ export type LegalDocument = {
 const LEGAL_DIR = join(process.cwd(), "src", "content", "legal");
 
 function parseFrontmatter(raw: string): { data: Record<string, string>; content: string } {
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!match) return { data: {}, content: raw };
+  // Normaliza CRLF → LF: en Windows git (core.autocrlf=true) convierte los \n
+  // del repo a \r\n, lo que rompía este match (mismo fix que check-legal-docs.cjs).
+  const normalized = raw.replace(/\r\n?/g, "\n");
+  const match = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return { data: {}, content: normalized };
 
   const data: Record<string, string> = {};
   for (const line of match[1].split("\n")) {

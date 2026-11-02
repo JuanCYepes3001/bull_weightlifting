@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, Scissors, Hash, Palette, CheckCircle } from "lucide-react";
+import { ArrowRight, Scissors, Hash, MessageCircle, CheckCircle } from "lucide-react";
 import { getProductsByCategory } from "@/lib/queries/products";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { isCustomizableProduct } from "@/lib/customization";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,25 +15,25 @@ const STEPS = [
     n: "01",
     icon: Scissors,
     title: "Elige tu trusa",
-    desc: "Selecciona el modelo, color y talla que más te guste de nuestra colección.",
+    desc: "Selecciona el modelo, color y talla que más te guste de nuestra colección y agrégala al carrito.",
   },
   {
     n: "02",
-    icon: Hash,
-    title: "Agrega tu nombre y número",
-    desc: "En la página del producto verás la sección de personalización. Escribe tu nombre (máx. 16 caracteres) y número (0–999).",
+    icon: CheckCircle,
+    title: "Completa tu compra",
+    desc: "Paga como cualquier producto — la personalización está incluida en el precio. En el checkout te pediremos tu número de WhatsApp.",
   },
   {
     n: "03",
-    icon: Palette,
-    title: "Selecciona el color del estampado",
-    desc: "Elige entre blanco, negro, rojo, dorado o plateado para el estampado.",
+    icon: MessageCircle,
+    title: "Cuéntanos cómo la quieres",
+    desc: "Después del pago te escribimos por WhatsApp para que nos indiques nombre, número, diseño y color del estampado.",
   },
   {
     n: "04",
-    icon: CheckCircle,
-    title: "Agrega al carrito",
-    desc: "Tu personalización queda guardada en el carrito. La verás reflejada en tu orden.",
+    icon: Hash,
+    title: "Confirmamos contigo",
+    desc: "Una persona de nuestro equipo te contacta para confirmar los detalles. Recibirás por WhatsApp cada avance de tu pedido.",
   },
 ];
 
@@ -45,7 +46,9 @@ const PRINT_COLORS = [
 ];
 
 export default async function PersonalizacionPage() {
-  const products = await getProductsByCategory("trusas").catch(() => []);
+  const products = (await getProductsByCategory("trusas").catch(() => [])).filter((p) =>
+    isCustomizableProduct(p.slug)
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 space-y-20">
@@ -120,7 +123,7 @@ export default async function PersonalizacionPage() {
           ))}
         </div>
         <p className="font-body text-xs text-white/25 italic">
-          * El color del estampado se elige directamente en la página del producto.
+          * El color del estampado lo defines con nuestro equipo por WhatsApp después de tu compra.
         </p>
       </section>
 

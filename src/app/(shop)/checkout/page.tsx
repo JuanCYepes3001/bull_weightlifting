@@ -11,6 +11,7 @@ import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/A
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { STATES_BY_COUNTRY } from "@/lib/locationData";
+import { normalizeWhatsAppNumber } from "@/lib/phone";
 import type { Address } from "@/types";
 
 // Manual-transfer methods (nequi, daviplata, dollar_app, global66) are still
@@ -61,9 +62,14 @@ export default function CheckoutPage() {
     });
   };
 
+  // WhatsApp is mandatory: confirmation, order progress and trusa
+  // personalization are all handled through it
+  const whatsAppValid = normalizeWhatsAppNumber(contact.phone) !== null;
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
   const isFormValid =
     contact.full_name.trim() &&
-    contact.phone.trim() &&
+    whatsAppValid &&
     addrValue.country &&
     addrValue.state &&
     addrValue.city &&
@@ -214,10 +220,20 @@ export default function CheckoutPage() {
                 required
               />
               <Input
-                label="Teléfono / WhatsApp"
+                label="Número de WhatsApp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 placeholder="3001234567"
                 value={contact.phone}
                 onChange={(e) => setC("phone", e.target.value)}
+                onBlur={() => setPhoneTouched(true)}
+                error={
+                  phoneTouched && contact.phone.trim() && !whatsAppValid
+                    ? "Número no válido. Ej: 3001234567, o +1 5551234567 si es internacional."
+                    : undefined
+                }
+                hint="Aquí te enviaremos la confirmación y el estado de tu pedido."
                 required
               />
             </div>

@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsApp, buildOrderConfirmationMessage } from "@/lib/whatsapp";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { findWompiTransactionsByReference, type WompiTransaction } from "@/lib/wompi";
+import { isCustomizableProduct } from "@/lib/customization";
 
 // Wompi orders older than this without a final result are expired and their
 // stock released. Must be longer than the checkout link expiration (60 min).
@@ -44,7 +45,7 @@ async function notifyPaidOrder(paymentId: string): Promise<void> {
   const supabase = createAdminClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, user_id, total, shipping_address, order_items(quantity, unit_price, product_variants(size, color, products(name)))")
+    .select("id, user_id, total, shipping_address, order_items(quantity, unit_price, product_variants(size, color, products(name, slug)))")
     .eq("payment_id", paymentId)
     .single();
   if (!order) return;
@@ -52,9 +53,17 @@ async function notifyPaidOrder(paymentId: string): Promise<void> {
   type Row = {
     quantity: number;
     unit_price: number;
-    product_variants: { size: string; color: string; products: { name: string } | null } | null;
+    product_variants: {
+      size: string;
+      color: string;
+      products: { name: string; slug: string } | null;
+    } | null;
   };
-  const items = ((order.order_items ?? []) as unknown as Row[]).map((r) => ({
+  const rows = (order.order_items ?? []) as unknown as Row[];
+  const needsCustomization = rows.some((r) =>
+    isCustomizableProduct(r.product_variants?.products?.slug)
+  );
+  const items = rows.map((r) => ({
     productName: r.product_variants?.products?.name ?? "Producto",
     size: r.product_variants?.size ?? "",
     color: r.product_variants?.color ?? "",
@@ -70,7 +79,7 @@ async function notifyPaidOrder(paymentId: string): Promise<void> {
     if (shipping?.phone) {
       await sendWhatsApp(
         shipping.phone,
-        buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod: "wompi", shipping })
+        buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod: "wompi", shipping, needsCustomization })
       );
     }
     if (order.user_id) {

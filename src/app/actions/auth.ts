@@ -27,6 +27,19 @@ const resetLimiter = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, "15 m"), prefix: "rl:reset" })
   : null;
 
+// Fail-open: si Upstash no responde (DB borrada, DNS, red) no tumbamos el
+// login/reset por un problema de nuestro lado — se loggea y se deja pasar.
+async function isWithinLimit(limiter: Ratelimit | null, key: string): Promise<boolean> {
+  if (!limiter) return true;
+  try {
+    const { success } = await limiter.limit(key);
+    return success;
+  } catch (err) {
+    console.error(`[RATE_LIMIT_UNAVAILABLE] Upstash falló para "${key}" — se permite la petición`, err);
+    return true;
+  }
+}
+
 async function getClientIp(): Promise<string> {
   const h = await headers();
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -40,9 +53,8 @@ type AuthResult = {
 
 export async function loginAction(formData: FormData): Promise<AuthResult> {
   const ip = await getClientIp();
-  if (loginLimiter) {
-    const { success: loginOk } = await loginLimiter.limit(`login:${ip}`);
-    if (!loginOk) return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
+  if (!(await isWithinLimit(loginLimiter, `login:${ip}`))) {
+    return { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." };
   }
 
   const raw = {
@@ -207,9 +219,8 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Au
   if (!email) return { error: "Email requerido" };
 
   // Rate limit by email: max 3 reset emails per 15 minutes
-  if (resetLimiter) {
-    const { success: resetOk } = await resetLimiter.limit(`reset:${email.toLowerCase()}`);
-    if (!resetOk) return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
+  if (!(await isWithinLimit(resetLimiter, `reset:${email.toLowerCase()}`))) {
+    return { error: "Ya enviamos un correo recientemente. Espera 15 minutos antes de intentar de nuevo." };
   }
 
   const supabase = await createClient();

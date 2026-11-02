@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Category, Product } from "@/types";
 
 /* ─── Dashboard stats ──────────────────────────────────── */
 
@@ -58,7 +59,7 @@ export async function getAdminProducts(filters?: {
   search?: string;
   category?: string;
   status?: string;
-}) {
+}): Promise<Product[]> {
   const supabase = await createClient();
   let query = supabase
     .from("products")
@@ -81,7 +82,7 @@ export async function getAdminProducts(filters?: {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  return (data as unknown as Product[]) ?? [];
 }
 
 export async function getProductByIdAdmin(id: string) {
@@ -100,10 +101,10 @@ export async function getProductByIdAdmin(id: string) {
 
 /* ─── Offers ───────────────────────────────────────────── */
 
-export async function getAdminOffers() {
+export async function getAdminOffers(): Promise<Product[]> {
   const supabase = await createClient();
 
-  await supabase.rpc("expire_products_offers" as any);
+  await supabase.rpc("expire_products_offers");
 
   const { data, error } = await supabase
     .from("products")
@@ -114,7 +115,7 @@ export async function getAdminOffers() {
     .order("updated_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  return (data as unknown as Product[]) ?? [];
 }
 
 /* ─── Inventory / Low stock ────────────────────────────── */
@@ -138,12 +139,20 @@ export async function getLowStockProducts(threshold = 10): Promise<LowStockVaria
 
   if (error) return [];
 
-  return (data ?? [])
-    .filter((v: any) => v.product?.is_active)
-    .map((v: any) => ({
+  const rows = data as unknown as {
+    id: string;
+    size: string;
+    color: string;
+    stock: number;
+    product: { id: string; name: string; is_active: boolean } | null;
+  }[];
+
+  return rows
+    .filter((v) => v.product?.is_active)
+    .map((v) => ({
       variantId:   v.id,
-      productId:   v.product.id,
-      productName: v.product.name,
+      productId:   v.product!.id,
+      productName: v.product!.name,
       size:        v.size,
       color:       v.color,
       stock:       v.stock,
@@ -152,7 +161,7 @@ export async function getLowStockProducts(threshold = 10): Promise<LowStockVaria
 
 /* ─── Categories ───────────────────────────────────────── */
 
-export async function getAdminCategories() {
+export async function getAdminCategories(): Promise<Category[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
@@ -160,7 +169,7 @@ export async function getAdminCategories() {
     .order("position", { ascending: true });
 
   if (error) return [];
-  return data ?? [];
+  return (data as unknown as Category[]) ?? [];
 }
 
 /* ─── Activity log ─────────────────────────────────────── */
@@ -503,7 +512,10 @@ export async function getTopProducts(limit = 5): Promise<TopProduct[]> {
 
   const map = new Map<string, TopProduct>();
   for (const item of data) {
-    const product = (item.variant as any)?.product;
+    const variant = item.variant as unknown as {
+      product: { id: string; name: string; slug: string } | null;
+    } | null;
+    const product = variant?.product;
     if (!product?.id) continue;
     const existing = map.get(product.id);
     if (existing) {

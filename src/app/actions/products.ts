@@ -229,7 +229,7 @@ export async function bulkDeleteProductsAction(ids: string[]): Promise<ActionRes
   const { error } = await supabase.from("products").delete().in("id", ids);
   if (error) return { error: "Error al eliminar productos" };
 
-  const names = (prods ?? []).map((p: any) => p.name).join(", ");
+  const names = (prods ?? []).map((p) => p.name).join(", ");
   await logActivity(adminProfile.user_id, adminProfile.name ?? "Admin", "bulk_deleted", names, undefined, { count: ids.length });
 
   revalidatePath("/admin/products");

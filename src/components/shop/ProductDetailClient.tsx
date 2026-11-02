@@ -9,6 +9,7 @@ import { SizeGuide } from "./SizeGuide";
 import { TrusasCustomizer } from "./TrusasCustomizer";
 import { ProductImage } from "./ProductImage";
 import { getProductImageCandidates } from "@/lib/storage";
+import { isCustomizableProduct } from "@/lib/customization";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -16,7 +17,7 @@ interface ProductDetailClientProps {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
-  const isTrusas = product.category?.slug === "trusas";
+  const isCustomizable = isCustomizableProduct(product.slug);
   const images = product.images ?? [];
   const variants = product.variants ?? [];
 
@@ -163,8 +164,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <p className="font-body text-sm text-white/30">Sin variantes disponibles.</p>
         )}
 
-        {/* Personalización (solo trusas) */}
-        {isTrusas && <TrusasCustomizer />}
+        {/* Personalización (solo Trusa Clásica Personalizada) */}
+        {isCustomizable && <TrusasCustomizer />}
 
         {/* Botón agregar */}
         <AddToCartButton

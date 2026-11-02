@@ -43,6 +43,7 @@ const PAY_LABELS: Record<string, string> = {
   daviplata:     "Daviplata",
   contraentrega: "Contra entrega",
   paypal:        "PayPal",
+  wompi:         "Wompi (tarjeta / PSE / Nequi)",
   dollar_app:    "Dollar App",
   global66:      "Global 66",
   simulado:      "Pago simulado",

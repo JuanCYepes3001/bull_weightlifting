@@ -5,7 +5,7 @@ import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
-import { sendWhatsApp, buildShippedMessage, buildDeliveredMessage } from "@/lib/whatsapp";
+import { sendWhatsApp, buildStatusUpdateMessage } from "@/lib/whatsapp";
 import {
   sendShippedEmail,
   sendDeliveredEmail,
@@ -52,12 +52,16 @@ export async function updateOrderStatusAction(
     const capturedStatus = status;
 
     after(async () => {
-      // WhatsApp al cliente solo en shipped y delivered
-      if (phone && (capturedStatus === "shipped" || capturedStatus === "delivered")) {
-        const message = capturedStatus === "shipped"
-          ? buildShippedMessage({ orderId: capturedOrder.id, total: capturedOrder.total, isContraEntrega })
-          : buildDeliveredMessage({ orderId: capturedOrder.id, total: capturedOrder.total, isContraEntrega });
-        await sendWhatsApp(phone, message);
+      // WhatsApp al cliente en cada avance del pedido (al mismo número del checkout)
+      if (phone) {
+        const message = buildStatusUpdateMessage({
+          orderId: capturedOrder.id,
+          status: capturedStatus,
+          customerName: addr?.full_name ?? "",
+          total: capturedOrder.total,
+          isContraEntrega,
+        });
+        if (message) await sendWhatsApp(phone, message);
       }
 
       // Email al cliente en todos los cambios de estado relevantes

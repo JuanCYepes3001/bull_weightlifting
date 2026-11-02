@@ -1,5 +1,4 @@
 import { getAdminOrderById } from "@/lib/queries/admin";
-import { updateOrderStatusAction } from "@/app/actions/orders";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {

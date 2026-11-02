@@ -105,7 +105,10 @@ export async function capturePayPalOrder(paypalOrderId: string): Promise<{
   }
 
   const data = await res.json();
-  const capture = (data.purchase_units as Array<any>)?.[0]?.payments?.captures?.[0];
+  const purchaseUnits = data.purchase_units as Array<{
+    payments?: { captures?: Array<{ id: string; amount?: { value: string } }> };
+  }>;
+  const capture = purchaseUnits?.[0]?.payments?.captures?.[0];
   return {
     status: data.status as string,
     captureId: capture?.id ?? "",

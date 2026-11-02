@@ -1,17 +1,45 @@
 // WhatsApp notifications via Meta Cloud API (WhatsApp Business Platform)
 // Required env vars: WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID
+// Optional: WHATSAPP_TEMPLATE_LANG (default "es")
+//
+// Every message is an approved *template*: Meta only delivers free-form text
+// inside the 24h window after the customer writes to us, and most customers
+// never have. The templates must exist in WhatsApp Manager with exactly these
+// names, language and variable order — see docs/whatsapp-templates.md.
 
 const ACCESS_TOKEN    = process.env.WHATSAPP_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const API_VERSION     = "v20.0";
+const TEMPLATE_LANG   = process.env.WHATSAPP_TEMPLATE_LANG ?? "es";
+const API_VERSION     = "v25.0";
+
+export const WHATSAPP_TEMPLATES = {
+  orderConfirmed: "bull_pedido_confirmado",
+  orderConfirmedCustomization: "bull_pedido_confirmado_personalizacion",
+  statusUpdate: "bull_pedido_actualizacion",
+} as const;
+
+export type WhatsAppTemplateMessage = {
+  template: (typeof WHATSAPP_TEMPLATES)[keyof typeof WHATSAPP_TEMPLATES];
+  params: string[];
+};
 
 function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
+  // New orders store the number normalized to E.164 (lib/phone.ts)
+  if (phone.trim().startsWith("+")) return digits;
+  // Legacy orders: raw Colombian number, with or without country code
   if (digits.startsWith("57") && digits.length >= 12) return digits;
   return `57${digits}`;
 }
 
-export async function sendWhatsApp(to: string, body: string): Promise<void> {
+// Meta rejects template parameters that are empty or contain newlines/tabs
+// or more than 4 consecutive spaces (error 132018).
+function sanitizeParam(value: string): string {
+  const clean = value.replace(/[\r\n\t]+/g, " ").replace(/ {2,}/g, " ").trim();
+  return clean || "-";
+}
+
+export async function sendWhatsApp(to: string, message: WhatsAppTemplateMessage): Promise<void> {
   if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) {
     console.error("[WhatsApp] WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID not configured — WhatsApp sending disabled");
     return;
@@ -29,103 +57,133 @@ export async function sendWhatsApp(to: string, body: string): Promise<void> {
         body: JSON.stringify({
           messaging_product: "whatsapp",
           to: formatPhone(to),
-          type: "text",
-          text: { body },
+          type: "template",
+          template: {
+            name: message.template,
+            language: { code: TEMPLATE_LANG },
+            components: [
+              {
+                type: "body",
+                parameters: message.params.map((p) => ({ type: "text", text: sanitizeParam(p) })),
+              },
+            ],
+          },
         }),
       }
     );
     if (!res.ok) {
-      console.error("[WhatsApp] Meta API error", res.status, await res.text());
+      console.error(`[WhatsApp] Meta API error (template ${message.template})`, res.status, await res.text());
     }
   } catch (err) {
     console.error("[WhatsApp] Network error sending notification:", err);
   }
 }
 
+const PAY_LABELS: Record<string, string> = {
+  nequi:         "Nequi",
+  daviplata:     "Daviplata",
+  contraentrega: "Contra entrega (efectivo al recibir)",
+  paypal:        "PayPal",
+  wompi:         "Wompi (tarjeta / PSE / Nequi)",
+  dollar_app:    "Dollar App",
+  global66:      "Global 66",
+  simulado:      "Pago simulado",
+};
+
+const MANUAL_PAYMENT_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
+
+const cop = (n: number) => `${n.toLocaleString("es-CO")} COP`;
+const shortOrderId = (orderId: string) => orderId.slice(0, 8).toUpperCase();
+const firstName = (fullName: string) => fullName.trim().split(/\s+/)[0] || "cliente";
+
+/*
+ * bull_pedido_confirmado / bull_pedido_confirmado_personalizacion
+ * {{1}} nombre · {{2}} orden · {{3}} estado · {{4}} productos · {{5}} total
+ * {{6}} método de pago · {{7}} dirección de envío
+ */
 export function buildOrderConfirmationMessage(params: {
   orderId: string;
   items: Array<{ productName: string; quantity: number; price: number; size: string; color: string }>;
   total: number;
   paymentMethod: string;
   shipping: { full_name: string; city: string; state: string; address: string };
-}): string {
-  const { orderId, items, total, paymentMethod, shipping } = params;
-  const shortId = orderId.slice(0, 8).toUpperCase();
+  // True when the order includes the Trusa Clásica Personalizada
+  needsCustomization?: boolean;
+}): WhatsAppTemplateMessage {
+  const { orderId, items, total, paymentMethod, shipping, needsCustomization = false } = params;
 
-  const PAY_LABELS: Record<string, string> = {
-    nequi:         "Nequi",
-    daviplata:     "Daviplata",
-    contraentrega: "Contra entrega (pago en efectivo al recibir)",
-    paypal:        "PayPal",
-    dollar_app:    "Dollar App",
-    global66:      "Global 66",
-    simulado:      "Pago simulado",
-  };
-
-  const lines = items
-    .map((i) => `• ${i.productName} (${i.size} / ${i.color}) × ${i.quantity} — $${(i.price * i.quantity).toLocaleString("es-CO")}`)
-    .join("\n");
-
-  const codNote =
+  const status =
     paymentMethod === "contraentrega"
-      ? `\n\n💵 *Recuerda:* Al momento de la entrega deberás pagar *$${total.toLocaleString("es-CO")} COP en efectivo*. No se requiere ningún adelanto.`
-      : "";
+      ? `Confirmado. Pagas ${cop(total)} en efectivo al recibir`
+      : MANUAL_PAYMENT_METHODS.has(paymentMethod)
+      ? "Pago en verificación"
+      : "Pago recibido, en preparación";
 
-  return (
-    `🏋️ *BULL WEIGHTLIFTING*\n` +
-    `✅ *¡Orden Confirmada!*\n\n` +
-    `*Orden #${shortId}*\n\n` +
-    `*Productos:*\n${lines}\n\n` +
-    `*Total:* $${total.toLocaleString("es-CO")} COP\n` +
-    `*Método de pago:* ${PAY_LABELS[paymentMethod] ?? paymentMethod}\n` +
-    `*Dirección:* ${shipping.address}, ${shipping.city}, ${shipping.state}\n` +
-    `*Destinatario:* ${shipping.full_name}` +
-    codNote +
-    `\n\n¡Gracias por tu compra! Pronto confirmaremos el envío. 🚀`
-  );
+  // Single line: template parameters cannot contain line breaks
+  const products = items
+    .map((i) => `${i.productName} (${i.size} / ${i.color}) x${i.quantity}`)
+    .join("; ");
+
+  return {
+    template: needsCustomization
+      ? WHATSAPP_TEMPLATES.orderConfirmedCustomization
+      : WHATSAPP_TEMPLATES.orderConfirmed,
+    params: [
+      firstName(shipping.full_name),
+      shortOrderId(orderId),
+      status,
+      products,
+      cop(total),
+      PAY_LABELS[paymentMethod] ?? paymentMethod,
+      `${shipping.address}, ${shipping.city}, ${shipping.state}`,
+    ],
+  };
 }
 
-export function buildDeliveredMessage(params: {
+/*
+ * bull_pedido_actualizacion
+ * {{1}} nombre · {{2}} orden · {{3}} nuevo estado · {{4}} detalle
+ */
+const STATUS_UPDATES: Record<string, { label: string; detail: string }> = {
+  processing: {
+    label: "En preparación",
+    detail: "Tu pedido ya está en proceso. Te avisaremos apenas sea despachado.",
+  },
+  shipped: {
+    label: "En camino",
+    detail: "Tu pedido fue despachado. Entrega estimada: 2 a 5 días hábiles.",
+  },
+  delivered: {
+    label: "Entregado",
+    detail: "Tu pedido fue entregado. Si tienes algún problema con él, contáctanos.",
+  },
+  cancelled: {
+    label: "Cancelado",
+    detail: "Tu pedido fue cancelado. Si tienes dudas, contáctanos.",
+  },
+  refunded: {
+    label: "Reembolsado",
+    detail: "El reembolso puede tardar algunos días hábiles en reflejarse según tu medio de pago.",
+  },
+};
+
+export function buildStatusUpdateMessage(params: {
   orderId: string;
+  status: string;
+  customerName: string;
   total: number;
   isContraEntrega: boolean;
-}): string {
-  const { orderId, total, isContraEntrega } = params;
-  const shortId = orderId.slice(0, 8).toUpperCase();
+}): WhatsAppTemplateMessage | null {
+  const update = STATUS_UPDATES[params.status];
+  if (!update) return null;
 
-  const codNote = isContraEntrega
-    ? `\n\n💵 Esperamos que hayas podido realizar el pago de *$${total.toLocaleString("es-CO")} COP* al mensajero.`
-    : "";
+  let detail = update.detail;
+  if (params.isContraEntrega && params.status === "shipped") {
+    detail += ` Recuerda tener ${cop(params.total)} en efectivo para pagar al recibir.`;
+  }
 
-  return (
-    `🏋️ *BULL WEIGHTLIFTING*\n` +
-    `✅ *¡Tu pedido fue entregado!*\n\n` +
-    `*Orden #${shortId}*\n` +
-    `*Estado:* Entregado` +
-    codNote +
-    `\n\n¡Gracias por confiar en BULL WEIGHTLIFTING! 💪🏆\nSi tienes algún problema con tu pedido, contáctanos.`
-  );
-}
-
-export function buildShippedMessage(params: {
-  orderId: string;
-  total: number;
-  isContraEntrega: boolean;
-}): string {
-  const { orderId, total, isContraEntrega } = params;
-  const shortId = orderId.slice(0, 8).toUpperCase();
-
-  const codNote = isContraEntrega
-    ? `\n\n💵 *Recuerda:* Deberás pagar *$${total.toLocaleString("es-CO")} COP en efectivo* al recibir el paquete. No se requiere ningún adelanto previo.`
-    : "";
-
-  return (
-    `🏋️ *BULL WEIGHTLIFTING*\n` +
-    `🚚 *¡Tu pedido está en camino!*\n\n` +
-    `*Orden #${shortId}*\n` +
-    `*Estado:* En tránsito\n` +
-    `*Entrega estimada:* 2–5 días hábiles` +
-    codNote +
-    `\n\n¡Ya viene de camino a ti! 💪`
-  );
+  return {
+    template: WHATSAPP_TEMPLATES.statusUpdate,
+    params: [firstName(params.customerName), shortOrderId(params.orderId), update.label, detail],
+  };
 }

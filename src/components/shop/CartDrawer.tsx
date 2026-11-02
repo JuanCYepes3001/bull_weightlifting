@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import Link from "next/link";
 import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -14,8 +15,11 @@ export function CartDrawer() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Portal mount guard — avoids SSR mismatch
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     const drawer = drawerRef.current;
@@ -114,12 +118,14 @@ export function CartDrawer() {
                 className="flex gap-4 pb-5 border-b border-white/5 last:border-0"
               >
                 {/* Thumbnail */}
-                <div className="w-16 h-20 bg-[#222] flex-shrink-0 overflow-hidden">
+                <div className="relative w-16 h-20 bg-[#222] flex-shrink-0 overflow-hidden">
                   {item.imageUrl ? (
-                    <img
+                    <Image
                       src={item.imageUrl}
                       alt={item.productName}
-                      className="w-full h-full object-contain"
+                      fill
+                      sizes="64px"
+                      className="object-contain"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a]" />

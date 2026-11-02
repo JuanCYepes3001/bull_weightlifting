@@ -36,9 +36,19 @@ const PAY_LABELS: Record<string, string> = {
   daviplata:     "Daviplata",
   contraentrega: "Contra entrega",
   paypal:        "PayPal",
+  wompi:         "Wompi (tarjeta / PSE / Nequi)",
   dollar_app:    "Dollar App",
   global66:      "Global 66",
   simulado:      "Pago simulado",
+};
+
+const PAY_STATUS_LABELS: Record<string, string> = {
+  approved:             "Pago aprobado",
+  wompi_pending:        "Esperando confirmación del pago",
+  declined:             "Pago rechazado",
+  amount_mismatch:      "Pago en revisión",
+  pending_verification: "Pendiente de verificación",
+  cod_pending:          "Se paga al recibir",
 };
 
 export default async function UserOrderDetailPage({
@@ -202,7 +212,9 @@ export default async function UserOrderDetailPage({
           </p>
           <p className="font-body text-sm text-white">{paymentLabel}</p>
           {order.payment_status && (
-            <p className="font-body text-xs text-white/40">{order.payment_status}</p>
+            <p className="font-body text-xs text-white/40">
+              {PAY_STATUS_LABELS[order.payment_status] ?? order.payment_status}
+            </p>
           )}
         </div>
 

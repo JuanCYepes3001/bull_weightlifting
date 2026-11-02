@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, MapPin } from "lucide-react";
 import { registerAction } from "@/app/actions/auth";
@@ -10,6 +10,7 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/AddressForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LegalModal } from "@/components/legal/LegalModal";
 import { createClient } from "@/lib/supabase/client";
 
 export function RegisterForm() {
@@ -35,13 +36,20 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      acceptTerms: false,
+      acceptPrivacy: false,
+    },
   });
 
-  const password = watch("password", "");
+  const password = useWatch({ control, name: "password", defaultValue: "" });
+  const acceptTerms = useWatch({ control, name: "acceptTerms" });
+  const acceptPrivacy = useWatch({ control, name: "acceptPrivacy" });
+  const canSubmit = acceptTerms && acceptPrivacy;
 
   const passwordStrength = (() => {
     if (!password) return null;
@@ -68,7 +76,7 @@ export function RegisterForm() {
     }
 
     const formData = new FormData();
-    Object.entries(data).forEach(([k, v]) => formData.append(k, v));
+    Object.entries(data).forEach(([k, v]) => formData.append(k, String(v)));
 
     // Append phone + address fields
     if (phone.trim()) formData.append("phone", phone.trim());
@@ -235,11 +243,55 @@ export function RegisterForm() {
         <AddressForm value={addrValue} onChange={setAddrValue} />
       </div>
 
+      {/* Aceptación legal */}
+      <div className="space-y-3 pt-2">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-crimson bg-white/5 border border-white/20"
+            {...register("acceptTerms")}
+          />
+          <span className="font-body text-xs text-white/60 leading-relaxed">
+            He leído y acepto los{" "}
+            <LegalModal
+              slug="terminos"
+              className="text-white underline underline-offset-4 hover:text-crimson transition-colors"
+            >
+              Términos y Condiciones
+            </LegalModal>
+          </span>
+        </label>
+        {errors.acceptTerms && (
+          <p className="text-xs text-red-400 font-body">{errors.acceptTerms.message}</p>
+        )}
+
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-crimson bg-white/5 border border-white/20"
+            {...register("acceptPrivacy")}
+          />
+          <span className="font-body text-xs text-white/60 leading-relaxed">
+            He leído y acepto la{" "}
+            <LegalModal
+              slug="privacidad"
+              className="text-white underline underline-offset-4 hover:text-crimson transition-colors"
+            >
+              Política de Privacidad
+            </LegalModal>
+          </span>
+        </label>
+        {errors.acceptPrivacy && (
+          <p className="text-xs text-red-400 font-body">{errors.acceptPrivacy.message}</p>
+        )}
+      </div>
+
       <Button
         type="submit"
         className="w-full"
         size="lg"
         loading={isSubmitting}
+        disabled={!canSubmit}
       >
         Crear cuenta
       </Button>

@@ -1,25 +1,26 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { createOrderAction, createPayPalOrderAction } from "@/app/actions/checkout";
+import { createOrderAction, createPayPalOrderAction, createWompiCheckoutAction } from "@/app/actions/checkout";
 import { getUserAddressesAction } from "@/app/actions/addresses";
 import { AddressForm, EMPTY_ADDRESS, type AddressValue } from "@/components/ui/AddressForm";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { STATES_BY_COUNTRY } from "@/lib/locationData";
+import { normalizeWhatsAppNumber } from "@/lib/phone";
 import type { Address } from "@/types";
 
+// Manual-transfer methods (nequi, daviplata, dollar_app, global66) are still
+// accepted by the server for old flows but no longer offered: Wompi covers
+// Nequi, PSE and cards with automatic confirmation.
 const PAYMENT_METHODS = [
-  { id: "nequi",         label: "Nequi",          icon: "📱", note: null },
-  { id: "daviplata",     label: "Daviplata",       icon: "💳", note: null },
-  { id: "contraentrega", label: "Contra entrega",  icon: "🚚", note: "Pago en efectivo al recibir" },
-  { id: "paypal",        label: "PayPal",          icon: "🌐", note: "Pago internacional" },
-  { id: "dollar_app",   label: "Dollar App",      icon: "💵", note: "Pago en dólares" },
-  { id: "global66",     label: "Global 66",       icon: "🌍", note: "Transferencia internacional" },
-  { id: "simulado",      label: "Pago simulado ✓", icon: "🧪", note: null },
+  { id: "wompi",         label: "Tarjeta, PSE o Nequi", icon: "💳", note: "Pago seguro con Wompi" },
+  { id: "paypal",        label: "PayPal",               icon: "🌐", note: "Pago internacional (USD)" },
+  { id: "contraentrega", label: "Contra entrega",       icon: "🚚", note: "Pago en efectivo al recibir" },
 ];
 
 function stateName(countryCode: string, stateCode: string): string {
@@ -29,9 +30,8 @@ function stateName(countryCode: string, stateCode: string): string {
 export default function CheckoutPage() {
   const items      = useCartStore((s) => s.items);
   const total      = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.quantity, 0));
-  const clearCart  = useCartStore((s) => s.clearCart);
 
-  const [paymentMethod, setPaymentMethod] = useState("simulado");
+  const [paymentMethod, setPaymentMethod] = useState("wompi");
   const [serverError, setServerError]     = useState<string | null>(null);
   const [isPending, startTransition]      = useTransition();
 
@@ -62,9 +62,14 @@ export default function CheckoutPage() {
     });
   };
 
+  // WhatsApp is mandatory: confirmation, order progress and trusa
+  // personalization are all handled through it
+  const whatsAppValid = normalizeWhatsAppNumber(contact.phone) !== null;
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
   const isFormValid =
     contact.full_name.trim() &&
-    contact.phone.trim() &&
+    whatsAppValid &&
     addrValue.country &&
     addrValue.state &&
     addrValue.city &&
@@ -111,6 +116,17 @@ export default function CheckoutPage() {
     };
 
     startTransition(async () => {
+      // Wompi: order is created server-side, then redirect to Wompi's checkout
+      if (paymentMethod === "wompi") {
+        const result = await createWompiCheckoutAction(checkoutItems, shippingData);
+        if ("error" in result) {
+          setServerError(result.error);
+        } else {
+          window.location.href = result.checkoutUrl;
+        }
+        return;
+      }
+
       // PayPal: redirect to PayPal approval page
       if (paymentMethod === "paypal") {
         const result = await createPayPalOrderAction(checkoutItems, shippingData);
@@ -204,10 +220,20 @@ export default function CheckoutPage() {
                 required
               />
               <Input
-                label="Teléfono / WhatsApp"
+                label="Número de WhatsApp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 placeholder="3001234567"
                 value={contact.phone}
                 onChange={(e) => setC("phone", e.target.value)}
+                onBlur={() => setPhoneTouched(true)}
+                error={
+                  phoneTouched && contact.phone.trim() && !whatsAppValid
+                    ? "Número no válido. Ej: 3001234567, o +1 5551234567 si es internacional."
+                    : undefined
+                }
+                hint="Aquí te enviaremos la confirmación y el estado de tu pedido."
                 required
               />
             </div>
@@ -262,9 +288,6 @@ export default function CheckoutPage() {
                 </button>
               ))}
             </div>
-            <p className="font-body text-[10px] text-white/20 tracking-wide">
-              "Pago simulado" confirma la orden sin procesar ningún cobro real.
-            </p>
           </section>
 
           {serverError && (
@@ -282,9 +305,9 @@ export default function CheckoutPage() {
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {items.map((item) => (
                 <div key={item.variantId} className="flex gap-3">
-                  <div className="w-12 h-14 bg-[#222] flex-shrink-0 overflow-hidden">
+                  <div className="relative w-12 h-14 bg-[#222] flex-shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-contain" />
+                      <Image src={item.imageUrl} alt={item.productName} fill sizes="48px" className="object-contain" />
                     ) : (
                       <div className="w-full h-full bg-[#2a2a2a]" />
                     )}
@@ -333,7 +356,11 @@ export default function CheckoutPage() {
               loading={isPending}
               disabled={!isFormValid || isPending}
             >
-              {isPending ? "Procesando..." : "Confirmar pedido"}
+              {isPending
+                ? "Procesando..."
+                : paymentMethod === "contraentrega"
+                ? "Confirmar pedido"
+                : "Ir a pagar"}
             </Button>
 
             <Link

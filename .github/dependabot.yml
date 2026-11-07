@@ -9,3 +9,10 @@ updates:
       # typescript-eslint (vía eslint-config-next) aún no soporta TS 7
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # Los plugins de eslint-config-next (react, import, jsx-a11y) aún no soportan ESLint 10
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # react y react-dom deben tener exactamente la misma versión
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]

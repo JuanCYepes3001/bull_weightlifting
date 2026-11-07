@@ -68,7 +68,12 @@ export default function config(phase: string): NextConfig {
     process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "development";
   if (phase === PHASE_PRODUCTION_BUILD && !isVercelPreview) {
     const { ok, errors } = checkLegalDocuments();
-    if (!ok) {
+    // Override consciente y temporal: publicar con documentos en borrador.
+    // Quitar la variable de Vercel en cuanto los documentos estén "vigente".
+    if (!ok && process.env.ALLOW_DRAFT_LEGAL_DOCS === "true") {
+      console.warn("⚠ ALLOW_DRAFT_LEGAL_DOCS=true — se publica con documentos legales sin aprobar:\n");
+      errors.forEach((e) => console.warn(`  - ${e}`));
+    } else if (!ok) {
       console.error("✗ Guard de documentos legales falló — build abortado:\n");
       errors.forEach((e) => console.error(`  - ${e}`));
       throw new Error(

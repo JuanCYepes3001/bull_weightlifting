@@ -61,8 +61,12 @@ const nextConfig: NextConfig = {
 // Se restringe a la fase de build (no a `next start` / runtime del server)
 // chequeando `phase`, que Next.js pasa siempre a esta función — así el
 // guard nunca puede tumbar la app ya desplegada, solo el build.
+// Los previews de Vercel (PRs) se excluyen: deben poder desplegarse con
+// documentos en borrador para revisarlos antes de aprobarlos.
 export default function config(phase: string): NextConfig {
-  if (phase === PHASE_PRODUCTION_BUILD) {
+  const isVercelPreview =
+    process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "development";
+  if (phase === PHASE_PRODUCTION_BUILD && !isVercelPreview) {
     const { ok, errors } = checkLegalDocuments();
     if (!ok) {
       console.error("✗ Guard de documentos legales falló — build abortado:\n");

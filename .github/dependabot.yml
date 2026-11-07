@@ -3,8 +3,11 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Bogota"
+    open-pull-requests-limit: 3
     ignore:
       # typescript-eslint (vía eslint-config-next) aún no soporta TS 7
       - dependency-name: "typescript"
@@ -12,7 +15,12 @@ updates:
       # Los plugins de eslint-config-next (react, import, jsx-a11y) aún no soportan ESLint 10
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
+    # Un paquete cae en el primer grupo que coincida. Las versiones mayores
+    # quedan fuera de los grupos y llegan en PRs individuales para revisarlas.
     groups:
       # react y react-dom deben tener exactamente la misma versión
       react:
         patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

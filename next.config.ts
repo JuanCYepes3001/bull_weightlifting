@@ -75,11 +75,19 @@ export default function config(phase: string): NextConfig {
     const { ok, errors } = checkLegalDocuments();
     // Override consciente y temporal: publicar con documentos en borrador.
     // Quitar la variable de Vercel en cuanto los documentos estén "vigente".
-    if (!ok && process.env.ALLOW_DRAFT_LEGAL_DOCS === "true") {
+    // trim: un valor guardado desde una terminal Windows puede traer "\r\n"
+    const override = process.env.ALLOW_DRAFT_LEGAL_DOCS;
+    const allowDrafts = override?.trim().toLowerCase() === "true";
+    if (!ok && allowDrafts) {
       console.warn("⚠ ALLOW_DRAFT_LEGAL_DOCS=true — se publica con documentos legales sin aprobar:\n");
       errors.forEach((e) => console.warn(`  - ${e}`));
     } else if (!ok) {
       console.error("✗ Guard de documentos legales falló — build abortado:\n");
+      console.error(
+        override === undefined
+          ? "  (ALLOW_DRAFT_LEGAL_DOCS no está definida en este entorno)\n"
+          : `  (ALLOW_DRAFT_LEGAL_DOCS tiene un valor no válido: ${JSON.stringify(override)})\n`
+      );
       errors.forEach((e) => console.error(`  - ${e}`));
       throw new Error(
         "Documentos legales no aprobados para producción. Ver detalle arriba."

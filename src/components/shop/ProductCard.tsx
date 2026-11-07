@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/types";
 import { getProductImageCandidates } from "@/lib/storage";
+import { isCustomizableProduct } from "@/lib/customization";
 import { ProductImage } from "./ProductImage";
 
 interface ProductCardProps {
@@ -20,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
     ? getProductImageCandidates(product.name, firstColor)
     : [];
   const hasStock = product.variants?.some((v) => v.stock > 0) ?? false;
-  const isCustomizable = product.category?.slug === "trusas";
+  const isCustomizable = isCustomizableProduct(product.slug);
   
   const now = new Date();
   const isSaleActive = product.is_on_sale && 

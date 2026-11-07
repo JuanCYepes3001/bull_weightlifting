@@ -90,7 +90,7 @@ const PAY_LABELS: Record<string, string> = {
   simulado:      "Pago simulado",
 };
 
-const MANUAL_PAYMENT_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
+export const MANUAL_PAYMENT_METHODS: ReadonlySet<string> = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
 
 const cop = (n: number) => `${n.toLocaleString("es-CO")} COP`;
 const shortOrderId = (orderId: string) => orderId.slice(0, 8).toUpperCase();
@@ -107,13 +107,19 @@ export function buildOrderConfirmationMessage(params: {
   total: number;
   paymentMethod: string;
   shipping: { full_name: string; city: string; state: string; address: string };
-  // True when the order includes the Trusa Clásica Personalizada
+  // True when the order includes a customizable trusa (lib/customization.ts)
   needsCustomization?: boolean;
+  // A manual-transfer payment the admin has already verified
+  paymentConfirmed?: boolean;
 }): WhatsAppTemplateMessage {
-  const { orderId, items, total, paymentMethod, shipping, needsCustomization = false } = params;
+  const {
+    orderId, items, total, paymentMethod, shipping,
+    needsCustomization = false, paymentConfirmed = false,
+  } = params;
 
-  const status =
-    paymentMethod === "contraentrega"
+  const status = paymentConfirmed
+    ? "Pago confirmado, en preparación"
+    : paymentMethod === "contraentrega"
       ? `Confirmado. Pagas ${cop(total)} en efectivo al recibir`
       : MANUAL_PAYMENT_METHODS.has(paymentMethod)
       ? "Pago en verificación"

@@ -97,9 +97,11 @@ async function insertOrder(
 
   if (stockError || !variants) return { error: "Error al verificar disponibilidad" };
 
-  const needsCustomization = (variants as VariantWithPrice[]).some((v) =>
-    isCustomizableProduct(v.products?.slug)
-  );
+  // Manual transfers are still unverified here: their customization request is
+  // sent by updateOrderStatusAction once the admin confirms the payment
+  const needsCustomization =
+    !MANUAL_METHODS.has(paymentMethod) &&
+    (variants as VariantWithPrice[]).some((v) => isCustomizableProduct(v.products?.slug));
 
   // Build server-side price map from DB values
   const priceMap = new Map<string, number>();

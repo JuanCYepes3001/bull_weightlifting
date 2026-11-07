@@ -105,7 +105,6 @@ export function Navbar() {
   const navLinks = [
     { label: "Inicio",         href: "/" },
     { label: "Colección",      href: "/products" },
-    { label: "Personalización",href: "/personalizacion" },
     { label: "Ofertas",        href: "/products?on_sale=true", isOferta: true },
   ];
 

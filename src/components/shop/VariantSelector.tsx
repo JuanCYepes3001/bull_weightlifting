@@ -11,7 +11,12 @@ interface VariantSelectorProps {
 }
 
 export function VariantSelector({ variants, onSelect, onColorSelect }: VariantSelectorProps) {
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  // Un solo color (p. ej. las trusas "PERSONALIZADO"): no hay nada que elegir,
+  // así que se preselecciona y las tallas aparecen de inmediato
+  const [selectedColor, setSelectedColor] = useState<string | null>(() => {
+    const colors = new Set(variants.map((v) => v.color));
+    return colors.size === 1 ? [...colors][0] : null;
+  });
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   // Colores únicos con su hex

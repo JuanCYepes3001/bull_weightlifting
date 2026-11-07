@@ -61,6 +61,14 @@
 
   /* Grain texture */
   --noise-opacity: 0.04;
+
+  /* Zoom lento de las fotos de deportistas en el hero */
+  --animate-kenburns: kenburns 20s ease-in-out infinite alternate;
+
+  @keyframes kenburns {
+    from { transform: scale(1); }
+    to   { transform: scale(1.08); }
+  }
 }
 
 /* ─── Base Styles ─────────────────────────────────────── */

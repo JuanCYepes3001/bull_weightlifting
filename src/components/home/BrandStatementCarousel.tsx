@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 
-const SLIDES = [
+const PHRASES = [
   {
     lines: ["No entrenas para verte bien.", "Entrenas para ser imparable."],
     sub: "Cada pieza diseñada para acompañarte — desde el primer rep hasta el último.",
@@ -27,19 +27,27 @@ const SLIDES = [
   },
 ];
 
+const SWIPE_THRESHOLD_PX = 50;
+
 interface Props {
   imageUrls: string[];
 }
 
 export function BrandStatementCarousel({ imageUrls }: Props) {
+  // Una diapositiva por deportista: toda foto nueva del bucket aparece sola.
+  // Las frases se repiten en ciclo si hay más fotos que frases.
+  const slideCount = Math.max(PHRASES.length, imageUrls.length);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeRef = useRef(0);
   const animatingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const slideEls = useRef<(HTMLDivElement | null)[]>([]);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
+  // Desfasado una foto respecto al hero, que arranca con la primera
+  const imageIndex = (i: number) => (i + 1) % imageUrls.length;
   const getImage = (i: number) =>
-    imageUrls.length ? imageUrls[i % imageUrls.length] : null;
+    imageUrls.length ? imageUrls[imageIndex(i)] : null;
 
   const transitionTo = useCallback((next: number) => {
     if (animatingRef.current || next === activeRef.current) return;
@@ -76,8 +84,8 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
   }, []);
 
   const advance = useCallback(() => {
-    transitionTo((activeRef.current + 1) % SLIDES.length);
-  }, [transitionTo]);
+    transitionTo((activeRef.current + 1) % slideCount);
+  }, [transitionTo, slideCount]);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -108,17 +116,40 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
     resetTimer();
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    // Solo gestos horizontales: el scroll vertical de la página no cambia de slide
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) return;
+    handleNav((activeRef.current + (dx < 0 ? 1 : -1) + slideCount) % slideCount);
+  };
+
   return (
-    <section className="relative bg-[#111111] overflow-hidden">
+    <section
+      className="relative bg-[#111111] overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="absolute top-0 inset-x-0 h-px bg-crimson z-10" />
 
       {/*
-        min-h-[62vh] on every slide guarantees identical section height across all slides.
-        The image column fills that height minus py-12 padding → all images are exactly
-        the same pixel height regardless of their intrinsic dimensions.
+        Todas las diapositivas comparten la misma celda del grid: la sección toma
+        la altura de la más alta, así no salta de tamaño al cambiar.
+        Celular: foto arriba a todo el ancho, frase debajo.
+        Escritorio (md+): foto y frase lado a lado, alternando el lado.
       */}
       <div className="grid">
-        {SLIDES.map((slide, i) => {
+        {Array.from({ length: slideCount }, (_, i) => {
+          const phrase = PHRASES[i % PHRASES.length];
           const img = getImage(i);
           const imageLeft = i % 2 === 1;
 
@@ -126,29 +157,29 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
             <div
               key={i}
               ref={(el) => { slideEls.current[i] = el; }}
-              className="col-start-1 row-start-1 flex min-h-[62vh]"
+              className="col-start-1 row-start-1 flex flex-col md:flex-row md:min-h-[62vh]"
               style={{ opacity: 0, zIndex: 0 }}
             >
               {/* ── Text column ── */}
               <div
-                className={`flex-1 flex items-center px-8 md:px-14 lg:px-20 py-16 ${
-                  imageLeft ? "order-2" : "order-1"
+                className={`flex-1 flex items-center px-6 md:px-14 lg:px-20 pt-8 pb-16 md:py-16 order-2 ${
+                  imageLeft ? "md:order-2" : "md:order-1"
                 }`}
               >
-                <div className={`w-full ${imageLeft ? "text-right" : "text-left"}`}>
+                <div className={`w-full text-left ${imageLeft ? "md:text-right" : ""}`}>
                   <p
                     data-t
-                    className="font-anantason text-[10px] tracking-[0.6em] text-crimson uppercase mb-10"
+                    className="font-anantason text-[10px] tracking-[0.6em] text-crimson uppercase mb-6 md:mb-10"
                   >
                     MANIFIESTO
                   </p>
 
                   <div className="space-y-1 overflow-hidden">
-                    {slide.lines.map((line, j) => (
+                    {phrase.lines.map((line, j) => (
                       <p
                         key={j}
                         data-t
-                        className="font-heading text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight text-white uppercase"
+                        className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight text-white uppercase"
                       >
                         {line}
                       </p>
@@ -157,52 +188,52 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
 
                   <p
                     data-t
-                    className={`font-body text-sm text-white/50 leading-relaxed mt-10 max-w-xs ${
-                      imageLeft ? "ml-auto" : "mr-auto"
+                    className={`font-body text-sm text-white/50 leading-relaxed mt-6 md:mt-10 max-w-xs ${
+                      imageLeft ? "md:ml-auto" : ""
                     }`}
                   >
-                    {slide.sub}
+                    {phrase.sub}
                   </p>
                 </div>
               </div>
 
               {/* ── Image column ── */}
-              <div
-                className={`hidden md:flex flex-col flex-shrink-0 w-[42%] lg:w-[44%] py-10 md:py-14 ${
-                  imageLeft ? "order-1" : "order-2"
-                }`}
-              >
-                {img ? (
-                  /* flex-1 fills the height set by py-10/14 padding above */
+              {img && (
+                <div
+                  className={`flex flex-col flex-shrink-0 w-full h-[55svh] order-1 md:h-auto md:w-[42%] lg:w-[44%] md:py-14 ${
+                    imageLeft ? "md:order-1" : "md:order-2"
+                  }`}
+                >
                   <div className="relative flex-1 overflow-hidden">
                     <Image
                       src={img}
-                      alt={`Atleta ${i + 1}`}
+                      alt={`Deportista Bull Weightlifting ${imageIndex(i) + 1}`}
                       fill
-                      className="object-cover object-top"
-                      priority={i === 0}
-                      sizes="44vw"
+                      className="object-cover object-[center_30%]"
+                      sizes="(max-width: 767px) 100vw, 44vw"
                     />
-                    {/* Soft edge fade toward the text column */}
+                    {/* Celular: fundido hacia la frase de abajo */}
+                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#111111] to-transparent md:hidden" />
+                    {/* Escritorio: fundido hacia la columna de texto */}
                     <div
-                      className={`absolute inset-y-0 w-20 ${
+                      className={`hidden md:block absolute inset-y-0 w-20 ${
                         imageLeft
                           ? "right-0 bg-gradient-to-r from-transparent to-[#111111]"
                           : "left-0 bg-gradient-to-l from-transparent to-[#111111]"
                       }`}
                     />
                   </div>
-                ) : null}
-              </div>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Prev arrow */}
+      {/* Flechas: solo en pantallas medianas+; en celular se desliza con el dedo */}
       <button
-        onClick={() => handleNav((activeRef.current - 1 + SLIDES.length) % SLIDES.length)}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
+        onClick={() => handleNav((activeRef.current - 1 + slideCount) % slideCount)}
+        className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
         aria-label="Anterior"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -210,10 +241,9 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
         </svg>
       </button>
 
-      {/* Next arrow */}
       <button
-        onClick={() => handleNav((activeRef.current + 1) % SLIDES.length)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
+        onClick={() => handleNav((activeRef.current + 1) % slideCount)}
+        className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 items-center justify-center text-white/40 hover:text-white transition-colors duration-200"
         aria-label="Siguiente"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -222,18 +252,21 @@ export function BrandStatementCarousel({ imageUrls }: Props) {
       </button>
 
       {/* Navigation dots */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-        {SLIDES.map((_, i) => (
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1">
+        {Array.from({ length: slideCount }, (_, i) => (
           <button
             key={i}
             onClick={() => handleNav(i)}
             aria-label={`Slide ${i + 1}`}
-            className={`block h-px transition-all duration-300 ${
-              i === activeIndex
-                ? "w-10 bg-crimson"
-                : "w-5 bg-white/30 hover:bg-white/60"
-            }`}
-          />
+            aria-current={i === activeIndex}
+            className="py-3 px-1"
+          >
+            <span
+              className={`block h-px transition-all duration-300 ${
+                i === activeIndex ? "w-10 bg-crimson" : "w-5 bg-white/30 hover:bg-white/60"
+              }`}
+            />
+          </button>
         ))}
       </div>
 

@@ -6,7 +6,7 @@ proyecto: "[[proyectos/bull-weightlifting]]"
 
 # STATE — Bull Weightlifting
 
-> Última actualización: 2026-10-17
+> Última actualización: 2026-11-07 — PR #36 con CI y Vercel en verde, ver [[diario/2026-11-07]]
 > Ver historial completo en [[diario/2026-05-04]] | anteriores: [[diario/2026-05-03]] [[diario/2026-04-17]]
 
 ---
@@ -189,7 +189,8 @@ El app está desplegada en Vercel. Migraciones 014–017 ejecutadas. Inventario 
 
 **Alta prioridad (hacer antes del deploy)**
 - [x] **[CN-006/007]** Migrado `xlsx` → `exceljs` — `orders/route.ts` reescrito, `serverExternalPackages` limpio. **Falta ejecutar: `npm uninstall xlsx && npm install exceljs`**
-- [ ] **[CN-008]** `npm audit fix` — parchea vulnerabilidad DoS en `next@16.2.2`. **Ejecutar manualmente en rama separada con testing**
+- [x] **[CN-008]** `npm audit fix` aplicado 2026-11-07 (next 16.4.5, 0 high/critical) — ver [[diario/2026-11-07]]
+- [ ] **Docs legales** en `borrador` → pasarlos a `vigente` (revisión legal) o el build de producción se aborta
 - [x] **[CN-004]** Open redirect en auth callback — `src/app/api/auth/callback/route.ts` — `safePath` con regex `^\/(?!\/)` antes del redirect
 - [x] **[CN-005]** Monto capturado de PayPal verificado contra `totalUSD` del cookie (tolerancia ±$0.02) — `paypal.ts` + `checkout.ts`
 

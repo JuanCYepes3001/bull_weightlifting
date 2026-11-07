@@ -164,7 +164,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <p className="font-body text-sm text-white/30">Sin variantes disponibles.</p>
         )}
 
-        {/* Personalización (solo Trusa Clásica Personalizada) */}
+        {/* Personalización (solo trusas personalizadas, ver lib/customization.ts) */}
         {isCustomizable && <TrusasCustomizer />}
 
         {/* Botón agregar */}

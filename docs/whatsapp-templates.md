@@ -112,9 +112,22 @@ Te avisaremos por este medio cada avance de tu pedido.
 
 ### 5.2 `bull_pedido_confirmado_personalizacion`
 
-Igual que la anterior, pero se usa **solo cuando el pedido incluye la Trusa
-Clásica Personalizada** (slug `trusaclasicapersonalizada`, ver
-`src/lib/customization.ts`).
+Igual que la anterior, pero se usa **solo cuando el pedido incluye una trusa
+personalizada**: Clásica, Mangas o Albornoz (ver `src/lib/customization.ts`).
+
+Cuándo se envía (siempre después de que el cliente pagó):
+- **Wompi / PayPal:** cuando la pasarela aprueba el pago.
+- **Nequi / Daviplata / Dollar App / Global66:** cuando el admin verifica el
+  pago y pasa el pedido de *pendiente* a *en preparación*. En ese caso
+  reemplaza al aviso `bull_pedido_actualizacion` de "En preparación", y {{3}}
+  dice `Pago confirmado, en preparación`.
+- **Contra entrega:** al confirmar el pedido (se paga al recibir, pero la
+  trusa hay que fabricarla antes de enviarla).
+
+> ⚠️ El texto fijo debe hablar de "una trusa personalizada", no de un modelo
+> concreto: el mismo mensaje sirve para los 3 modelos (el modelo exacto ya va
+> en {{4}}). Si la plantilla ya se envió a Meta con "Trusa Clásica
+> Personalizada", hay que editarla y reenviarla a aprobación.
 
 ```
 Hola {{1}}, gracias por tu compra en Bull Weightlifting.
@@ -126,13 +139,13 @@ Total: {{5}}
 Método de pago: {{6}}
 Envío a: {{7}}
 
-Tu pedido incluye una Trusa Clásica Personalizada. Por favor responde a este mensaje describiendo cómo la quieres: nombre, número, diseño y color del estampado. Una persona de nuestro equipo se pondrá en contacto contigo para confirmar el proceso de personalización.
+Tu pedido incluye una trusa personalizada. Por favor responde a este mensaje describiendo cómo la quieres: nombre, número, diseño y color del estampado. Una persona de nuestro equipo se pondrá en contacto contigo para confirmar el proceso de personalización.
 
 Te avisaremos por este medio cada avance de tu pedido.
 ```
 
 Las variables son las mismas de 5.1. Ejemplo de {{4}}:
-`Trusa Clasica Personalizada (M / Negro) x1`.
+`Trusa Mangas Personalizada (M / PERSONALIZADO) x1`.
 
 ### 5.3 `bull_pedido_actualizacion`
 

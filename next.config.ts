@@ -19,6 +19,11 @@ const ContentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/personalizacion", destination: "/products?q=personalizada", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { checkLegalDocuments } from "./scripts/check-legal-docs.cjs";
 
 // Content-Security-Policy
 // Note: 'unsafe-inline' is required for Next.js App Router (React hydration inline scripts).
@@ -9,8 +11,8 @@ const ContentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://source.unsplash.com https://www.paypal.com https://www.paypalobjects.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://api.mercadopago.com",
-  "frame-src https://www.paypal.com https://www.sandbox.paypal.com https://www.mercadopago.com https://www.mercadopago.com.co https://www.mercadopago.com.ar",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com",
+  "frame-src https://www.paypal.com https://www.sandbox.paypal.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -55,4 +57,24 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Guard: en producción, los documentos legales deben estar "vigente".
+// Se restringe a la fase de build (no a `next start` / runtime del server)
+// chequeando `phase`, que Next.js pasa siempre a esta función — así el
+// guard nunca puede tumbar la app ya desplegada, solo el build.
+// Los previews de Vercel (PRs) se excluyen: deben poder desplegarse con
+// documentos en borrador para revisarlos antes de aprobarlos.
+export default function config(phase: string): NextConfig {
+  const isVercelPreview =
+    process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "development";
+  if (phase === PHASE_PRODUCTION_BUILD && !isVercelPreview) {
+    const { ok, errors } = checkLegalDocuments();
+    if (!ok) {
+      console.error("✗ Guard de documentos legales falló — build abortado:\n");
+      errors.forEach((e) => console.error(`  - ${e}`));
+      throw new Error(
+        "Documentos legales no aprobados para producción. Ver detalle arriba."
+      );
+    }
+  }
+  return nextConfig;
+}

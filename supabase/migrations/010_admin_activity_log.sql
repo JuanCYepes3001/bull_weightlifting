@@ -5,7 +5,7 @@
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS admin_activity_log (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   admin_name  TEXT NOT NULL DEFAULT 'Admin',
   action      TEXT NOT NULL,        -- 'product_created', 'product_updated', 'product_deleted', 'stock_updated', 'offer_applied', 'bulk_deleted'

@@ -74,7 +74,7 @@ export default async function InventoryPage() {
         <p className="font-body text-[9px] tracking-[0.4em] uppercase text-white/20 px-1">
           Filtros de productos
         </p>
-        <CategoryManager categories={categories as any} />
+        <CategoryManager categories={categories} />
       </div>
 
       {/* Collection section (empty — for future campaigns/seasons) */}
@@ -96,7 +96,9 @@ export default async function InventoryPage() {
       </div>
 
       {/* Product inventory manager */}
-      <InventoryManager products={products as any} />
+      <InventoryManager
+        products={products.map((p) => ({ ...p, variants: p.variants ?? [] }))}
+      />
     </div>
   );
 }

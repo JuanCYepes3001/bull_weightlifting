@@ -4,9 +4,14 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsApp, buildOrderConfirmationMessage } from "@/lib/whatsapp";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
+import { buildWompiCheckoutUrl, isWompiConfigured } from "@/lib/wompi";
+import { expireStaleWompiOrders } from "@/lib/payments";
+import { normalizeWhatsAppNumber } from "@/lib/phone";
+import { isCustomizableProduct } from "@/lib/customization";
 
 export interface CheckoutItem {
   variantId: string;
@@ -30,14 +35,28 @@ export interface ShippingAddress {
 
 export type CheckoutResult = { error: string } | { orderId: string };
 
-// All accepted payment methods — any other value is rejected before hitting the DB
+// All accepted payment methods — any other value is rejected before hitting the DB.
+// "simulado" creates an "approved" order without charging anything, so it's
+// excluded outside development — otherwise anyone could drain real stock
+// without paying.
 const VALID_PAYMENT_METHODS = new Set([
-  "nequi", "daviplata", "dollar_app", "global66",
-  "contraentrega", "simulado",
+  "nequi", "daviplata", "dollar_app", "global66", "contraentrega",
+  ...(process.env.NODE_ENV === "production" ? [] : ["simulado"]),
 ]);
 
 // Payment methods that require manual verification before fulfillment
 const MANUAL_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"]);
+
+const INVALID_WHATSAPP_ERROR =
+  "Ingresa un número de WhatsApp válido (ej: 3001234567, o +1 5551234567 si es internacional).";
+
+// The WhatsApp number is mandatory for every order: confirmation, order
+// progress and trusa personalization are all handled through it. Stored
+// normalized (E.164) so lib/whatsapp.ts can send to international numbers.
+function withValidWhatsApp(shipping: ShippingAddress): ShippingAddress | null {
+  const phone = normalizeWhatsAppNumber(shipping.phone ?? "");
+  return phone ? { ...shipping, phone } : null;
+}
 
 /* ─── Shared: create DB order ──────────────────────────── */
 
@@ -45,7 +64,12 @@ const MANUAL_METHODS = new Set(["nequi", "daviplata", "dollar_app", "global66"])
 type VariantWithPrice = {
   id: string;
   stock: number;
-  products: { price: number; is_on_sale: boolean; sale_price: number | null } | null;
+  products: {
+    price: number;
+    is_on_sale: boolean;
+    sale_price: number | null;
+    slug?: string;
+  } | null;
 };
 
 async function insertOrder(
@@ -53,8 +77,11 @@ async function insertOrder(
   shipping: ShippingAddress,
   paymentMethod: string,
   paymentId: string,
-  paymentStatus: string
-): Promise<{ orderId: string } | { error: string }> {
+  paymentStatus: string,
+  // false for gateway payments still awaiting a result — the confirmation is
+  // sent by lib/payments.ts once the gateway approves the payment
+  notify = true
+): Promise<{ orderId: string; total: number; email: string | null } | { error: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -65,10 +92,14 @@ async function insertOrder(
   const variantIds = items.map((i) => i.variantId);
   const { data: variants, error: stockError } = await supabase
     .from("product_variants")
-    .select("id, stock, products(price, is_on_sale, sale_price)")
+    .select("id, stock, products(price, is_on_sale, sale_price, slug)")
     .in("id", variantIds);
 
   if (stockError || !variants) return { error: "Error al verificar disponibilidad" };
+
+  const needsCustomization = (variants as VariantWithPrice[]).some((v) =>
+    isCustomizableProduct(v.products?.slug)
+  );
 
   // Build server-side price map from DB values
   const priceMap = new Map<string, number>();
@@ -96,7 +127,9 @@ async function insertOrder(
   // Single transactional RPC: inserts order + order_items + decrements stock
   // atomically. Any failure (network, insufficient stock, constraint) rolls back
   // everything — no orphan orders, no inconsistent stock (fixes #5 and #6).
-  const { data: orderId, error: orderError } = await supabase.rpc("create_order", {
+  // Runs with the service role: create_order is not callable by end users
+  // (migration 020), so nobody can forge an "approved" order from the browser.
+  const { data: orderId, error: orderError } = await createAdminClient().rpc("create_order", {
     p_user_id: user.id,
     p_status: "pending",
     p_total: total,
@@ -122,12 +155,14 @@ async function insertOrder(
   }
 
   const order = { id: orderId as string };
+  const email = user.email ?? null;
+  if (!notify) return { orderId: order.id, total, email };
 
   // Non-blocking notifications — after() ensures these run after the response/redirect
   after(async () => {
     await sendWhatsApp(
       shipping.phone,
-      buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping })
+      buildOrderConfirmationMessage({ orderId: order.id, items, total, paymentMethod, shipping, needsCustomization })
     );
     if (user && "email" in user && user.email) {
       await sendOrderConfirmationEmail({
@@ -141,7 +176,7 @@ async function insertOrder(
     }
   });
 
-  return { orderId: order.id };
+  return { orderId: order.id, total, email };
 }
 
 /* ─── Standard checkout (Nequi / Daviplata / COD / Simulado) */
@@ -154,6 +189,8 @@ export async function createOrderAction(
   if (!items.length) return { error: "El carrito está vacío" };
   if (!VALID_PAYMENT_METHODS.has(paymentMethod))
     return { error: "Método de pago no válido." };
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
 
   const isManual = MANUAL_METHODS.has(paymentMethod);
   const paymentStatus = isManual
@@ -164,7 +201,7 @@ export async function createOrderAction(
 
   const result = await insertOrder(
     items,
-    shipping,
+    validShipping,
     paymentMethod,
     `${paymentMethod.toUpperCase()}-${Date.now()}`,
     paymentStatus
@@ -186,6 +223,9 @@ export async function createPayPalOrderAction(
   if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
     return { error: "PayPal no está configurado en este servidor." };
   }
+  // Validated before charging: a bad number must never surface after capture
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
 
   // Re-fetch canonical prices from DB — client-supplied prices are never trusted
   const supabase = await createClient();
@@ -222,7 +262,7 @@ export async function createPayPalOrderAction(
     const jar = await cookies();
     jar.set(
       "paypal_pending",
-      JSON.stringify({ items, shipping, paypalOrderId, totalUSD }),
+      JSON.stringify({ items, shipping: validShipping, paypalOrderId, totalUSD }),
       { maxAge: 60 * 15, httpOnly: true, sameSite: "lax", path: "/" }
     );
 
@@ -277,4 +317,53 @@ export async function finalizePayPalOrderAction(
   } catch {
     return { error: "Error al capturar el pago de PayPal." };
   }
+}
+
+/* ─── Wompi (tarjeta / PSE / Nequi) ─────────────────────────
+ * 1. Creates the order with stock reserved and payment_status "wompi_pending".
+ * 2. Returns the signed Wompi checkout URL; the customer pays there.
+ * 3. Wompi redirects to /checkout/wompi-return and notifies
+ *    /api/webhooks/wompi — both apply the result via lib/payments.ts.
+ */
+
+const WOMPI_LINK_TTL_MS = 60 * 60 * 1000;
+
+export async function createWompiCheckoutAction(
+  items: CheckoutItem[],
+  shipping: ShippingAddress
+): Promise<{ checkoutUrl: string } | { error: string }> {
+  if (!items.length) return { error: "El carrito está vacío" };
+  if (!isWompiConfigured()) {
+    return { error: "El pago con tarjeta / PSE no está configurado en este servidor." };
+  }
+  const validShipping = withValidWhatsApp(shipping);
+  if (!validShipping) return { error: INVALID_WHATSAPP_ERROR };
+
+  const reference = `WOMPI-${crypto.randomUUID()}`;
+  const result = await insertOrder(items, validShipping, "wompi", reference, "wompi_pending", false);
+  if ("error" in result) return result;
+
+  // Housekeeping: release stock held by abandoned Wompi checkouts
+  after(async () => {
+    try {
+      await expireStaleWompiOrders();
+    } catch (err) {
+      console.error("[Wompi] Expiry job failed:", err);
+    }
+  });
+
+  const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+  const checkoutUrl = buildWompiCheckoutUrl({
+    reference,
+    amountInCents: Math.round(result.total * 100),
+    redirectUrl: `${siteUrl}/checkout/wompi-return`,
+    expiresAt: new Date(Date.now() + WOMPI_LINK_TTL_MS),
+    customer: {
+      email: result.email ?? undefined,
+      fullName: validShipping.full_name,
+      phone: validShipping.phone,
+    },
+  });
+
+  return { checkoutUrl };
 }

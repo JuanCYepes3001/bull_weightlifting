@@ -114,7 +114,8 @@ export async function GET(request: NextRequest) {
 
   const itemsByOrder = new Map<string, { name: string; qty: number }[]>();
   for (const item of itemsRes.data ?? []) {
-    const name = (item.variant as any)?.product?.name ?? "?";
+    const variant = item.variant as unknown as { product: { name: string } | null } | null;
+    const name = variant?.product?.name ?? "?";
     if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
     itemsByOrder.get(item.order_id)!.push({ name, qty: item.quantity });
   }

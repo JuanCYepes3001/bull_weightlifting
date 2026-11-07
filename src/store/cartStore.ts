@@ -2,17 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /* ── Tipos locales del carrito (sin depender de la DB) ─── */
-export interface CartCustomization {
-  name?: string;      // nombre estampado en la prenda
-  number?: string;    // número estampado
-  printColor?: string; // color del estampado
-  design?: string;    // estilo de diseño: "clasico" | "bull" | "minimalista"
-  // Medidas personalizadas (opcional, para talla custom)
-  chest?: string;     // pecho en cm
-  hip?: string;       // cadera en cm
-  torso?: string;     // largo de tronco en cm
-}
-
+// Las trusas personalizables entran como un ítem normal a precio fijo: la
+// personalización se acuerda por WhatsApp después del pago (lib/customization.ts).
 export interface LocalCartItem {
   variantId: string;
   productId: string;
@@ -24,7 +15,6 @@ export interface LocalCartItem {
   imageUrl: string | null;
   quantity: number;
   maxStock?: number; // stock available at the time of adding — used for client-side limit
-  customization?: CartCustomization;
 }
 
 interface CartStore {

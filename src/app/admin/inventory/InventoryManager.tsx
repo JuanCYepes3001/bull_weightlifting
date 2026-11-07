@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import Image from "next/image";
 import {
   ChevronDown,
   ChevronUp,
@@ -344,11 +345,15 @@ function ProductRow({ product }: { product: Product }) {
         <td className="px-4 py-3">
           <div className="flex items-center gap-3">
             {product.images?.[0]?.url ? (
-              <img
-                src={product.images[0].url}
-                alt={product.name}
-                className="w-9 h-11 object-cover flex-shrink-0 bg-white/5"
-              />
+              <div className="relative w-9 h-11 flex-shrink-0 bg-white/5">
+                <Image
+                  src={product.images[0].url}
+                  alt={product.name}
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="w-9 h-11 bg-white/5 flex-shrink-0" />
             )}

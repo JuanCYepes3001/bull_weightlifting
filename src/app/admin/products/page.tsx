@@ -40,14 +40,14 @@ export default async function AdminProductsPage({
       )}
 
       <AdminProductFilters
-        categories={categories as any}
+        categories={categories}
         search={search}
         categoryId={category}
         status={status}
         total={products.length}
       />
 
-      <AdminProductsTable products={products as any} lowStockIds={lowStockProductIds} />
+      <AdminProductsTable products={products} lowStockIds={lowStockProductIds} />
     </div>
   );
 }

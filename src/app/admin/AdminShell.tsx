@@ -12,24 +12,14 @@ interface AdminShellProps {
   children: React.ReactNode;
 }
 
-export function AdminShell({ adminName, children }: AdminShellProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname();
-
-  // Close the mobile drawer on route change.
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  // Lock body scroll while the mobile drawer is open.
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuOpen]);
-
-  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+function NavLinks({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
     <>
       {adminNav.map(({ label, href, icon: Icon }) => {
         const active = pathname.startsWith(href);
@@ -53,6 +43,27 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
       })}
     </>
   );
+}
+
+export function AdminShell({ adminName, children }: AdminShellProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the mobile drawer on route change (adjusted during render, not in
+  // an effect, to avoid the extra commit a useEffect-based reset would cause).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMenuOpen(false);
+  }
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
   return (
     <div className="lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#0D0D0D]">
@@ -75,7 +86,7 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 top-14 z-30 bg-[#0D0D0D]/98 backdrop-blur-md overflow-y-auto">
           <nav className="px-3 py-4 space-y-1">
-            <NavLinks onNavigate={() => setMenuOpen(false)} />
+            <NavLinks pathname={pathname} onNavigate={() => setMenuOpen(false)} />
           </nav>
           <div className="px-5 py-6 border-t border-white/5 space-y-4">
             <Link
@@ -114,7 +125,7 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
         </Link>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          <NavLinks />
+          <NavLinks pathname={pathname} />
         </nav>
 
         <div className="px-5 py-6 border-t border-white/5 space-y-4">

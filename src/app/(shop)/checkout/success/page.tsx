@@ -76,6 +76,26 @@ function getMethodInfo(method: string | null): MethodInfo | null {
           "Procederemos a preparar y despachar tu pedido.",
         ],
       };
+    case "wompi":
+      return {
+        title: "Pago aprobado — Wompi",
+        isPending: false,
+        steps: [
+          "Tu pago fue aprobado y confirmado por Wompi.",
+          "Recibirás la confirmación de tu pedido por correo y WhatsApp.",
+          "Procederemos a preparar y despachar tu pedido.",
+        ],
+      };
+    case "wompi_pending":
+      return {
+        title: "Pago en proceso — Wompi",
+        isPending: true,
+        steps: [
+          "Tu banco aún está confirmando el pago (común en PSE).",
+          "No necesitas hacer nada más: el pedido se actualizará automáticamente.",
+          "Puedes ver el estado en \"Mis órdenes\". Si el pago es rechazado, el pedido se cancelará sin cobro.",
+        ],
+      };
     default:
       return null;
   }
@@ -108,7 +128,9 @@ export default function CheckoutSuccessPage() {
         <h1 className="text-3xl md:text-4xl text-white">¡ORDEN CONFIRMADA!</h1>
         <p className="font-body text-sm text-white/40 max-w-sm mx-auto mt-3">
           {methodInfo?.isPending
-            ? "Tu pedido fue registrado. Completa el pago siguiendo las instrucciones de abajo."
+            ? method === "wompi_pending"
+              ? "Tu pedido fue registrado. Estamos esperando la confirmación de tu banco."
+              : "Tu pedido fue registrado. Completa el pago siguiendo las instrucciones de abajo."
             : "Tu pedido fue registrado y el pago procesado exitosamente."}
         </p>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { X, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -198,14 +199,19 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
 
               {/* Preview */}
               {img.url && !row.uploading && (
-                <img
-                  src={img.url}
-                  alt=""
-                  className="w-12 h-14 object-cover border border-white/10 flex-shrink-0"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.visibility = "hidden";
-                  }}
-                />
+                <div className="relative w-12 h-14 border border-white/10 flex-shrink-0">
+                  <Image
+                    src={img.url}
+                    alt=""
+                    fill
+                    sizes="48px"
+                    unoptimized
+                    className="object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.visibility = "hidden";
+                    }}
+                  />
+                </div>
               )}
 
               {/* Remove */}

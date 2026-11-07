@@ -401,6 +401,77 @@ export type Database = {
           }
         ];
       };
+      legal_documents: {
+        Row: {
+          id: string;
+          slug: string;
+          version: number;
+          title: string;
+          status: "borrador" | "vigente" | "archivado";
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          version: number;
+          title: string;
+          status?: "borrador" | "vigente" | "archivado";
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          version?: number;
+          title?: string;
+          status?: "borrador" | "vigente" | "archivado";
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      legal_acceptances: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          user_email: string;
+          document_id: string;
+          accepted_at: string;
+          ip_address: string | null;
+          user_agent: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          user_email: string;
+          document_id: string;
+          accepted_at?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          user_email?: string;
+          document_id?: string;
+          accepted_at?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "legal_acceptances_document_id_fkey";
+            columns: ["document_id"];
+            isOneToOne: false;
+            referencedRelation: "legal_documents";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<never, never>;
     CompositeTypes: Record<never, never>;
@@ -425,6 +496,10 @@ export type Database = {
         Args: { p_variant_id: string; p_qty: number };
         Returns: void;
       };
+      expire_products_offers: {
+        Args: Record<never, never>;
+        Returns: void;
+      };
       create_order: {
         Args: {
           p_user_id: string;
@@ -438,11 +513,16 @@ export type Database = {
         };
         Returns: string; // order UUID
       };
+      apply_payment_result: {
+        Args: { p_payment_id: string; p_result: "approved" | "declined"; p_amount: number | null };
+        Returns: "approved" | "declined" | "amount_mismatch" | "noop" | "not_found";
+      };
     };
     Enums: {
       user_role: "user" | "admin";
       gender_type: "hombre" | "mujer" | "unisex";
       order_status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+      legal_document_status: "borrador" | "vigente" | "archivado";
     };
   };
 };

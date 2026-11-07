@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo, useEffect } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, ExternalLink, ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -107,10 +107,15 @@ export default function OrdersClient({
   const [search, setSearch] = useState("");
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
 
-  useEffect(() => {
+  // Reset local state when the server hands us a new order list (e.g. after
+  // switching status tabs). Adjusted during render, not in an effect, per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-based-on-a-prop-change
+  const [prevInitialOrders, setPrevInitialOrders] = useState(initialOrders);
+  if (initialOrders !== prevInitialOrders) {
+    setPrevInitialOrders(initialOrders);
     setOrders(initialOrders);
     setSearch("");
-  }, [initialOrders]);
+  }
 
   const filtered = useMemo(() => {
     if (!search.trim()) return orders;

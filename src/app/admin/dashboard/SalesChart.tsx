@@ -87,7 +87,7 @@ function BarChart({
 
   return (
     <div className="flex items-end gap-[2px] h-20 w-full">
-      {data.map((d, i) => {
+      {data.map((d) => {
         const pct = (d[metric] / max) * 100;
         return (
           <div key={d.date} className="flex-1 flex flex-col items-center justify-end h-full group relative">

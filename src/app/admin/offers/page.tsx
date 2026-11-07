@@ -26,7 +26,7 @@ export default async function AdminOffersPage() {
           <h1 className="text-2xl text-white">OFERTAS ACTIVAS</h1>
         </div>
         <div className="flex items-center gap-4">
-          <BulkOfferManager products={allProducts as any} categories={categories} />
+          <BulkOfferManager products={allProducts} categories={categories} />
           <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-sm">
             <Tag size={14} className="text-crimson" />
             <span className="font-body text-xs text-white/60 uppercase tracking-widest">
@@ -76,7 +76,7 @@ export default async function AdminOffersPage() {
                 </td>
               </tr>
             ) : (
-              offers.map((product: any) => (
+              offers.map((product) => (
                 <AdminProductRow key={product.id} product={product} />
               ))
             )}

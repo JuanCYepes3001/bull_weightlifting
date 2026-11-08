@@ -1,17 +1,15 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BrandStatementCarousel } from "./BrandStatementCarousel";
 
-export async function BrandStatement() {
+// Fotos de deportistas del bucket `athletes`: subir una imagen ahí basta para
+// que aparezca en el hero y en el carrusel de la home.
+export async function getAthleteImageUrls(): Promise<string[]> {
   const supabase = createAdminClient();
-
   const { data: files } = await supabase.storage.from("athletes").list("", {
-    limit: 20,
+    limit: 30,
     sortBy: { column: "name", order: "asc" },
   });
 
-  const imageUrls = (files ?? [])
+  return (files ?? [])
     .filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f.name))
     .map((f) => supabase.storage.from("athletes").getPublicUrl(f.name).data.publicUrl);
-
-  return <BrandStatementCarousel imageUrls={imageUrls} />;
 }

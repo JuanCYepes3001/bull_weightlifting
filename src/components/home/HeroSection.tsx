@@ -6,13 +6,17 @@ import { ArrowDown } from "lucide-react";
 import gsap from "gsap";
 import { Button } from "@/components/ui/Button";
 import { BullMark } from "@/components/ui/BullMark";
+import { cn } from "@/utils/cn";
+import { HeroAthletes } from "./HeroAthletes";
 
 interface HeroSectionProps {
   isAuthenticated: boolean;
   userName?: string | null;
+  athleteImages?: string[];
 }
 
-export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
+export function HeroSection({ isAuthenticated, userName, athleteImages = [] }: HeroSectionProps) {
+  const hasPhotos = athleteImages.length > 0;
   const heroRef = useRef<HTMLElement>(null);
   const bullRef = useRef<HTMLHeadingElement>(null);
   const weightRef = useRef<HTMLParagraphElement>(null);
@@ -129,8 +133,10 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       // Guardamos computedBullSize para uso si es necesario
       setComputedBullSize(best);
 
-      // Ajustar tamaño del mark: que sea grande y llamativo, proporción respecto al ancho objetivo
-      const mark = Math.min(520, Math.max(64, Math.floor(targetW * 0.45)));
+      // Ajustar tamaño del mark: que sea grande y llamativo, proporción respecto al ancho objetivo.
+      // Con fotos de fondo en celular se limita para no tapar al deportista.
+      const maxMark = hasPhotos && window.innerWidth < 1024 ? 72 : 520;
+      const mark = Math.min(maxMark, Math.max(56, Math.floor(targetW * 0.45)));
       setComputedMarkSize(mark);
     }
 
@@ -146,13 +152,19 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       ro.disconnect();
       window.removeEventListener("resize", fitBullToWeight);
     };
-  }, []);
+  }, [hasPhotos]);
 
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className={cn(
+        "relative min-h-[100svh] flex flex-col items-center overflow-hidden",
+        // pt-20: el contenido nunca queda debajo del navbar fijo (celular horizontal)
+        hasPhotos ? "justify-end pt-20 pb-20 lg:justify-center lg:pb-0" : "justify-center"
+      )}
     >
+      <HeroAthletes images={athleteImages} />
+
       {/* ── Fondo fantasma BULL (watermark) — Horizon Bull ── */}
       <span
         className="absolute select-none pointer-events-none font-heading text-[28vw] leading-none text-white/[0.015] tracking-widest top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -173,10 +185,16 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       </div>
 
       {/* ── Contenido principal ── */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4">
+      <div
+        className={cn(
+          "relative z-10 flex flex-col items-center text-center px-4",
+          hasPhotos && "w-full lg:w-[54%] lg:self-start [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]"
+        )}
+      >
 
         {/* Ícono de marca — reemplazar con SVG oficial */}
-        <div className="hero-mark mb-4 md:mb-6">
+        {/* En pantallas muy bajas (celular horizontal) el ícono no cabe junto al resto */}
+        <div className="hero-mark mb-4 md:mb-6 [@media(max-height:500px)]:hidden">
           <BullMark size={computedMarkSize ?? 140} />
         </div>
 
@@ -202,12 +220,22 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
         <div className="hero-line w-full max-w-xs md:max-w-md h-px bg-crimson mt-6 mb-4" />
 
         {/* Tagline — Arimo, cuerpo de texto */}
-        <p className="hero-tagline font-body text-xs text-white/30 tracking-[0.3em] uppercase">
+        <p
+          className={cn(
+            "hero-tagline font-body text-xs tracking-[0.3em] uppercase",
+            hasPhotos ? "text-white/60" : "text-white/30"
+          )}
+        >
           El que para, pierde
         </p>
 
         {/* CTAs */}
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center">
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row gap-4 items-center",
+            hasPhotos ? "mt-6 lg:mt-10" : "mt-10"
+          )}
+        >
           {isAuthenticated ? (
             <>
               <Link href="/products" className="hero-cta">
@@ -235,7 +263,12 @@ export function HeroSection({ isAuthenticated, userName }: HeroSectionProps) {
       </div>
 
       {/* ── Scroll indicator — Arimo ── */}
-      <div className="hero-scroll absolute bottom-4 flex flex-col items-center gap-2 text-white/20">
+      <div
+        className={cn(
+          "hero-scroll absolute bottom-4 z-10 flex flex-col items-center gap-2",
+          hasPhotos ? "text-white/40 lg:left-[27%] lg:-translate-x-1/2" : "text-white/20"
+        )}
+      >
         <ArrowDown size={16} />
         <p className="font-body text-[10px] tracking-widest uppercase">Scroll</p>
       </div>

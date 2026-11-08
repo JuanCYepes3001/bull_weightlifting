@@ -69,6 +69,14 @@
     from { transform: scale(1); }
     to   { transform: scale(1.08); }
   }
+
+  /* Franja de texto de la home: el contenido va duplicado, -50% = una vuelta */
+  --animate-marquee: marquee 45s linear infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
 }
 
 /* ─── Base Styles ─────────────────────────────────────── */

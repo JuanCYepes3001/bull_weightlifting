@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { getProductBySlug, getRelatedProducts } from "@/lib/queries/products";
 import { ProductDetailClient } from "@/components/shop/ProductDetailClient";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { displayProductName } from "@/utils/productName";
 import type { Metadata } from "next";
 
 interface ProductPageProps {
@@ -14,9 +15,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { slug } = await params;
   const product = await getProductBySlug(slug).catch(() => null);
   if (!product) return { title: "Producto no encontrado" };
+  const name = displayProductName(product.name);
   return {
-    title: product.name,
-    description: product.description ?? `${product.name} — Bull Weightlifting`,
+    title: name,
+    description: product.description ?? `${name} — Bull Weightlifting`,
   };
 }
 
@@ -40,7 +42,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <span>/</span>
         <Link href="/products" className="hover:text-white transition-colors">Colección</Link>
         <span>/</span>
-        <span className="text-white/60 truncate max-w-[200px]">{product.name}</span>
+        <span className="text-white/60 truncate max-w-[200px]">{displayProductName(product.name)}</span>
       </nav>
 
       {/* Back */}

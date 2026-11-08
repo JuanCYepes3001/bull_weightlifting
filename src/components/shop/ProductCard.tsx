@@ -3,6 +3,7 @@ import type { Product } from "@/types";
 import { getProductImageCandidates } from "@/lib/storage";
 import { isCustomizableProduct } from "@/lib/customization";
 import { ProductImage } from "./ProductImage";
+import { displayProductName } from "@/utils/productName";
 
 interface ProductCardProps {
   product: Product;
@@ -31,13 +32,13 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group flex flex-col border border-white/5 hover:border-crimson/30 transition-colors overflow-hidden"
+      className="group flex min-w-0 flex-col border border-white/5 hover:border-crimson/30 transition-colors overflow-hidden"
     >
       {/* Imagen / placeholder */}
       <div className="relative aspect-[3/4] bg-[#111] overflow-hidden">
         <ProductImage
           candidates={imageCandidates}
-          alt={product.name}
+          alt={displayProductName(product.name)}
           sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-contain transition-transform duration-700 group-hover:scale-105"
         />
@@ -83,8 +84,9 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.category.name}
           </p>
         )}
-        <h3 className="font-heading text-sm tracking-wide text-white uppercase leading-tight line-clamp-2">
-          {product.name}
+        {/* overflow-wrap: nombres sin espacios ("CAMISACOMPRESSION") no deben ensanchar la grilla */}
+        <h3 className="font-heading text-xs sm:text-sm tracking-wide text-white uppercase leading-tight line-clamp-2 [overflow-wrap:anywhere]">
+          {displayProductName(product.name)}
         </h3>
 
         {/* Colores disponibles */}

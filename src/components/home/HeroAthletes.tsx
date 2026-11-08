@@ -38,7 +38,8 @@ export function HeroAthletes({ images }: HeroAthletesProps) {
 
   return (
     <>
-      <div className="absolute inset-0 lg:left-auto lg:w-[46%]" aria-hidden="true">
+      {/* top-16: la foto empieza bajo el navbar (h-16, fondo sólido) y no se recorta */}
+      <div className="absolute inset-x-0 top-16 bottom-0 lg:left-auto lg:w-[46%]" aria-hidden="true">
         {images.slice(0, mountedCount).map((src, i) => (
           <div
             key={src}
@@ -62,7 +63,6 @@ export function HeroAthletes({ images }: HeroAthletesProps) {
             para que el fundido no deje un borde visible */}
         {/* Celular: degradado inferior para que el logo y los botones se lean */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/75 to-[#0D0D0D]/10 lg:hidden" />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0D0D0D]/80 to-transparent lg:hidden" />
 
         {/* Escritorio: fundido del panel hacia el contenido */}
         <div className="absolute inset-y-0 left-0 w-56 bg-gradient-to-r from-[#0D0D0D] to-transparent hidden lg:block" />

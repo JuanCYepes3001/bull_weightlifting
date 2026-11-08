@@ -10,6 +10,7 @@ import { TrusasCustomizer } from "./TrusasCustomizer";
 import { ProductImage } from "./ProductImage";
 import { getProductImageCandidates } from "@/lib/storage";
 import { isCustomizableProduct } from "@/lib/customization";
+import { displayProductName } from "@/utils/productName";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -86,7 +87,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         <div className="relative aspect-[4/5] bg-[#111] overflow-hidden border border-white/5">
           <ProductImage
             candidates={activeCandidates}
-            alt={product.name}
+            alt={displayProductName(product.name)}
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-contain"
             placeholderTextClassName="font-heading text-crimson/15 text-8xl tracking-widest select-none"
@@ -123,7 +124,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         {/* Nombre */}
         <h1 className="text-3xl md:text-4xl text-white leading-tight">
-          {product.name.toUpperCase()}
+          {displayProductName(product.name).toUpperCase()}
         </h1>
 
         {/* Precio */}

@@ -12,7 +12,6 @@ import { useCartStore } from "@/store/cartStore";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,12 +41,6 @@ export function Navbar() {
     if (path === "/products") return !searchParams.get("on_sale");
     return true;
   };
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     if (!navRef.current) return;
@@ -111,11 +104,8 @@ export function Navbar() {
   return (
     <nav
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/95 backdrop-blur-md border-b border-white/5"
-          : "bg-transparent"
-      }`}
+      // Fondo siempre sólido: sobre las fotos del hero un menú transparente se confundía con la imagen
+      className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D0D] border-b border-white/10"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <BullLogo
